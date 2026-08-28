@@ -17,6 +17,7 @@ export function TextEditor({
   onTranslate,
   isTranslating,
 }: TextEditorProps) {
+  console.log(selectedNote)
   return (
     <div className="flex flex-col gap-6 p-6 rounded-lg border bg-card text-card-foreground">
       <div className="space-y-1">
@@ -29,7 +30,7 @@ export function TextEditor({
             size="sm"
             variant="secondary"
             className="gap-2"
-            disabled={!selectedNote.contentEn.trim()} // Desabilita se estiver vazio
+            disabled={!selectedNote.enText.trim()} // Desabilita se estiver vazio
           >
             <Languages size={16} />
             {isTranslating ? (
@@ -41,7 +42,7 @@ export function TextEditor({
         </div>
 
         <Textarea
-          value={selectedNote.contentEn}
+          value={selectedNote.enText}
           onChange={(e) => onChangeContent(e.target.value)}
           placeholder="Start typing in English..."
           className="min-h-32 text-base resize-none border-none rounded-none shadow-none focus-visible:ring-0 p-0 bg-transparent"
@@ -53,8 +54,8 @@ export function TextEditor({
           Japanese (Translation)
         </p>
         {/* Substituímos a renderização crua pelo TokenizedText */}
-        {selectedNote.contentJa ? (
-          <TokenizedText text={selectedNote.contentJa} />
+        {selectedNote.jpText ? (
+          <TokenizedText text={selectedNote.jpText} />
         ) : (
           <p className="text-base text-foreground leading-relaxed font-sans whitespace-pre-wrap">
             Click 'Translate' to generate the Japanese text...

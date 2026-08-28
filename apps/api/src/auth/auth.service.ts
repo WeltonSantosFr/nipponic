@@ -15,15 +15,12 @@ export class AuthService {
 
   async login({ email, password }: LoginUserDto) {
     const user = await this.prisma.db.orm.public.User.first({ email });
-    console.log(user);
 
     if (!user) {
       throw new UnauthorizedException("Invalid Credentials");
     }
 
     const isPasswordValid = compareSync(password, user.password);
-
-    console.log(isPasswordValid);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException("Invalid Credentials");

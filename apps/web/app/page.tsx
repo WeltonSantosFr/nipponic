@@ -28,6 +28,8 @@ const INITIAL_NOTES: Note[] = [
   },
 ];
 
+
+
 export default function Home() {
   return <Workspace initialNotes={INITIAL_NOTES} />;
 }

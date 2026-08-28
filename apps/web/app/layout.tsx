@@ -4,6 +4,10 @@ import "./globals.css";
 import { JetBrains_Mono } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
+import { cookies } from "next/headers";
+import { jwtDecode } from "jwt-decode";
+import { AuthProvider, UserPayload } from "@/contexts/AuthContext";
+import { NotesProvider } from "@/contexts/NotesContext";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -24,11 +28,22 @@ export const metadata: Metadata = {
   description: "Learn Japanese with ease",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("nipponic.token")?.value;
+
+  let initialUser: UserPayload | null = null;
+
+  if (token) {
+    try {
+      initialUser = jwtDecode(token);
+    } catch {}
+  }
+
   return (
     <html
       lang="en"
@@ -36,13 +51,17 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
-        >
-          {children}
-        </ThemeProvider>
+        <AuthProvider initialUser={initialUser}>
+          <NotesProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="dark"
+              enableSystem={false}
+            >
+              {children}
+            </ThemeProvider>
+          </NotesProvider>
+        </AuthProvider>
       </body>
     </html>
   );

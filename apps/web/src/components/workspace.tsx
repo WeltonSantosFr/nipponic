@@ -21,30 +21,32 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { BookOpen, Sparkles } from "lucide-react";
 import { TextEditor } from "@/components/text-editor";
 import { Toast } from "@/components/ui/toast";
+import { useNotes } from "@/contexts/NotesContext";
 
 interface WorkspaceProps {
   initialNotes: Note[];
 }
 
 export function Workspace({ initialNotes }: WorkspaceProps) {
-  const [notes, setNotes] = useState<Note[]>(initialNotes);
+  const { notes } = useNotes();
+
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [isTranslating, setIstranslating] = useState<boolean>(false);
 
   const selectedNote = notes.find((n) => n.id === selectedNoteId);
 
-  const handleCreateNote = () => {
-    const newNote: Note = {
-      id: Date.now().toString(),
-      title: `Untitled Note (${notes.length + 1})`,
-      category: "Today",
-      contentEn: "",
-      contentJa: "",
-      updatedAt: "Just now",
-    };
-    setNotes((prev) => [newNote, ...prev]);
-    setSelectedNoteId(newNote.id);
-  };
+  //const handleCreateNote = () => {
+  //  const newNote: Note = {
+  //   id: Date.now().toString(),
+  //    title: `Untitled Note (${notes.length + 1})`,
+  //   category: "Today",
+  //    contentEn: "",
+  //    contentJa: "",
+  //    updatedAt: "Just now",
+  //  };
+  //  setNotes((prev) => [newNote, ...prev]);
+  //  setSelectedNoteId(newNote.id);
+  //};
 
   const handleTranslate = async () => {
     setIstranslating(true);
@@ -67,13 +69,13 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
 
       const data = await response.json();
 
-      setNotes((prev) =>
-        prev.map((note) =>
-          note.id === selectedNote.id
-            ? { ...note, contentJa: data.translatedText }
-            : note,
-        ),
-      );
+      //setNotes((prev) =>
+      //  prev.map((note) =>
+      //    note.id === selectedNote.id
+      //      ? { ...note, contentJa: data.translatedText }
+      //      : note,
+      //  ),
+      //);
     } catch (error) {
       console.error("Error on translating:", error);
     } finally {
@@ -84,10 +86,8 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
   return (
     <SidebarProvider>
       <AppSidebar
-        notes={notes}
         selectedNoteId={selectedNoteId}
         onSelectNote={(id) => setSelectedNoteId(id)}
-        onNewNote={handleCreateNote}
       />
 
       <SidebarInset className="flex flex-col min-h-screen">
@@ -123,9 +123,7 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button onClick={handleCreateNote} className="w-full">
-                  Create New Note
-                </Button>
+                <Button className="w-full">Create New Note</Button>
               </CardContent>
             </Card>
           ) : (
@@ -135,11 +133,11 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
                 value={selectedNote.title}
                 onChange={(e) => {
                   const newTitle = e.target.value;
-                  setNotes((prev) =>
-                    prev.map((n) =>
-                      n.id === selectedNote.id ? { ...n, title: newTitle } : n,
-                    ),
-                  );
+                  //setNotes((prev) =>
+                  // prev.map((n) =>
+                  //    n.id === selectedNote.id ? { ...n, title: newTitle } : n,
+                  //  ),
+                  //);
                 }}
                 className="text-3xl font-bold bg-transparent outline-none tracking-tight text-foreground border-b border-transparent focus:border-border pb-1"
                 placeholder="Note title..."
@@ -150,16 +148,16 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
               <TextEditor
                 selectedNote={selectedNote}
                 onChangeContent={(newContent) => {
-                  setNotes((prev) =>
-                    prev.map((note) =>
-                      note.id === selectedNote.id
-                        ? {
-                            ...note,
-                            contentEn: newContent,
-                          }
-                        : note,
-                    ),
-                  );
+                  //setNotes((prev) =>
+                  //  prev.map((note) =>
+                  //    note.id === selectedNote.id
+                  //      ? {
+                  //          ...note,
+                  //          contentEn: newContent,
+                  //        }
+                  //      : note,
+                  //  ),
+                  //);
                 }}
                 isTranslating={isTranslating}
                 onTranslate={handleTranslate}

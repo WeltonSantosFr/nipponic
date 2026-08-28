@@ -1,16 +1,11 @@
 import { z } from "zod";
 
-// Schema e Tipagem para Categorias de Notas
-export const NoteCategorySchema = z.enum(["Today", "This Week", "Previous"]);
-export type NoteCategory = z.infer<typeof NoteCategorySchema>;
-
 // Schema da Nota Completa
 export const NoteSchema = z.object({
   id: z.string(),
   title: z.string().min(1, "Title is required"),
-  category: NoteCategorySchema,
-  contentEn: z.string(),
-  contentJa: z.string(),
+  enText: z.string(),
+  jpText: z.string(),
   updatedAt: z.string(),
 });
 export type Note = z.infer<typeof NoteSchema>;
