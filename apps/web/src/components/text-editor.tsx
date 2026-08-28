@@ -2,18 +2,20 @@ import { TokenizedText } from "@/components/tokenized-text";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Note } from "@nipponic/shared";
-import { Languages } from "lucide-react";
+import { Languages, Loader } from "lucide-react";
 
 interface TextEditorProps {
   selectedNote: Note;
   onChangeContent: (newContent: string) => void;
   onTranslate: () => void;
+  isTranslating: boolean;
 }
 
 export function TextEditor({
   selectedNote,
   onChangeContent,
   onTranslate,
+  isTranslating,
 }: TextEditorProps) {
   return (
     <div className="flex flex-col gap-6 p-6 rounded-lg border bg-card text-card-foreground">
@@ -30,7 +32,11 @@ export function TextEditor({
             disabled={!selectedNote.contentEn.trim()} // Desabilita se estiver vazio
           >
             <Languages size={16} />
-            Translate
+            {isTranslating ? (
+              <Loader className="animate-spin" size={16} />
+            ) : (
+              "Translate"
+            )}
           </Button>
         </div>
 

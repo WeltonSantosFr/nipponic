@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Note } from "@nipponic/shared";
-import { BookOpen, Plus, Settings } from "lucide-react";
+import { BookOpen, Plus, Settings, UserRound } from "lucide-react";
 
 interface AppSidebarProps {
   notes: Note[];
@@ -19,7 +19,7 @@ interface AppSidebarProps {
   onSelectNote: (id: string) => void;
   onNewNote: () => void;
 }
-
+Settings;
 export function AppSidebar({
   notes,
   selectedNoteId,
@@ -79,6 +79,10 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter>
+        <SidebarMenuButton>
+          <UserRound size={16} />
+          <span>Profile</span>
+        </SidebarMenuButton>
         <SidebarMenuButton>
           <Settings size={16} />
           <span>Configurations</span>

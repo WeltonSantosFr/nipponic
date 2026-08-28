@@ -29,6 +29,7 @@ interface WorkspaceProps {
 export function Workspace({ initialNotes }: WorkspaceProps) {
   const [notes, setNotes] = useState<Note[]>(initialNotes);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [isTranslating, setIstranslating] = useState<boolean>(false);
 
   const selectedNote = notes.find((n) => n.id === selectedNoteId);
 
@@ -46,6 +47,7 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
   };
 
   const handleTranslate = async () => {
+    setIstranslating(true);
     if (!selectedNote?.contentEn.trim()) return;
 
     try {
@@ -74,6 +76,8 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
       );
     } catch (error) {
       console.error("Error on translating:", error);
+    } finally {
+      setIstranslating(false);
     }
   };
 
@@ -157,6 +161,7 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
                     ),
                   );
                 }}
+                isTranslating={isTranslating}
                 onTranslate={handleTranslate}
               />
             </div>

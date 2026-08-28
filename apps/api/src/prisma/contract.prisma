@@ -1,0 +1,26 @@
+// use prisma-next
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  email        String   @unique
+  password     String
+  
+  notes        Note[]
+  
+  createdAt    DateTime @default(now())
+  updatedAt    temporal.updatedAt()
+}
+
+model Note {
+  id        String   @id @default(uuid())
+  title     String
+  enText    String
+  jpText    String
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt temporal.updatedAt()
+}

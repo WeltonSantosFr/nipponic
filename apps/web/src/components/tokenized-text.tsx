@@ -12,8 +12,9 @@ import { Loader2 } from "lucide-react";
 
 interface DictionaryData {
   reading: string;
-  meaning: string;
+  meanings: string[];
   jlpt: string | null;
+  isCommon: boolean;
 }
 
 function TokenItem({ word }: { word: string }) {
@@ -47,12 +48,12 @@ function TokenItem({ word }: { word: string }) {
     <HoverCard open={isOpen} onOpenChange={setIsOpen}>
       <HoverCardTrigger>
         <span
-          className={`cursor-text transition-colors duration-150 hover:bg-primary/20 hover:text-primary rounded-sm px-[1px]`}
+          className={`cursor-text transition-colors duration-150 hover:bg-primary/20 hover:text-primary rounded-sm px-px`}
           onMouseEnter={(e) => {
-            if (e.shiftKey) {
-              setIsOpen(true);
-              fetchDictionaryData();
-            }
+            // if (e.shiftKey) {
+            setIsOpen(true);
+            fetchDictionaryData();
+            // }
           }}
           onMouseLeave={() => setIsOpen(false)}
         >
@@ -62,7 +63,7 @@ function TokenItem({ word }: { word: string }) {
 
       <HoverCardContent
         side="top"
-        className="w-64 z-50 shadow-lg min-h-[100px] flex flex-col"
+        className="w-64 z-50 shadow-lg min-h-25 flex flex-col"
       >
         {isLoading ? (
           <div className="flex flex-1 items-center justify-center py-4 text-muted-foreground gap-2">
@@ -74,17 +75,44 @@ function TokenItem({ word }: { word: string }) {
             <span className="text-sm">No definition found.</span>
           </div>
         ) : dictData ? (
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-2xl leading-none">{word}</span>
-              {dictData.jlpt && (
-                <Badge variant="secondary">{dictData.jlpt}</Badge>
-              )}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex flex-col">
+                <span className="font-bold text-2xl leading-none">{word}</span>
+                <span className="text-sm font-medium text-muted-foreground mt-1">
+                  {dictData.reading}
+                </span>
+              </div>
+
+              {/* Badges alinhadas à direita */}
+              <div className="flex flex-row items-end gap-1">
+                {dictData.isCommon && (
+                  <Badge
+                    variant="default"
+                    className="text-[10px] bg-green-600/90 hover:bg-green-600"
+                  >
+                    Common
+                  </Badge>
+                )}
+                {dictData.jlpt && (
+                  <Badge variant="secondary" className="text-[10px]">
+                    {dictData.jlpt}
+                  </Badge>
+                )}
+              </div>
             </div>
-            <span className="text-sm font-medium text-muted-foreground">
-              {dictData.reading}
-            </span>
-            <p className="text-sm mt-2 leading-snug">{dictData.meaning}</p>
+
+            {/* Renderização da lista de significados enumerada */}
+            <div className="flex flex-col gap-1.5 mt-1 border-t pt-2">
+              {dictData.meanings.map((meaning, idx) => (
+                <p key={idx} className="text-sm leading-snug">
+                  <span className="text-muted-foreground text-xs mr-1">
+                    {idx + 1}.
+                  </span>
+                  {meaning}
+                </p>
+              ))}
+            </div>
           </div>
         ) : null}
       </HoverCardContent>

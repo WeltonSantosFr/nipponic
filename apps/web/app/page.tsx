@@ -29,5 +29,5 @@ const INITIAL_NOTES: Note[] = [
 ];
 
 export default function Home() {
-  return <Workspace initialNotes={INITIAL_NOTES}/>
+  return <Workspace initialNotes={INITIAL_NOTES} />;
 }
