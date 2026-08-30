@@ -50,7 +50,7 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
 
   const handleTranslate = async () => {
     setIstranslating(true);
-    if (!selectedNote?.contentEn.trim()) return;
+    if (!selectedNote?.enText.trim()) return;
 
     try {
       const response = await fetch("/api/translate", {
@@ -59,7 +59,7 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          text: selectedNote.contentEn,
+          text: selectedNote.enText,
           sourceLang: "EN",
           targetLang: "JA",
         }),

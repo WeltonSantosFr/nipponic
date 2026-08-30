@@ -7,8 +7,10 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useKuromoji } from "@/hooks/use-kuromoji";
-import { Loader2 } from "lucide-react";
+import { useSpeech } from "@/hooks/use-speech";
+import { Loader2, Volume2, VolumeX } from "lucide-react";
 
 interface DictionaryData {
   reading: string;
@@ -18,10 +20,10 @@ interface DictionaryData {
 }
 
 function TokenItem({ word }: { word: string }) {
-  const [isOpen, setIsOpen] = useState(false);
   const [dictData, setDictData] = useState<DictionaryData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const { speak, stop, isPlaying } = useSpeech();
 
   const fetchDictionaryData = async () => {
     if (dictData || isLoading) return;
@@ -44,25 +46,23 @@ function TokenItem({ word }: { word: string }) {
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      fetchDictionaryData();
+    } else {
+      stop();
+    }
+  };
+
   return (
-    <HoverCard open={isOpen} onOpenChange={setIsOpen}>
-      <HoverCardTrigger>
-        <span
-          className={`cursor-text transition-colors duration-150 hover:bg-primary/20 hover:text-primary rounded-sm px-px`}
-          onMouseEnter={(e) => {
-            // if (e.shiftKey) {
-            setIsOpen(true);
-            fetchDictionaryData();
-            // }
-          }}
-          onMouseLeave={() => setIsOpen(false)}
-        >
-          {word}
-        </span>
+    <HoverCard onOpenChange={handleOpenChange}>
+      <HoverCardTrigger className="cursor-text transition-colors duration-150 hover:bg-primary/20 hover:text-primary rounded-sm px-px">
+        {word}
       </HoverCardTrigger>
 
       <HoverCardContent
         side="top"
+        sideOffset={6}
         className="w-64 z-50 shadow-lg min-h-25 flex flex-col"
       >
         {isLoading ? (
@@ -78,7 +78,29 @@ function TokenItem({ word }: { word: string }) {
           <div className="flex flex-col gap-3">
             <div className="flex items-start justify-between gap-2">
               <div className="flex flex-col">
-                <span className="font-bold text-2xl leading-none">{word}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-2xl leading-none">{word}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-muted-foreground hover:text-primary shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isPlaying) {
+                        stop();
+                      } else {
+                        speak(dictData.reading || word, "ja-JP", 0.9);
+                      }
+                    }}
+                    title="Listen to pronunciation"
+                  >
+                    {isPlaying ? (
+                      <VolumeX className="h-3.5 w-3.5 text-primary animate-pulse" />
+                    ) : (
+                      <Volume2 className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                </div>
                 <span className="text-sm font-medium text-muted-foreground mt-1">
                   {dictData.reading}
                 </span>

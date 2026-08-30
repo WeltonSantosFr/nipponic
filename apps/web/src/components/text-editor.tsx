@@ -1,8 +1,9 @@
 import { TokenizedText } from "@/components/tokenized-text";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useSpeech } from "@/hooks/use-speech";
 import { Note } from "@nipponic/shared";
-import { Languages, Loader } from "lucide-react";
+import { Languages, Loader, Volume2, VolumeX } from "lucide-react";
 
 interface TextEditorProps {
   selectedNote: Note;
@@ -17,14 +18,35 @@ export function TextEditor({
   onTranslate,
   isTranslating,
 }: TextEditorProps) {
-  console.log(selectedNote)
+  console.log(selectedNote);
+  const { speak, stop, isPlaying, activeLang } = useSpeech();
   return (
     <div className="flex flex-col gap-6 p-6 rounded-lg border bg-card text-card-foreground">
       <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Original (English)
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Original (English)
+            </p>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground"
+              disabled={!selectedNote.enText.trim()}
+              onClick={() =>
+                isPlaying && activeLang === "en-US"
+                  ? stop()
+                  : speak(selectedNote.enText, "en-US")
+              }
+              title="Listen in English"
+            >
+              {isPlaying && activeLang === "en-US" ? (
+                <VolumeX className="h-4 w-4 text-primary animate-pulse" />
+              ) : (
+                <Volume2 className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
           <Button
             onClick={onTranslate}
             size="sm"
@@ -50,9 +72,29 @@ export function TextEditor({
       </div>
 
       <div className="space-y-1 bg-muted/40 p-4 rounded-md border border-dashed">
-        <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-          Japanese (Translation)
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+            Japanese (Translation)
+          </p>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-muted-foreground hover:text-primary"
+            disabled={!selectedNote.jpText.trim()}
+            onClick={() =>
+              isPlaying && activeLang === "ja-JP"
+                ? stop()
+                : speak(selectedNote.jpText, "ja-JP", 0.9)
+            }
+            title="Listen in Japanese"
+          >
+            {isPlaying && activeLang === "ja-JP" ? (
+              <VolumeX className="h-4 w-4 text-primary animate-pulse" />
+            ) : (
+              <Volume2 className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
         {/* Substituímos a renderização crua pelo TokenizedText */}
         {selectedNote.jpText ? (
           <TokenizedText text={selectedNote.jpText} />
