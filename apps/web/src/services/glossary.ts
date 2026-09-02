@@ -66,6 +66,27 @@ export function removeGlossaryRule(id: string): void {
   saveGlossaryRules(rules);
 }
 
+export function updateGlossaryRule(
+  id: string,
+  sourceTerm: string,
+  targetTerm: string
+): GlossaryRule | null {
+  const cleanSource = sourceTerm.trim();
+  const cleanTarget = targetTerm.trim();
+  const rules = getGlossaryRules();
+  const index = rules.findIndex((r) => r.id === id);
+  if (index < 0) return null;
+
+  const updatedRule: GlossaryRule = {
+    ...rules[index]!,
+    sourceTerm: cleanSource,
+    targetTerm: cleanTarget,
+  };
+  rules[index] = updatedRule;
+  saveGlossaryRules(rules);
+  return updatedRule;
+}
+
 /**
  * Custom React hook to re-render when glossary rules change.
  */
@@ -89,6 +110,8 @@ export function useGlossaryRules() {
   return {
     rules,
     addRule: (source: string, target: string) => addGlossaryRule(source, target),
+    updateRule: (id: string, source: string, target: string) =>
+      updateGlossaryRule(id, source, target),
     removeRule: (id: string) => removeGlossaryRule(id),
   };
 }

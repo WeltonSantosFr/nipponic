@@ -21,14 +21,22 @@ export class UsersService {
   }
 
   async findOne(id: string) {
-    return this.prisma.db.orm.public.User.where({ id: id });
+    return this.prisma.db.orm.public.User.first({ id });
   }
 
-  async update(id: string, body: UpdateUserDto) {
-    return this.prisma.db.orm.public.User.where({ id: id }).update({ ...body });
+  async update(id: string, body: Partial<UpdateUserDto>) {
+    const dataToUpdate: any = { ...body };
+    if (dataToUpdate.password) {
+      dataToUpdate.password = hashSync(dataToUpdate.password, 10);
+    }
+    return this.prisma.db.orm.public.User.where({ id: id }).update(dataToUpdate);
   }
 
   async delete(id: string) {
+    try {
+      await this.prisma.db.orm.public.Note.where({ userId: id }).delete();
+    } catch {}
     return this.prisma.db.orm.public.User.where({ id: id }).delete();
   }
 }
+

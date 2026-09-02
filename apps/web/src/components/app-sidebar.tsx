@@ -1,5 +1,7 @@
 import { DeleteNoteModal } from "@/components/delete-note-modal";
 import { LoginModal } from "@/components/login-modal";
+import { ProfileModal } from "@/components/profile-modal";
+import { SettingsModal } from "@/components/settings-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -42,6 +44,8 @@ export function AppSidebar({
   const { notes, createNewNote, deleteNote } = useNotes();
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
 
   const now = new Date();
@@ -208,10 +212,17 @@ export function AppSidebar({
               <DoorOpen size={16} color="red" />
               <span className="text-red-600">Logout</span>
             </SidebarMenuButton>
-            <SidebarMenuButton>
+            <SidebarMenuButton
+              onClick={() => setIsProfileModalOpen(true)}
+              className="cursor-pointer"
+            >
               <UserRound size={16} />
               <span>Profile</span>
             </SidebarMenuButton>
+            <ProfileModal
+              isOpen={isProfileModalOpen}
+              onClose={() => setIsProfileModalOpen(false)}
+            />
           </>
         ) : (
           <>
@@ -227,10 +238,17 @@ export function AppSidebar({
           </>
         )}
 
-        <SidebarMenuButton>
+        <SidebarMenuButton
+          onClick={() => setIsSettingsModalOpen(true)}
+          className="cursor-pointer"
+        >
           <Settings size={16} />
           <span>Configurations</span>
         </SidebarMenuButton>
+        <SettingsModal
+          isOpen={isSettingsModalOpen}
+          onClose={() => setIsSettingsModalOpen(false)}
+        />
       </SidebarFooter>
 
       <DeleteNoteModal
