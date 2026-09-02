@@ -8,6 +8,7 @@ import { Languages, Loader, Volume2, VolumeX } from "lucide-react";
 interface TextEditorProps {
   selectedNote: Note;
   onChangeContent: (newContent: string) => void;
+  onBlurContent?: () => void;
   onTranslate: () => void;
   isTranslating: boolean;
 }
@@ -15,10 +16,10 @@ interface TextEditorProps {
 export function TextEditor({
   selectedNote,
   onChangeContent,
+  onBlurContent,
   onTranslate,
   isTranslating,
 }: TextEditorProps) {
-  console.log(selectedNote);
   const { speak, stop, isPlaying, activeLang } = useSpeech();
   return (
     <div className="flex flex-col gap-6 p-6 rounded-lg border bg-card text-card-foreground">
@@ -66,6 +67,7 @@ export function TextEditor({
         <Textarea
           value={selectedNote.enText}
           onChange={(e) => onChangeContent(e.target.value)}
+          onBlur={onBlurContent}
           placeholder="Start typing in English..."
           className="min-h-32 text-base resize-none border-none rounded-none shadow-none focus-visible:ring-0 p-0 bg-transparent"
         />

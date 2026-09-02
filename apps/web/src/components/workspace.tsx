@@ -10,7 +10,6 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarProvider,
@@ -18,39 +17,30 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
-import { BookOpen, Sparkles } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { TextEditor } from "@/components/text-editor";
-import { Toast } from "@/components/ui/toast";
 import { useNotes } from "@/contexts/NotesContext";
 
 interface WorkspaceProps {
-  initialNotes: Note[];
+  initialNotes?: Note[];
 }
 
 export function Workspace({ initialNotes }: WorkspaceProps) {
-  const { notes } = useNotes();
+  const {
+    notes,
+    selectedNote,
+    selectedNoteId,
+    setSelectedNoteId,
+    createNewNote,
+    updateNoteContent,
+    saveNote,
+  } = useNotes();
 
-  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [isTranslating, setIstranslating] = useState<boolean>(false);
 
-  const selectedNote = notes.find((n) => n.id === selectedNoteId);
-
-  //const handleCreateNote = () => {
-  //  const newNote: Note = {
-  //   id: Date.now().toString(),
-  //    title: `Untitled Note (${notes.length + 1})`,
-  //   category: "Today",
-  //    contentEn: "",
-  //    contentJa: "",
-  //    updatedAt: "Just now",
-  //  };
-  //  setNotes((prev) => [newNote, ...prev]);
-  //  setSelectedNoteId(newNote.id);
-  //};
-
   const handleTranslate = async () => {
-    setIstranslating(true);
     if (!selectedNote?.enText.trim()) return;
+    setIstranslating(true);
 
     try {
       const response = await fetch("/api/translate", {
@@ -68,14 +58,12 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
       if (!response.ok) throw new Error("Error on request");
 
       const data = await response.json();
+      const translatedText = data.translatedText;
 
-      //setNotes((prev) =>
-      //  prev.map((note) =>
-      //    note.id === selectedNote.id
-      //      ? { ...note, contentJa: data.translatedText }
-      //      : note,
-      //  ),
-      //);
+      if (translatedText) {
+        updateNoteContent(selectedNote.id, { jpText: translatedText });
+        await saveNote(selectedNote.id, { jpText: translatedText });
+      }
     } catch (error) {
       console.error("Error on translating:", error);
     } finally {
@@ -100,13 +88,6 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
               </span>
             )}
           </div>
-
-          {/* {selectedNote && (
-            <Badge variant="outline" className="gap-1.5 py-1 text-xs">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              Auto-translation Active
-            </Badge>
-          )} */}
         </header>
 
         <main className="flex-1 p-8 flex flex-col items-center justify-center">
@@ -123,7 +104,9 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full">Create New Note</Button>
+                <Button className="w-full" onClick={() => createNewNote()}>
+                  Create New Note
+                </Button>
               </CardContent>
             </Card>
           ) : (
@@ -132,12 +115,10 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
                 type="text"
                 value={selectedNote.title}
                 onChange={(e) => {
-                  const newTitle = e.target.value;
-                  //setNotes((prev) =>
-                  // prev.map((n) =>
-                  //    n.id === selectedNote.id ? { ...n, title: newTitle } : n,
-                  //  ),
-                  //);
+                  updateNoteContent(selectedNote.id, { title: e.target.value });
+                }}
+                onBlur={() => {
+                  saveNote(selectedNote.id);
                 }}
                 className="text-3xl font-bold bg-transparent outline-none tracking-tight text-foreground border-b border-transparent focus:border-border pb-1"
                 placeholder="Note title..."
@@ -148,16 +129,10 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
               <TextEditor
                 selectedNote={selectedNote}
                 onChangeContent={(newContent) => {
-                  //setNotes((prev) =>
-                  //  prev.map((note) =>
-                  //    note.id === selectedNote.id
-                  //      ? {
-                  //          ...note,
-                  //          contentEn: newContent,
-                  //        }
-                  //      : note,
-                  //  ),
-                  //);
+                  updateNoteContent(selectedNote.id, { enText: newContent });
+                }}
+                onBlurContent={() => {
+                  saveNote(selectedNote.id);
                 }}
                 isTranslating={isTranslating}
                 onTranslate={handleTranslate}
@@ -169,3 +144,4 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
     </SidebarProvider>
   );
 }
+

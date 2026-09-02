@@ -38,12 +38,20 @@ export async function GET(request: Request) {
       jlpt = firstResult.jlpt[0].replace("jlpt-", "").toUpperCase();
     }
 
-    return NextResponse.json({
-      reading: japanese.reading || "",
-      meanings: allMeanings,
-      jlpt: jlpt,
-      isCommon: firstResult.is_common || false,
-    });
+    return NextResponse.json(
+      {
+        reading: japanese.reading || "",
+        meanings: allMeanings,
+        jlpt: jlpt,
+        isCommon: firstResult.is_common || false,
+      },
+      {
+        headers: {
+          "Cache-Control":
+            "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400",
+        },
+      }
+    );
   } catch (error) {
     console.error("Erro ao buscar no Jisho:", error);
     return NextResponse.json(

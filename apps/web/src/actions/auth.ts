@@ -12,5 +12,6 @@ export async function saveAuthCookie(token: string) {
 }
 
 export async function removeAuthCookie() {
+  const cookieStore = await cookies()
   cookieStore.delete("nipponic.token");
 }

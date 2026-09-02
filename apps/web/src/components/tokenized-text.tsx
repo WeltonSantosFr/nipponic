@@ -12,33 +12,42 @@ import { useKuromoji } from "@/hooks/use-kuromoji";
 import { useSpeech } from "@/hooks/use-speech";
 import { Loader2, Volume2, VolumeX } from "lucide-react";
 
-interface DictionaryData {
-  reading: string;
-  meanings: string[];
-  jlpt: string | null;
-  isCommon: boolean;
-}
+import {
+  DictionaryData,
+  getCachedDictionaryWord,
+  fetchDictionaryWord,
+} from "@/services/dictionary-cache";
 
 function TokenItem({ word }: { word: string }) {
-  const [dictData, setDictData] = useState<DictionaryData | null>(null);
+  const [dictData, setDictData] = useState<DictionaryData | null>(
+    () => getCachedDictionaryWord(word) ?? null
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
   const { speak, stop, isPlaying } = useSpeech();
 
   const fetchDictionaryData = async () => {
-    if (dictData || isLoading) return;
+    if (dictData) return;
+
+    // Check if available in memory / localStorage cache synchronously
+    const cached = getCachedDictionaryWord(word);
+    if (cached) {
+      setDictData(cached);
+      return;
+    }
+
+    if (isLoading) return;
 
     setIsLoading(true);
     setHasError(false);
 
     try {
-      const res = await fetch(
-        `/api/dictionary?word=${encodeURIComponent(word)}`,
-      );
-      if (!res.ok) throw new Error("Não encontrado");
-
-      const data = await res.json();
-      setDictData(data);
+      const data = await fetchDictionaryWord(word);
+      if (data) {
+        setDictData(data);
+      } else {
+        setHasError(true);
+      }
     } catch (err) {
       setHasError(true);
     } finally {
