@@ -20,6 +20,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { BookOpen } from "lucide-react";
 import { TextEditor } from "@/components/text-editor";
 import { useNotes } from "@/contexts/NotesContext";
+import { getGlossaryRules } from "@/services/glossary";
 
 interface WorkspaceProps {
   initialNotes?: Note[];
@@ -43,6 +44,7 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
     setIstranslating(true);
 
     try {
+      const glossaryRules = getGlossaryRules();
       const response = await fetch("/api/translate", {
         method: "POST",
         headers: {
@@ -52,6 +54,7 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
           text: selectedNote.enText,
           sourceLang: "EN",
           targetLang: "JA",
+          glossaryRules,
         }),
       });
 
@@ -134,6 +137,12 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
                 onBlurContent={() => {
                   saveNote(selectedNote.id);
                 }}
+                onChangeJpContent={(newJpContent) => {
+                  updateNoteContent(selectedNote.id, { jpText: newJpContent });
+                }}
+                onBlurJpContent={() => {
+                  saveNote(selectedNote.id);
+                }}
                 isTranslating={isTranslating}
                 onTranslate={handleTranslate}
               />
@@ -144,4 +153,5 @@ export function Workspace({ initialNotes }: WorkspaceProps) {
     </SidebarProvider>
   );
 }
+
 

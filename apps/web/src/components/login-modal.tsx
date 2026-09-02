@@ -38,7 +38,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Acesse sua conta</DialogTitle>
+          <DialogTitle>Sign in to your account</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -52,7 +52,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
+            <Label htmlFor="password">Password</Label>
             <Input 
               id="password" 
               type="password" 
@@ -62,7 +62,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             />
           </div>
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Entrando..." : "Entrar"}
+            {isLoading ? "Signing in..." : "Sign in"}
           </Button>
         </form>
       </DialogContent>

@@ -6,7 +6,7 @@ export async function GET(request: Request) {
 
   if (!word) {
     return NextResponse.json(
-      { error: "Palavra não fornecida" },
+      { error: "Word not provided" },
       { status: 400 },
     );
   }
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
     if (!data.data || data.data.length === 0) {
       return NextResponse.json(
-        { error: "Palavra não encontrada" },
+        { error: "Word not found" },
         { status: 404 },
       );
     }
@@ -30,8 +30,6 @@ export async function GET(request: Request) {
     const allMeanings = firstResult.senses.map((sense: any) =>
       sense.english_definitions.join(", "),
     );
-
-    // const englishMeanings = firstResult.senses[0].english_definitions.join(", ");
 
     let jlpt = null;
     if (firstResult.jlpt && firstResult.jlpt.length > 0) {
@@ -53,9 +51,9 @@ export async function GET(request: Request) {
       }
     );
   } catch (error) {
-    console.error("Erro ao buscar no Jisho:", error);
+    console.error("Error fetching from Jisho:", error);
     return NextResponse.json(
-      { error: "Erro interno no servidor" },
+      { error: "Internal server error" },
       { status: 500 },
     );
   }

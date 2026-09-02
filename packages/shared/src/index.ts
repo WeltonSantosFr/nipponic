@@ -10,11 +10,20 @@ export const NoteSchema = z.object({
 });
 export type Note = z.infer<typeof NoteSchema>;
 
+// Schema de Regra de Glossário de Tradução
+export const GlossaryRuleSchema = z.object({
+  id: z.string(),
+  sourceTerm: z.string().min(1, "Source term is required"),
+  targetTerm: z.string().min(1, "Target term is required"),
+});
+export type GlossaryRule = z.infer<typeof GlossaryRuleSchema>;
+
 // Contrato de Requisição de Tradução (Usado no Front e no Back)
 export const TranslateRequestSchema = z.object({
   text: z.string().min(1, "The text to translate should not be empty"),
   sourceLang: z.enum(["PT", "EN"]).default("EN"),
   targetLang: z.enum(["JA"]).default("JA"),
+  glossaryRules: z.array(GlossaryRuleSchema).optional(),
 });
 export type TranslateRequest = z.infer<typeof TranslateRequestSchema>;
 
