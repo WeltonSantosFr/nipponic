@@ -33,3 +33,57 @@ export const TranslateResponseSchema = z.object({
   detectedSourceLang: z.string().optional(),
 });
 export type TranslateResponse = z.infer<typeof TranslateResponseSchema>;
+
+// Schema do Flash Card
+export const CardSchema = z.object({
+  id: z.string(),
+  jpText: z.string().min(1, "Japanese text is required"),
+  enText: z.string().min(1, "English text is required"),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+export type Card = z.infer<typeof CardSchema>;
+
+// Schema do Deck (Pacote de Flash Cards)
+export const DeckSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, "Deck name is required"),
+  isPublic: z.boolean().default(false),
+  cards: z.array(CardSchema).default([]),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+export type Deck = z.infer<typeof DeckSchema>;
+
+export const CreateCardSchema = z.object({
+  jpText: z.string().min(1, "Japanese text is required"),
+  enText: z.string().min(1, "English text is required"),
+});
+export type CreateCardInput = z.infer<typeof CreateCardSchema>;
+
+export const UpdateCardSchema = CreateCardSchema.partial();
+export type UpdateCardInput = z.infer<typeof UpdateCardSchema>;
+
+export const CreateDeckSchema = z.object({
+  name: z.string().min(1, "Deck name is required"),
+  isPublic: z.boolean().optional().default(false),
+  cardIds: z.array(z.string()).optional().default([]),
+});
+export type CreateDeckInput = z.infer<typeof CreateDeckSchema>;
+
+export const UpdateDeckSchema = z.object({
+  name: z.string().min(1, "Deck name is required").optional(),
+  isPublic: z.boolean().optional(),
+});
+export type UpdateDeckInput = z.infer<typeof UpdateDeckSchema>;
+
+export const ReorderDeckCardsSchema = z.object({
+  cardIds: z.array(z.string()),
+});
+export type ReorderDeckCardsInput = z.infer<typeof ReorderDeckCardsSchema>;
+
+export const AddCardsToDeckSchema = z.object({
+  cardIds: z.array(z.string()),
+});
+export type AddCardsToDeckInput = z.infer<typeof AddCardsToDeckSchema>;
+

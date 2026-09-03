@@ -1,4 +1,7 @@
+"use client";
+
 import { DeleteNoteModal } from "@/components/delete-note-modal";
+import { DeleteDeckModal } from "@/components/delete-deck-modal";
 import { LoginModal } from "@/components/login-modal";
 import { ProfileModal } from "@/components/profile-modal";
 import { SettingsModal } from "@/components/settings-modal";
@@ -18,10 +21,13 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotes } from "@/contexts/NotesContext";
-import { Note } from "@nipponic/shared";
+import { useFlashCards } from "@/contexts/FlashCardsContext";
+import { Note, Deck } from "@nipponic/shared";
 import {
   BookOpen,
   DoorOpen,
+  Layers,
+  Play,
   Plus,
   Search,
   Settings,
@@ -42,11 +48,24 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const { user, isAuthenticated, logout } = useAuth();
   const { notes, createNewNote, deleteNote } = useNotes();
+  const {
+    decks,
+    createDeck,
+    deleteDeck,
+    selectedDeckId,
+    setSelectedDeckId,
+    startPlayingDeck,
+    activeSidebarView,
+    setActiveSidebarView,
+  } = useFlashCards();
+
   const [searchQuery, setSearchQuery] = useState("");
+  const [deckSearchQuery, setDeckSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
+  const [deckToDelete, setDeckToDelete] = useState<Deck | null>(null);
 
   const now = new Date();
   const startOfToday = new Date(
@@ -69,6 +88,12 @@ export function AppSidebar({
     const titleMatch = (note.title || "").toLowerCase().includes(q);
     const contentMatch = (note.enText || "").toLowerCase().includes(q);
     return titleMatch || contentMatch;
+  });
+
+  const filteredDecks = decks.filter((deck) => {
+    if (!deckSearchQuery.trim()) return true;
+    const q = deckSearchQuery.toLowerCase().trim();
+    return (deck.name || "").toLowerCase().includes(q);
   });
 
   const todayNotes: Note[] = [];
@@ -116,92 +141,221 @@ export function AppSidebar({
 
   return (
     <Sidebar>
-      <SidebarHeader className="gap-3">
+      <SidebarHeader className="gap-2.5">
         {user && isAuthenticated && (
-          <p className="text-sm text-center pt-2">
-            Welcome back {user.username}!
+          <p className="text-xs text-center pt-2 text-muted-foreground">
+            Welcome back <span className="font-semibold text-foreground">{user.username}</span>!
           </p>
         )}
-        <Button onClick={() => createNewNote()} className="w-full">
-          <Plus size={16} />
-          New Note
-        </Button>
 
-        {/* Note Search Input */}
-        <div className="relative w-full">
-          <Search
-            size={14}
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-          />
-          <Input
-            type="text"
-            placeholder="Search notes..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 pl-8 pr-7 text-xs rounded-md bg-muted/40 border-border/60"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              title="Clear search"
-            >
-              <X size={13} />
-            </button>
-          )}
+        {/* Feature Selector Slider */}
+        <div className="flex p-1 bg-muted/60 rounded-lg border border-border/70 text-xs font-medium">
+          <button
+            type="button"
+            onClick={() => setActiveSidebarView("notes")}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md transition-all cursor-pointer ${
+              activeSidebarView === "notes"
+                ? "bg-background text-foreground shadow-xs font-semibold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <BookOpen size={14} />
+            <span>Notes</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSidebarView("flashcards")}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md transition-all cursor-pointer ${
+              activeSidebarView === "flashcards"
+                ? "bg-background text-foreground shadow-xs font-semibold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Layers size={14} />
+            <span>Flash Cards</span>
+          </button>
         </div>
+
+        {activeSidebarView === "notes" ? (
+          <>
+            <Button onClick={() => createNewNote()} className="w-full gap-1.5 cursor-pointer">
+              <Plus size={16} />
+              New Note
+            </Button>
+
+            {/* Note Search Input */}
+            <div className="relative w-full">
+              <Search
+                size={14}
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+              />
+              <Input
+                type="text"
+                placeholder="Search notes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-8 pl-8 pr-7 text-xs rounded-md bg-muted/40 border-border/60"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                  title="Clear search"
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <Button
+              onClick={() => createDeck("New Deck")}
+              className="w-full gap-1.5 cursor-pointer"
+            >
+              <Plus size={16} />
+              New Deck
+            </Button>
+
+            {/* Deck Search Input */}
+            <div className="relative w-full">
+              <Search
+                size={14}
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+              />
+              <Input
+                type="text"
+                placeholder="Search decks..."
+                value={deckSearchQuery}
+                onChange={(e) => setDeckSearchQuery(e.target.value)}
+                className="h-8 pl-8 pr-7 text-xs rounded-md bg-muted/40 border-border/60"
+              />
+              {deckSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setDeckSearchQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                  title="Clear search"
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+          </>
+        )}
       </SidebarHeader>
 
       <SidebarContent>
-        {filteredNotes.length === 0 ? (
-          <div className="p-6 text-center text-xs text-muted-foreground">
-            {searchQuery.trim()
-              ? `No notes matching "${searchQuery}"`
-              : "No notes yet"}
-          </div>
+        {activeSidebarView === "notes" ? (
+          filteredNotes.length === 0 ? (
+            <div className="p-6 text-center text-xs text-muted-foreground">
+              {searchQuery.trim()
+                ? `No notes matching "${searchQuery}"`
+                : "No notes yet"}
+            </div>
+          ) : (
+            <>
+              {/* Group: Today */}
+              {todayNotes.length > 0 && (
+                <SidebarGroup>
+                  <SidebarGroupLabel>Today ({todayNotes.length})</SidebarGroupLabel>
+                  <SidebarMenu>
+                    {todayNotes.map(renderNoteItem)}
+                  </SidebarMenu>
+                </SidebarGroup>
+              )}
+
+              {/* Group: This Week */}
+              {weekNotes.length > 0 && (
+                <SidebarGroup>
+                  <SidebarGroupLabel>This Week ({weekNotes.length})</SidebarGroupLabel>
+                  <SidebarMenu>
+                    {weekNotes.map(renderNoteItem)}
+                  </SidebarMenu>
+                </SidebarGroup>
+              )}
+
+              {/* Group: This Month */}
+              {monthNotes.length > 0 && (
+                <SidebarGroup>
+                  <SidebarGroupLabel>This Month ({monthNotes.length})</SidebarGroupLabel>
+                  <SidebarMenu>
+                    {monthNotes.map(renderNoteItem)}
+                  </SidebarMenu>
+                </SidebarGroup>
+              )}
+
+              {/* Group: Older */}
+              {olderNotes.length > 0 && (
+                <SidebarGroup>
+                  <SidebarGroupLabel>Older ({olderNotes.length})</SidebarGroupLabel>
+                  <SidebarMenu>
+                    {olderNotes.map(renderNoteItem)}
+                  </SidebarMenu>
+                </SidebarGroup>
+              )}
+            </>
+          )
         ) : (
-          <>
-            {/* Group: Today */}
-            {todayNotes.length > 0 && (
-              <SidebarGroup>
-                <SidebarGroupLabel>Today ({todayNotes.length})</SidebarGroupLabel>
-                <SidebarMenu>
-                  {todayNotes.map(renderNoteItem)}
-                </SidebarMenu>
-              </SidebarGroup>
-            )}
+          /* Flash Cards Decks List */
+          <SidebarGroup>
+            <SidebarGroupLabel>
+              Decks ({filteredDecks.length})
+            </SidebarGroupLabel>
+            {filteredDecks.length === 0 ? (
+              <div className="p-6 text-center text-xs text-muted-foreground">
+                {deckSearchQuery.trim()
+                  ? `No decks matching "${deckSearchQuery}"`
+                  : "No decks yet. Click '+ New Deck' above to create one."}
+              </div>
+            ) : (
+              <SidebarMenu>
+                {filteredDecks.map((deck) => (
+                  <SidebarMenuItem key={deck.id} className="relative group/deck">
+                    <SidebarMenuButton
+                      isActive={selectedDeckId === deck.id}
+                      onClick={() => setSelectedDeckId(deck.id)}
+                      className="cursor-pointer pr-16"
+                    >
+                      <Layers size={16} />
+                      <span className="truncate">{deck.name || "Untitled Deck"}</span>
+                    </SidebarMenuButton>
 
-            {/* Group: This Week */}
-            {weekNotes.length > 0 && (
-              <SidebarGroup>
-                <SidebarGroupLabel>This Week ({weekNotes.length})</SidebarGroupLabel>
-                <SidebarMenu>
-                  {weekNotes.map(renderNoteItem)}
-                </SidebarMenu>
-              </SidebarGroup>
-            )}
+                    <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 z-10">
+                      {/* Badge or Play Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startPlayingDeck(deck);
+                        }}
+                        title="Play deck"
+                        className="p-1 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                      >
+                        <Play size={13} className="fill-current" />
+                        <span className="sr-only">Play deck</span>
+                      </button>
 
-            {/* Group: This Month */}
-            {monthNotes.length > 0 && (
-              <SidebarGroup>
-                <SidebarGroupLabel>This Month ({monthNotes.length})</SidebarGroupLabel>
-                <SidebarMenu>
-                  {monthNotes.map(renderNoteItem)}
-                </SidebarMenu>
-              </SidebarGroup>
+                      {/* Delete Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeckToDelete(deck);
+                        }}
+                        title="Delete deck"
+                        className="p-1 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                      >
+                        <Trash2 size={13} />
+                        <span className="sr-only">Delete deck</span>
+                      </button>
+                    </div>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
             )}
-
-            {/* Group: Older */}
-            {olderNotes.length > 0 && (
-              <SidebarGroup>
-                <SidebarGroupLabel>Older ({olderNotes.length})</SidebarGroupLabel>
-                <SidebarMenu>
-                  {olderNotes.map(renderNoteItem)}
-                </SidebarMenu>
-              </SidebarGroup>
-            )}
-          </>
+          </SidebarGroup>
         )}
       </SidebarContent>
 
@@ -226,7 +380,7 @@ export function AppSidebar({
           </>
         ) : (
           <>
-            <p className="text-xs px-3">Login to keep your notes</p>
+            <p className="text-xs px-3">Login to keep your notes and decks</p>
             <SidebarMenuButton onClick={() => setIsModalOpen(true)}>
               <UserRound size={16} />
               Login
@@ -258,6 +412,17 @@ export function AppSidebar({
         onConfirm={() => {
           if (noteToDelete) {
             deleteNote(noteToDelete.id);
+          }
+        }}
+      />
+
+      <DeleteDeckModal
+        deck={deckToDelete}
+        isOpen={!!deckToDelete}
+        onClose={() => setDeckToDelete(null)}
+        onConfirm={() => {
+          if (deckToDelete) {
+            deleteDeck(deckToDelete.id);
           }
         }}
       />

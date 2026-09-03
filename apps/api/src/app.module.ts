@@ -8,9 +8,11 @@ import { AuthController } from "./auth/auth.controller";
 import { AuthService } from "./auth/auth.service";
 import { AuthModule } from "./auth/auth.module";
 import { NotesModule } from "./notes/notes.module";
+import { CardsModule } from "./cards/cards.module";
+import { DecksModule } from "./decks/decks.module";
 
 @Module({
-  imports: [AuthModule, NotesModule],
+  imports: [AuthModule, NotesModule, CardsModule, DecksModule],
   controllers: [AppController, UsersController],
   providers: [PrismaService, UsersService],
 })

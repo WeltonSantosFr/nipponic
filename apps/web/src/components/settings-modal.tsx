@@ -13,6 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useGlossaryRules } from "@/services/glossary";
+import { useFlashCards } from "@/contexts/FlashCardsContext";
+import { useSpeech } from "@/hooks/use-speech";
+import { Card } from "@nipponic/shared";
 import {
   BookMarked,
   Pencil,
@@ -22,6 +25,8 @@ import {
   Trash2,
   X,
   Check,
+  Layers,
+  Volume2,
 } from "lucide-react";
 
 interface SettingsModalProps {
@@ -29,7 +34,7 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-type SettingsTab = "glossary";
+type SettingsTab = "glossary" | "flashcards";
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>("glossary");
@@ -57,12 +62,17 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 isActive={activeTab === "glossary"}
                 onClick={() => setActiveTab("glossary")}
               />
+              <FlashCardsSidebarTab
+                isActive={activeTab === "flashcards"}
+                onClick={() => setActiveTab("flashcards")}
+              />
             </nav>
           </aside>
 
           {/* Settings Main Content Area */}
           <main className="flex-1 flex flex-col h-full min-h-0 overflow-y-auto p-6">
             {activeTab === "glossary" && <GlossarySettingsSection />}
+            {activeTab === "flashcards" && <FlashCardsSettingsSection />}
           </main>
         </div>
       </DialogContent>
@@ -98,6 +108,39 @@ function GlossarySidebarTab({
         className="text-[10px] px-1.5 py-0 h-4"
       >
         {rules.length}
+      </Badge>
+    </button>
+  );
+}
+
+function FlashCardsSidebarTab({
+  isActive,
+  onClick,
+}: {
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  const { cards } = useFlashCards();
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+        isActive
+          ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        <Layers size={15} />
+        <span>Flash Cards</span>
+      </div>
+      <Badge
+        variant={isActive ? "secondary" : "outline"}
+        className="text-[10px] px-1.5 py-0 h-4"
+      >
+        {cards.length}
       </Badge>
     </button>
   );
@@ -186,7 +229,7 @@ function GlossarySettingsSection() {
               variant="ghost"
               size="sm"
               onClick={resetForm}
-              className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+              className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
             >
               Cancel Edit
             </Button>
@@ -229,7 +272,7 @@ function GlossarySettingsSection() {
               variant="outline"
               size="sm"
               onClick={resetForm}
-              className="h-8 px-3 text-xs"
+              className="h-8 px-3 text-xs cursor-pointer"
             >
               Cancel
             </Button>
@@ -238,7 +281,7 @@ function GlossarySettingsSection() {
             type="submit"
             size="sm"
             disabled={!sourceTerm.trim() || !targetTerm.trim()}
-            className="h-8 px-3 text-xs gap-1.5"
+            className="h-8 px-3 text-xs gap-1.5 cursor-pointer"
           >
             {editingId ? (
               <>
@@ -324,7 +367,7 @@ function GlossarySettingsSection() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
                   onClick={() => handleStartEdit(rule)}
                   title="Edit term"
                 >
@@ -334,12 +377,274 @@ function GlossarySettingsSection() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
+                  className="h-7 w-7 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 cursor-pointer"
                   onClick={() => {
                     if (editingId === rule.id) resetForm();
                     removeRule(rule.id);
                   }}
                   title="Delete term"
+                >
+                  <Trash2 size={13} />
+                  <span className="sr-only">Delete</span>
+                </Button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function FlashCardsSettingsSection() {
+  const { cards, createCard, updateCard, deleteCard } = useFlashCards();
+  const { speak, isPlaying } = useSpeech();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Form states
+  const [jpText, setJpText] = useState("");
+  const [enText, setEnText] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const resetForm = () => {
+    setJpText("");
+    setEnText("");
+    setEditingId(null);
+  };
+
+  const handleStartEdit = (card: Card) => {
+    setEditingId(card.id);
+    setJpText(card.jpText);
+    setEnText(card.enText);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!jpText.trim() || !enText.trim()) return;
+
+    if (editingId) {
+      await updateCard(editingId, { jpText: jpText.trim(), enText: enText.trim() });
+    } else {
+      await createCard({ jpText: jpText.trim(), enText: enText.trim() });
+    }
+    resetForm();
+  };
+
+  const filteredCards = cards.filter((card) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    return (
+      card.jpText.toLowerCase().includes(q) ||
+      card.enText.toLowerCase().includes(q)
+    );
+  });
+
+  return (
+    <div className="flex flex-col h-full gap-5">
+      {/* Header */}
+      <div>
+        <div className="flex items-center gap-2">
+          <Layers className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-bold tracking-tight">
+            Flash Cards Arsenal
+          </h2>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          Manage your master collection of flash cards. Add, edit, or search cards
+          across Japanese and English.
+        </p>
+      </div>
+
+      {/* Add / Edit Form */}
+      <form
+        onSubmit={handleSubmit}
+        className="p-4 bg-muted/40 rounded-lg border border-border/80 flex flex-col gap-3 shrink-0"
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+            {editingId ? (
+              <>
+                <Pencil size={13} className="text-primary" />
+                Edit Card
+              </>
+            ) : (
+              <>
+                <Plus size={13} className="text-primary" />
+                Add New Flash Card
+              </>
+            )}
+          </span>
+          {editingId && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={resetForm}
+              className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
+            >
+              Cancel Edit
+            </Button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label htmlFor="card-jp-text" className="text-xs">
+              Japanese Text (Front)
+            </Label>
+            <Input
+              id="card-jp-text"
+              placeholder="e.g. 友達 (ともだち)"
+              value={jpText}
+              onChange={(e) => setJpText(e.target.value)}
+              required
+              className="h-8 text-xs bg-background font-japanese"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="card-en-text" className="text-xs">
+              English Meaning (Back)
+            </Label>
+            <Input
+              id="card-en-text"
+              placeholder="e.g. Friend"
+              value={enText}
+              onChange={(e) => setEnText(e.target.value)}
+              required
+              className="h-8 text-xs bg-background"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 pt-1">
+          {editingId && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={resetForm}
+              className="h-8 px-3 text-xs cursor-pointer"
+            >
+              Cancel
+            </Button>
+          )}
+          <Button
+            type="submit"
+            size="sm"
+            disabled={!jpText.trim() || !enText.trim()}
+            className="h-8 px-3 text-xs gap-1.5 cursor-pointer"
+          >
+            {editingId ? (
+              <>
+                <Check size={14} />
+                Update Card
+              </>
+            ) : (
+              <>
+                <Plus size={14} />
+                Add Card
+              </>
+            )}
+          </Button>
+        </div>
+      </form>
+
+      {/* Search & Cards Count */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Arsenal Cards ({filteredCards.length}
+            {searchQuery.trim() ? ` of ${cards.length}` : ""})
+          </span>
+
+          <div className="relative w-48 sm:w-60">
+            <Search
+              size={13}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+            />
+            <Input
+              type="text"
+              placeholder="Search Japanese or English..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-7 pl-8 pr-7 text-xs rounded-md bg-muted/30 border-border/70"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                title="Clear filter"
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Cards List */}
+      <div className="flex-1 overflow-y-auto space-y-2 min-h-36 pr-1">
+        {filteredCards.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground text-xs border border-dashed rounded-lg flex flex-col items-center justify-center gap-1.5">
+            <Layers size={20} className="text-muted-foreground/60" />
+            <span>
+              {searchQuery.trim()
+                ? `No flash cards found matching "${searchQuery}"`
+                : "No flash cards in your arsenal yet. Add your first card above."}
+            </span>
+          </div>
+        ) : (
+          filteredCards.map((card) => (
+            <div
+              key={card.id}
+              className={`flex items-center justify-between p-3 rounded-lg border transition-all text-xs ${
+                editingId === card.id
+                  ? "bg-primary/5 border-primary shadow-xs"
+                  : "bg-card text-card-foreground hover:border-border"
+              }`}
+            >
+              <div className="flex items-center gap-2.5 overflow-hidden">
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="font-bold text-foreground font-japanese text-sm truncate max-w-36 sm:max-w-48">
+                    {card.jpText}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => speak(card.jpText, "ja-JP")}
+                    disabled={isPlaying}
+                    className="p-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                    title="Pronounce Japanese"
+                  >
+                    <Volume2 size={14} />
+                  </button>
+                </div>
+                <span className="text-muted-foreground font-mono">→</span>
+                <span className="font-medium text-muted-foreground truncate max-w-40 sm:max-w-56">
+                  {card.enText}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
+                  onClick={() => handleStartEdit(card)}
+                  title="Edit card"
+                >
+                  <Pencil size={13} />
+                  <span className="sr-only">Edit</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 cursor-pointer"
+                  onClick={() => {
+                    if (editingId === card.id) resetForm();
+                    deleteCard(card.id);
+                  }}
+                  title="Delete card"
                 >
                   <Trash2 size={13} />
                   <span className="sr-only">Delete</span>

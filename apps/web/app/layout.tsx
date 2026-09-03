@@ -8,6 +8,7 @@ import { cookies } from "next/headers";
 import { jwtDecode } from "jwt-decode";
 import { AuthProvider, UserPayload } from "@/contexts/AuthContext";
 import { NotesProvider } from "@/contexts/NotesContext";
+import { FlashCardsProvider } from "@/contexts/FlashCardsContext";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -53,13 +54,15 @@ export default async function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AuthProvider initialUser={initialUser}>
           <NotesProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="dark"
-              enableSystem={false}
-            >
-              {children}
-            </ThemeProvider>
+            <FlashCardsProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="dark"
+                enableSystem={false}
+              >
+                {children}
+              </ThemeProvider>
+            </FlashCardsProvider>
           </NotesProvider>
         </AuthProvider>
       </body>

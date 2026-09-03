@@ -1,0 +1,443 @@
+[
+  {
+    "id": "table.card",
+    "label": "Create table \"card\"",
+    "summary": "Creates table \"card\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "card"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"card\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"card\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"card\"",
+        "sql": "CREATE TABLE \"public\".\"card\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"enText\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"jpText\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"card\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"card\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.deck",
+    "label": "Create table \"deck\"",
+    "summary": "Creates table \"deck\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "deck"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"deck\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"deck\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"deck\"",
+        "sql": "CREATE TABLE \"public\".\"deck\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"isPublic\" bool DEFAULT false NOT NULL,\n  \"name\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"deck\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"deck\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.deckCard",
+    "label": "Create table \"deckCard\"",
+    "summary": "Creates table \"deckCard\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "deckCard"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"deckCard\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"deckCard\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"deckCard\"",
+        "sql": "CREATE TABLE \"public\".\"deckCard\" (\n  \"cardId\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"deckId\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"order\" int4 DEFAULT 0 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"deckCard\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"deckCard\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.card.card_userId_idx_a489d58a",
+    "label": "Create index \"card_userId_idx_a489d58a\" on \"card\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "card_userId_idx_a489d58a",
+        "table": "card"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"card_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"card_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"card_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"card_userId_idx_a489d58a\" ON \"public\".\"card\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"card_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"card_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.deck.deck_userId_idx_a489d58a",
+    "label": "Create index \"deck_userId_idx_a489d58a\" on \"deck\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "deck_userId_idx_a489d58a",
+        "table": "deck"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"deck_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"deck_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"deck_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"deck_userId_idx_a489d58a\" ON \"public\".\"deck\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"deck_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"deck_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.deckCard.deckCard_cardId_idx_c511c1e1",
+    "label": "Create index \"deckCard_cardId_idx_c511c1e1\" on \"deckCard\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "deckCard_cardId_idx_c511c1e1",
+        "table": "deckCard"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"deckCard_cardId_idx_c511c1e1\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"deckCard_cardId_idx_c511c1e1\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"deckCard_cardId_idx_c511c1e1\"",
+        "sql": "CREATE INDEX \"deckCard_cardId_idx_c511c1e1\" ON \"public\".\"deckCard\" (\"cardId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"deckCard_cardId_idx_c511c1e1\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"deckCard_cardId_idx_c511c1e1\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.deckCard.deckCard_deckId_idx_10905b14",
+    "label": "Create index \"deckCard_deckId_idx_10905b14\" on \"deckCard\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "deckCard_deckId_idx_10905b14",
+        "table": "deckCard"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"deckCard_deckId_idx_10905b14\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"deckCard_deckId_idx_10905b14\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"deckCard_deckId_idx_10905b14\"",
+        "sql": "CREATE INDEX \"deckCard_deckId_idx_10905b14\" ON \"public\".\"deckCard\" (\"deckId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"deckCard_deckId_idx_10905b14\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"deckCard_deckId_idx_10905b14\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.card.card_userId_fkey",
+    "label": "Add foreign key \"card_userId_fkey\" on \"card\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "card_userId_fkey",
+        "table": "card"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"card_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "card_userId_fkey",
+          "public",
+          "\"public\".\"card\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"card_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"card\"\nADD CONSTRAINT \"card_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"card_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "card_userId_fkey",
+          "public",
+          "\"public\".\"card\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.deck.deck_userId_fkey",
+    "label": "Add foreign key \"deck_userId_fkey\" on \"deck\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "deck_userId_fkey",
+        "table": "deck"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"deck_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "deck_userId_fkey",
+          "public",
+          "\"public\".\"deck\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"deck_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"deck\"\nADD CONSTRAINT \"deck_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"deck_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "deck_userId_fkey",
+          "public",
+          "\"public\".\"deck\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.deckCard.deckCard_deckId_fkey",
+    "label": "Add foreign key \"deckCard_deckId_fkey\" on \"deckCard\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "deckCard_deckId_fkey",
+        "table": "deckCard"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"deckCard_deckId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "deckCard_deckId_fkey",
+          "public",
+          "\"public\".\"deckCard\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"deckCard_deckId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"deckCard\"\nADD CONSTRAINT \"deckCard_deckId_fkey\"\nFOREIGN KEY (\"deckId\")\nREFERENCES \"public\".\"deck\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"deckCard_deckId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "deckCard_deckId_fkey",
+          "public",
+          "\"public\".\"deckCard\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.deckCard.deckCard_cardId_fkey",
+    "label": "Add foreign key \"deckCard_cardId_fkey\" on \"deckCard\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "deckCard_cardId_fkey",
+        "table": "deckCard"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"deckCard_cardId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "deckCard_cardId_fkey",
+          "public",
+          "\"public\".\"deckCard\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"deckCard_cardId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"deckCard\"\nADD CONSTRAINT \"deckCard_cardId_fkey\"\nFOREIGN KEY (\"cardId\")\nREFERENCES \"public\".\"card\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"deckCard_cardId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "deckCard_cardId_fkey",
+          "public",
+          "\"public\".\"deckCard\""
+        ]
+      }
+    ]
+  }
+]
