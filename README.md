@@ -1,165 +1,160 @@
-# Turborepo starter
+<div align="center">
+  <h1 align="center">🇯🇵 Nipponic</h1>
+  <p align="center">
+    <b>Plataforma Completa e Moderna para Aprendizado Autodidata de Japonês</b>
+  </p>
+  <p align="center">
+    <a href="#sobre-o-projeto">Sobre</a> •
+    <a href="#arquitetura">Arquitetura</a> •
+    <a href="#tecnologias">Tecnologias</a> •
+    <a href="#começando">Começando</a> •
+    <a href="#executando-com-docker">Docker</a> •
+    <a href="#contribuição">Contribuição</a> •
+    <a href="#licença">Licença</a>
+  </p>
 
-This Turborepo starter is maintained by the Turborepo core team.
+  <p align="center">
+    <img src="https://img.shields.io/badge/Monorepo-Turborepo-red?style=flat-square&logo=turborepo" alt="Turborepo" />
+    <img src="https://img.shields.io/badge/Frontend-Next.js%2015-black?style=flat-square&logo=next.js" alt="Next.js" />
+    <img src="https://img.shields.io/badge/Backend-Node.js%20%2F%20Express-green?style=flat-square&logo=nodedotjs" alt="Node.js" />
+    <img src="https://img.shields.io/badge/Database-Supabase%20%2F%20PostgreSQL-336791?style=flat-square&logo=postgresql" alt="PostgreSQL" />
+    <img src="https://img.shields.io/badge/Styling-TailwindCSS-38B2AC?style=flat-square&logo=tailwindcss" alt="TailwindCSS" />
+    <img src="https://img.shields.io/badge/TypeScript-5.9-blue?style=flat-square&logo=typescript" alt="TypeScript" />
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square" alt="License MIT" />
+  </p>
+</div>
 
-## Using this example
+---
 
-Run the following command:
+## 📖 Sobre o Projeto
 
-```sh
-npx create-turbo@latest
+O **Nipponic** é um ecossistema educacional de alta performance projetado especificamente para falantes de português que desejam dominar o idioma japonês de forma autônoma, eficiente e interativa. 
+
+Combinando algoritmos modernos de repetição espaçada (SRS), dicionário integrado de kanji com análise de furigana, painel de anotações inteligentes e flashcards interativos, o Nipponic oferece uma experiência fluida de imersão e retenção de vocabulário.
+
+---
+
+## 🏛️ Arquitetura do Sistema
+
+O projeto é estruturado como um **Monorepo** gerenciado via Turborepo, garantindo isolamento de pacotes, reaproveitamento de componentes e tipagem estrita de ponta a ponta.
+
+```mermaid
+graph TD
+    subgraph Client [Camada de Apresentação]
+        Web[App Web - Next.js 15 / React]
+        Docs[Documentação - Next.js]
+    end
+
+    subgraph Core [Pacotes Compartilhados]
+        UI[Design System - Tailwind / Componentes]
+        Types[Tipos & Configurações TS / ESLint]
+    end
+
+    subgraph Server [Camada de Serviços & Dados]
+        API[API Backend - Node.js / Express]
+        Supabase[(Supabase / PostgreSQL & SRS Engine)]
+    end
+
+    Web --> UI
+    Web --> API
+    Docs --> UI
+    API --> Supabase
 ```
 
-## What's inside?
+---
 
-This Turborepo includes the following packages/apps:
+## 🧰 Tecnologias Utilizadas
 
-### Apps and Packages
+O stack tecnológico foi escolhido priorizando escalabilidade, tipagem forte e excelente experiência de desenvolvimento:
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+* **Monorepo:** [Turborepo](https://turborepo.dev/) & [pnpm workspaces](https://pnpm.io/)
+* **Frontend:** [Next.js 15](https://nextjs.org/), [React](https://react.dev/), [Tailwind CSS](https://tailwindcss.com/)
+* **Backend:** [Node.js](https://nodejs.org/), [Express](https://expressjs.com/), [TypeScript](https://www.typescriptlang.org/)
+* **Banco de Dados & Auth:** [Supabase](https://supabase.com/) (PostgreSQL + Row Level Security)
+* **Qualidade de Código:** [ESLint](https://eslint.org/), [Prettier](https://prettier.io/)
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+---
 
-### Utilities
+## 🚀 Começando (Desenvolvimento Local)
 
-This Turborepo has some additional tools already setup for you:
+### Pré-requisitos
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+Certifique-se de ter as seguintes ferramentas instaladas em sua máquina:
+* [Node.js](https://nodejs.org/) (versão 18 ou superior)
+* [pnpm](https://pnpm.io/) (versão 9 ou superior recomendada)
+* [Git](https://git-scm.com/)
 
-### Build
+### 1. Clonando o Repositório
 
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+```bash
+git clone https://github.com/seu-usuario/nipponic.git
+cd nipponic
 ```
 
-Without global `turbo`, use your package manager:
+### 2. Instalando as Dependências
 
-```sh
-cd my-turborepo
-npx turbo build
-pnpm dlx turbo build
-pnpm exec turbo build
+Instale todas as dependências do monorepo executando:
+
+```bash
+pnpm install
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+### 3. Configurando as Variáveis de Ambiente
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+Crie os arquivos `.env.local` e `.env` necessários baseando-se nos exemplos de cada app (`apps/web`, `apps/api`) e configure suas chaves do Supabase e variáveis do backend.
 
-```sh
-turbo build --filter=docs
+### 4. Executando em Modo de Desenvolvimento
+
+Para rodar todos os aplicativos e pacotes simultaneamente via Turborepo:
+
+```bash
+pnpm dev
 ```
 
-Without global `turbo`:
+---
 
-```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+## 🐳 Executando com Docker
+
+O Nipponic suporta containerização para facilitar o deploy e homologação em ambientes isolados.
+
+```bash
+# Construir e subir os containers do projeto
+docker compose up --build -d
 ```
 
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
+Para encerrar os serviços:
+```bash
+docker compose down
 ```
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
-```
+## 🛠️ Comandos Úteis do Turborepo
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+| Comando | Descrição |
+| :--- | :--- |
+| `pnpm dev` | Inicia todos os aplicativos em modo de desenvolvimento |
+| `pnpm build` | Compila todos os pacotes e aplicativos do monorepo |
+| `pnpm lint` | Executa o linter em todo o código-fonte |
+| `pnpm format` | Formata o código utilizando o Prettier |
+| `pnpm check-types` | Executa a verificação estática de tipos TypeScript |
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+---
 
-```sh
-turbo dev --filter=web
-```
+## 🤝 Guia de Contribuição
 
-Without global `turbo`:
+Contribuições são sempre bem-vindas! Se você deseja ajudar a melhorar o Nipponic:
 
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+1. Faça um **Fork** do projeto.
+2. Crie uma branch para a sua feature (`git checkout -b feature/nova-funcionalidade`).
+3. Faça o commit das suas alterações (`git commit -m 'feat: adiciona nova funcionalidade x'`).
+4. Faça o **Push** para a branch (`git push origin feature/nova-funcionalidade`).
+5. Abra um **Pull Request**.
 
-### Remote Caching
+Por favor, certifique-se de que o código passa nos testes de lint e build (`pnpm build` e `pnpm lint`) antes de submeter o PR.
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+---
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+## 📄 Licença
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
-
-# nipponic
-
-# nipponic
-
-# nipponic
+Este projeto está sob a licença [MIT](LICENSE). Veja o arquivo de licença para mais detalhes.
