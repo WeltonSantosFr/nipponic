@@ -17,5 +17,12 @@
       "cache": false,
       "persistent": true
     }
+  },
+  "pipeline" : {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**"],
+      "env": ["DEEPL_AUTH_KEY", "DATABASE_URL"]
+    }
   }
 }
