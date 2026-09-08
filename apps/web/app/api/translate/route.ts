@@ -14,10 +14,24 @@ export async function POST(request: Request) {
 
     const parsedData = TranslateRequestSchema.parse(body);
 
+    const sourceLangCode =
+      parsedData.sourceLang === "JA"
+        ? ("ja" as const)
+        : parsedData.sourceLang === "PT"
+        ? ("pt" as const)
+        : ("en" as const);
+
+    const targetLangCode =
+      parsedData.targetLang === "EN"
+        ? ("en-US" as const)
+        : parsedData.targetLang === "PT"
+        ? ("pt-BR" as const)
+        : ("ja" as const);
+
     const result = await translator.translateText(
       parsedData.text,
-      parsedData.sourceLang === "EN" ? "en" : "pt",
-      "ja",
+      sourceLangCode,
+      targetLangCode
     );
 
     let translatedText = result.text;
@@ -29,23 +43,29 @@ export async function POST(request: Request) {
         const targetTerm = rule.targetTerm.trim();
         if (!sourceTerm || !targetTerm) continue;
 
-        const enRegex = new RegExp(`\\b${escapeRegExp(sourceTerm)}\\b`, "i");
-        if (enRegex.test(parsedData.text)) {
+        // Check forward match (sourceTerm in input text)
+        const isMatched =
+          sourceLangCode === "ja"
+            ? parsedData.text.includes(sourceTerm)
+            : new RegExp(`\\b${escapeRegExp(sourceTerm)}\\b`, "i").test(
+                parsedData.text
+              );
+
+        if (isMatched) {
           try {
-            // Find default translation of the specific source term to replace it in context
             const singleTermResult = await translator.translateText(
               sourceTerm,
-              "en",
-              "ja"
+              sourceLangCode,
+              targetLangCode
             );
-            const defaultJpTerm = singleTermResult.text.trim();
+            const defaultTargetTerm = singleTermResult.text.trim();
             if (
-              defaultJpTerm &&
-              translatedText.includes(defaultJpTerm) &&
-              defaultJpTerm !== targetTerm
+              defaultTargetTerm &&
+              translatedText.includes(defaultTargetTerm) &&
+              defaultTargetTerm !== targetTerm
             ) {
               translatedText = translatedText.replaceAll(
-                defaultJpTerm,
+                defaultTargetTerm,
                 targetTerm
               );
             }

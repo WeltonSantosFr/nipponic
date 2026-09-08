@@ -15,16 +15,17 @@ model User {
 }
 
 model Note {
-  id        String   @id @default(uuid())
-  title     String
-  enText    String
-  jpText    String
+  id         String   @id @default(uuid())
+  title      String
+  enText     String
+  jpText     String
+  sourceLang String   @default("EN")
   
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  createdAt DateTime @default(now())
-  updatedAt temporal.updatedAt()
+  createdAt  DateTime @default(now())
+  updatedAt  temporal.updatedAt()
 }
 
 model Card {

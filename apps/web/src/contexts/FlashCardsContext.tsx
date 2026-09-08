@@ -7,9 +7,12 @@ import {
   useEffect,
   useCallback,
   useRef,
+  useMemo,
   ReactNode,
 } from "react";
-import { Card, Deck } from "@nipponic/shared";
+import { Card, Deck, ReviewRating } from "@nipponic/shared";
+import { calculateNextReview, isCardDue } from "@/lib/srs";
+import { APP_DECKS } from "@/data/app-decks";
 import {
   getCardsAction,
   createCardAction,
@@ -18,6 +21,7 @@ import {
 } from "@/actions/cards";
 import {
   getDecksAction,
+  getPublicDecksAction,
   createDeckAction,
   updateDeckAction,
   deleteDeckAction,
@@ -28,25 +32,46 @@ import {
 import { useAuth } from "./AuthContext";
 
 export type SidebarViewMode = "notes" | "flashcards";
+export type DeckTabMode = "my" | "app" | "public";
 
 interface FlashCardsContextData {
   cards: Card[];
   decks: Deck[];
+  appDecks: Deck[];
+  publicDecks: Deck[];
+  activeDeckTab: DeckTabMode;
+  setActiveDeckTab: (tab: DeckTabMode) => void;
   selectedDeckId: string | null;
   selectedDeck: Deck | undefined;
+  isCurrentDeckOwner: boolean;
   setSelectedDeckId: (id: string | null) => void;
   activeSidebarView: SidebarViewMode;
   setActiveSidebarView: (view: SidebarViewMode) => void;
   playingDeck: Deck | null;
   startPlayingDeck: (deck: Deck) => void;
   stopPlayingDeck: () => void;
-  createCard: (data: { jpText: string; enText: string }) => Promise<Card | null>;
-  updateCard: (
-    id: string,
-    data: Partial<{ jpText: string; enText: string }>
+  createCard: (
+    data: {
+      jpText: string;
+      enText: string;
+      interval?: number;
+      easeFactor?: number;
+      repetitions?: number;
+      lapses?: number;
+      nextReviewAt?: string | null;
+      lastReviewedAt?: string | null;
+    },
+    deckId?: string
   ) => Promise<Card | null>;
+  updateCard: (id: string, data: Partial<Card>) => Promise<Card | null>;
   deleteCard: (id: string) => Promise<boolean>;
-  createDeck: (name?: string, cardIds?: string[]) => Promise<Deck | null>;
+  reviewCard: (cardId: string, rating: ReviewRating) => Promise<Card | null>;
+  getDueCards: (deckId?: string) => Card[];
+  createDeck: (
+    name?: string,
+    cardIds?: string[],
+    preloadedCards?: Card[]
+  ) => Promise<Deck | null>;
   updateDeck: (
     id: string,
     data: Partial<{ name: string; isPublic: boolean }>
@@ -55,6 +80,7 @@ interface FlashCardsContextData {
   addCardsToDeck: (deckId: string, cardIds: string[]) => Promise<void>;
   removeCardFromDeck: (deckId: string, cardId: string) => Promise<void>;
   reorderDeckCards: (deckId: string, cardIds: string[]) => Promise<void>;
+  addDeckToMyDecks: (deck: Deck) => Promise<Deck | null>;
   refreshAll: () => Promise<void>;
 }
 
@@ -66,6 +92,8 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
   const [cards, setCards] = useState<Card[]>([]);
   const [decks, setDecks] = useState<Deck[]>([]);
+  const [publicDecks, setPublicDecks] = useState<Deck[]>([]);
+  const [activeDeckTab, setActiveDeckTab] = useState<DeckTabMode>("my");
   const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
   const [activeSidebarView, setActiveSidebarView] =
     useState<SidebarViewMode>("notes");
@@ -76,23 +104,42 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
   const decksRef = useRef<Deck[]>(decks);
   decksRef.current = decks;
 
-  const selectedDeck = decks.find((d) => d.id === selectedDeckId);
+  const appDecks = APP_DECKS;
+
+  const selectedDeck = useMemo(() => {
+    if (!selectedDeckId) return undefined;
+    const myDeck = decks.find((d) => d.id === selectedDeckId);
+    if (myDeck) return myDeck;
+    const appDeck = appDecks.find((d) => d.id === selectedDeckId);
+    if (appDeck) return appDeck;
+    const pubDeck = publicDecks.find((d) => d.id === selectedDeckId);
+    if (pubDeck) return pubDeck;
+    return undefined;
+  }, [selectedDeckId, decks, appDecks, publicDecks]);
+
+  const isCurrentDeckOwner = useMemo(() => {
+    if (!selectedDeck) return false;
+    return decks.some((d) => d.id === selectedDeck.id);
+  }, [selectedDeck, decks]);
 
   const refreshAll = useCallback(async () => {
     if (isAuthenticated) {
       try {
-        const [fetchedCards, fetchedDecks] = await Promise.all([
+        const [fetchedCards, fetchedDecks, fetchedPublic] = await Promise.all([
           getCardsAction(),
           getDecksAction(),
+          getPublicDecksAction(),
         ]);
         setCards(fetchedCards || []);
         setDecks(fetchedDecks || []);
+        setPublicDecks(fetchedPublic || []);
       } catch (err) {
         console.error("Error fetching flash cards/decks:", err);
       }
     } else {
       setCards([]);
       setDecks([]);
+      setPublicDecks([]);
     }
   }, [isAuthenticated]);
 
@@ -108,20 +155,55 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
     setPlayingDeck(null);
   };
 
-  const createCard = async (data: {
-    jpText: string;
-    enText: string;
-  }): Promise<Card | null> => {
+  const getDueCards = useCallback(
+    (deckId?: string): Card[] => {
+      if (deckId) {
+        const deck = decksRef.current.find((d) => d.id === deckId);
+        if (!deck) return [];
+        return deck.cards.filter(isCardDue);
+      }
+      return cardsRef.current.filter(isCardDue);
+    },
+    []
+  );
+
+  const createCard = async (
+    data: {
+      jpText: string;
+      enText: string;
+      interval?: number;
+      easeFactor?: number;
+      repetitions?: number;
+      lapses?: number;
+      nextReviewAt?: string | null;
+      lastReviewedAt?: string | null;
+    },
+    deckId?: string
+  ): Promise<Card | null> => {
     const tempId = `temp-card-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const optimisticCard: Card = {
       id: tempId,
       jpText: data.jpText,
       enText: data.enText,
+      interval: data.interval ?? 0,
+      easeFactor: data.easeFactor ?? 2.5,
+      repetitions: data.repetitions ?? 0,
+      lapses: data.lapses ?? 0,
+      nextReviewAt: data.nextReviewAt ?? new Date().toISOString(),
+      lastReviewedAt: data.lastReviewedAt ?? null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
     setCards((prev) => [optimisticCard, ...prev]);
+
+    if (deckId) {
+      setDecks((prevDecks) =>
+        prevDecks.map((d) =>
+          d.id === deckId ? { ...d, cards: [optimisticCard, ...d.cards] } : d
+        )
+      );
+    }
 
     if (!isAuthenticated) return optimisticCard;
 
@@ -131,6 +213,22 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
         setCards((prev) =>
           prev.map((c) => (c.id === tempId ? created : c))
         );
+
+        if (deckId) {
+          setDecks((prevDecks) =>
+            prevDecks.map((d) =>
+              d.id === deckId
+                ? {
+                    ...d,
+                    cards: d.cards.map((c) => (c.id === tempId ? created : c)),
+                  }
+                : d
+            )
+          );
+          if (!deckId.startsWith("temp-")) {
+            await addCardsToDeckAction(deckId, [created.id]);
+          }
+        }
         return created;
       }
       return optimisticCard;
@@ -142,7 +240,7 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
 
   const updateCard = async (
     id: string,
-    data: Partial<{ jpText: string; enText: string }>
+    data: Partial<Card>
   ): Promise<Card | null> => {
     setCards((prev) =>
       prev.map((c) =>
@@ -175,6 +273,17 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const reviewCard = async (
+    cardId: string,
+    rating: ReviewRating
+  ): Promise<Card | null> => {
+    const card = cardsRef.current.find((c) => c.id === cardId);
+    if (!card) return null;
+
+    const srsData = calculateNextReview(card, rating);
+    return await updateCard(cardId, srsData);
+  };
+
   const deleteCard = async (id: string): Promise<boolean> => {
     setCards((prev) => prev.filter((c) => c.id !== id));
     // Remove from decks state
@@ -197,12 +306,14 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
 
   const createDeck = async (
     name = "New Deck",
-    cardIds: string[] = []
+    cardIds: string[] = [],
+    preloadedCards?: Card[]
   ): Promise<Deck | null> => {
     const tempId = `temp-deck-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    const selectedCards = cardsRef.current.filter((c) =>
-      cardIds.includes(c.id)
-    );
+    const selectedCards =
+      preloadedCards && preloadedCards.length > 0
+        ? preloadedCards
+        : cardsRef.current.filter((c) => cardIds.includes(c.id));
 
     const optimisticDeck: Deck = {
       id: tempId,
@@ -215,6 +326,7 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
 
     setDecks((prev) => [optimisticDeck, ...prev]);
     setSelectedDeckId(tempId);
+    setActiveDeckTab("my");
 
     if (!isAuthenticated) return optimisticDeck;
 
@@ -232,6 +344,35 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
       console.error("Error creating deck:", err);
       return null;
     }
+  };
+
+  const addDeckToMyDecks = async (sourceDeck: Deck): Promise<Deck | null> => {
+    const createdCards: Card[] = [];
+    const createdCardIds: string[] = [];
+
+    for (const card of sourceDeck.cards) {
+      const created = await createCard({
+        jpText: card.jpText,
+        enText: card.enText,
+      });
+      if (created) {
+        createdCards.push(created);
+        createdCardIds.push(created.id);
+      }
+    }
+
+    const createdDeck = await createDeck(
+      sourceDeck.name,
+      createdCardIds,
+      createdCards
+    );
+
+    if (createdDeck) {
+      setActiveDeckTab("my");
+      setSelectedDeckId(createdDeck.id);
+    }
+
+    return createdDeck;
   };
 
   const updateDeck = async (
@@ -368,8 +509,13 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
       value={{
         cards,
         decks,
+        appDecks,
+        publicDecks,
+        activeDeckTab,
+        setActiveDeckTab,
         selectedDeckId,
         selectedDeck,
+        isCurrentDeckOwner,
         setSelectedDeckId,
         activeSidebarView,
         setActiveSidebarView,
@@ -379,12 +525,15 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
         createCard,
         updateCard,
         deleteCard,
+        reviewCard,
+        getDueCards,
         createDeck,
         updateDeck,
         deleteDeck,
         addCardsToDeck,
         removeCardFromDeck,
         reorderDeckCards,
+        addDeckToMyDecks,
         refreshAll,
       }}
     >

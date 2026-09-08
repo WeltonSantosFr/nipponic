@@ -41,7 +41,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-3xl md:max-w-4xl h-[620px] max-h-[90vh] p-0 overflow-hidden flex flex-col gap-0 border-border/80">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-3xl md:max-w-4xl h-[620px] max-h-[90vh] p-0 overflow-hidden flex flex-col gap-0 border-border/80">
         <DialogHeader className="sr-only">
           <DialogTitle>Configurations</DialogTitle>
           <DialogDescription>
@@ -49,15 +49,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-1 h-full min-h-0 overflow-hidden">
+        <div className="flex flex-col sm:flex-row flex-1 h-full min-h-0 overflow-hidden">
           {/* Internal Sidebar */}
-          <aside className="w-48 sm:w-56 bg-muted/25 border-r border-border/70 flex flex-col p-3.5 gap-1 shrink-0">
-            <div className="flex items-center gap-2 px-2 py-2 mb-2 text-foreground font-semibold text-sm">
+          <aside className="w-full sm:w-56 bg-muted/25 border-b sm:border-b-0 sm:border-r border-border/70 flex flex-row sm:flex-col p-2.5 sm:p-3.5 gap-2 sm:gap-1 shrink-0 items-center sm:items-stretch">
+            <div className="flex items-center gap-2 px-2 py-1 sm:py-2 sm:mb-2 text-foreground font-semibold text-sm shrink-0">
               <Settings size={17} className="text-primary" />
               <span>Configurations</span>
             </div>
 
-            <nav className="space-y-1">
+            <nav className="flex flex-row sm:flex-col gap-1 w-full flex-1">
               <GlossarySidebarTab
                 isActive={activeTab === "glossary"}
                 onClick={() => setActiveTab("glossary")}
@@ -70,7 +70,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </aside>
 
           {/* Settings Main Content Area */}
-          <main className="flex-1 flex flex-col h-full min-h-0 overflow-y-auto p-6">
+          <main className="flex-1 flex flex-col h-full min-h-0 overflow-y-auto p-4 sm:p-6">
             {activeTab === "glossary" && <GlossarySettingsSection />}
             {activeTab === "flashcards" && <FlashCardsSettingsSection />}
           </main>
@@ -93,19 +93,19 @@ function GlossarySidebarTab({
     <button
       type="button"
       onClick={onClick}
-      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+      className={`flex-1 sm:w-full flex items-center justify-between px-2.5 py-1.5 sm:py-2 rounded-md text-xs font-medium transition-colors cursor-pointer ${
         isActive
           ? "bg-primary text-primary-foreground font-semibold shadow-xs"
           : "text-muted-foreground hover:bg-muted hover:text-foreground"
       }`}
     >
-      <div className="flex items-center gap-2">
-        <BookMarked size={15} />
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        <BookMarked size={14} />
         <span>Glossary</span>
       </div>
       <Badge
         variant={isActive ? "secondary" : "outline"}
-        className="text-[10px] px-1.5 py-0 h-4"
+        className="text-[10px] px-1.5 py-0 h-4 ml-1"
       >
         {rules.length}
       </Badge>
@@ -126,19 +126,19 @@ function FlashCardsSidebarTab({
     <button
       type="button"
       onClick={onClick}
-      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+      className={`flex-1 sm:w-full flex items-center justify-between px-2.5 py-1.5 sm:py-2 rounded-md text-xs font-medium transition-colors cursor-pointer ${
         isActive
           ? "bg-primary text-primary-foreground font-semibold shadow-xs"
           : "text-muted-foreground hover:bg-muted hover:text-foreground"
       }`}
     >
-      <div className="flex items-center gap-2">
-        <Layers size={15} />
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        <Layers size={14} />
         <span>Flash Cards</span>
       </div>
       <Badge
         variant={isActive ? "secondary" : "outline"}
-        className="text-[10px] px-1.5 py-0 h-4"
+        className="text-[10px] px-1.5 py-0 h-4 ml-1"
       >
         {cards.length}
       </Badge>
@@ -300,13 +300,13 @@ function GlossarySettingsSection() {
 
       {/* Search & Rules Count */}
       <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Saved Terms ({filteredRules.length}
             {searchQuery.trim() ? ` of ${rules.length}` : ""})
           </span>
 
-          <div className="relative w-48 sm:w-60">
+          <div className="relative w-full sm:w-60">
             <Search
               size={13}
               className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
@@ -316,7 +316,7 @@ function GlossarySettingsSection() {
               placeholder="Filter terms..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-7 pl-8 pr-7 text-xs rounded-md bg-muted/30 border-border/70"
+              className="h-7 pl-8 pr-7 text-xs rounded-md bg-muted/30 border-border/70 w-full"
             />
             {searchQuery && (
               <button
@@ -347,18 +347,18 @@ function GlossarySettingsSection() {
           filteredRules.map((rule) => (
             <div
               key={rule.id}
-              className={`flex items-center justify-between p-3 rounded-lg border transition-all text-xs ${
+              className={`flex items-center justify-between p-2.5 sm:p-3 rounded-lg border transition-all text-xs ${
                 editingId === rule.id
                   ? "bg-primary/5 border-primary shadow-xs"
                   : "bg-card text-card-foreground hover:border-border"
               }`}
             >
-              <div className="flex items-center gap-2.5 overflow-hidden">
-                <span className="font-semibold text-foreground truncate max-w-44 sm:max-w-56">
+              <div className="flex items-center gap-2 overflow-hidden min-w-0">
+                <span className="font-semibold text-foreground truncate max-w-[110px] sm:max-w-56">
                   {rule.sourceTerm}
                 </span>
-                <span className="text-muted-foreground font-mono">→</span>
-                <span className="font-bold text-primary truncate max-w-44 sm:max-w-56">
+                <span className="text-muted-foreground font-mono shrink-0">→</span>
+                <span className="font-bold text-primary truncate max-w-[110px] sm:max-w-56">
                   {rule.targetTerm}
                 </span>
               </div>
@@ -551,13 +551,13 @@ function FlashCardsSettingsSection() {
 
       {/* Search & Cards Count */}
       <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Arsenal Cards ({filteredCards.length}
             {searchQuery.trim() ? ` of ${cards.length}` : ""})
           </span>
 
-          <div className="relative w-48 sm:w-60">
+          <div className="relative w-full sm:w-60">
             <Search
               size={13}
               className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
@@ -567,7 +567,7 @@ function FlashCardsSettingsSection() {
               placeholder="Search Japanese or English..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-7 pl-8 pr-7 text-xs rounded-md bg-muted/30 border-border/70"
+              className="h-7 pl-8 pr-7 text-xs rounded-md bg-muted/30 border-border/70 w-full"
             />
             {searchQuery && (
               <button
@@ -598,29 +598,29 @@ function FlashCardsSettingsSection() {
           filteredCards.map((card) => (
             <div
               key={card.id}
-              className={`flex items-center justify-between p-3 rounded-lg border transition-all text-xs ${
+              className={`flex items-center justify-between p-2.5 sm:p-3 rounded-lg border transition-all text-xs ${
                 editingId === card.id
                   ? "bg-primary/5 border-primary shadow-xs"
                   : "bg-card text-card-foreground hover:border-border"
               }`}
             >
-              <div className="flex items-center gap-2.5 overflow-hidden">
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="font-bold text-foreground font-japanese text-sm truncate max-w-36 sm:max-w-48">
+              <div className="flex items-center gap-2 overflow-hidden min-w-0">
+                <div className="flex items-center gap-1 shrink-0 max-w-[120px] sm:max-w-48">
+                  <span className="font-bold text-foreground font-japanese text-xs sm:text-sm truncate">
                     {card.jpText}
                   </span>
                   <button
                     type="button"
                     onClick={() => speak(card.jpText, "ja-JP")}
                     disabled={isPlaying}
-                    className="p-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                    className="p-0.5 sm:p-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer shrink-0"
                     title="Pronounce Japanese"
                   >
-                    <Volume2 size={14} />
+                    <Volume2 size={13} />
                   </button>
                 </div>
-                <span className="text-muted-foreground font-mono">→</span>
-                <span className="font-medium text-muted-foreground truncate max-w-40 sm:max-w-56">
+                <span className="text-muted-foreground font-mono shrink-0">→</span>
+                <span className="font-medium text-muted-foreground truncate max-w-[110px] sm:max-w-56">
                   {card.enText}
                 </span>
               </div>

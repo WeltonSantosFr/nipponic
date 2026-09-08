@@ -27,6 +27,29 @@ export async function getDecksAction(): Promise<Deck[]> {
   }
 }
 
+export async function getPublicDecksAction(): Promise<Deck[]> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("nipponic.token")?.value;
+
+  if (!token) return [];
+
+  try {
+    const res = await fetch(`${API_URL}/decks/public`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+
+    if (!res.ok) return [];
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching public decks:", error);
+    return [];
+  }
+}
+
 export async function getDeckAction(id: string): Promise<Deck | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("nipponic.token")?.value;

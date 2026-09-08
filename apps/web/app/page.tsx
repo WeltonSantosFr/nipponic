@@ -7,6 +7,7 @@ const INITIAL_NOTES: Note[] = [
     title: "Today's diary",
     enText: "Today the day was sunny. I went walking on the park.",
     jpText: "今日は晴れていました。公園を散歩してきました。",
+    sourceLang: "EN",
     updatedAt: "10:30",
   },
   {
@@ -14,6 +15,7 @@ const INITIAL_NOTES: Note[] = [
     title: "Restaurant phrases",
     enText: "One water please. The tab please.",
     jpText: "お水をください。お会計をお願いします。",
+    sourceLang: "EN",
     updatedAt: "08:15",
   },
   {
@@ -21,6 +23,7 @@ const INITIAL_NOTES: Note[] = [
     title: "JLPT N5 Vocab",
     enText: "Study kanji of time and directions.",
     jpText: "時間と方向の漢字を勉強する。",
+    sourceLang: "JA",
     updatedAt: "Yesterday",
   },
 ];

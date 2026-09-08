@@ -62,31 +62,19 @@ export class DecksService {
 
   async findAll(userId: string) {
     const decks = await this.prisma.db.orm.public.Deck.where({ userId }).all();
-    const userCards = await this.prisma.db.orm.public.Card.where({
-      userId,
+    return await Promise.all(decks.map((deck) => this.populateDeckCards(deck)));
+  }
+
+  async findPublic(currentUserId?: string) {
+    const allPublicDecks = await this.prisma.db.orm.public.Deck.where({
+      isPublic: true,
     }).all();
-    const cardsMap = new Map(userCards.map((c) => [c.id, c]));
 
-    const populated = await Promise.all(
-      decks.map(async (deck) => {
-        const deckCards = await this.prisma.db.orm.public.DeckCard.where({
-          deckId: deck.id,
-        }).all();
+    const decks = currentUserId
+      ? allPublicDecks.filter((d) => d.userId !== currentUserId)
+      : allPublicDecks;
 
-        deckCards.sort((a, b) => a.order - b.order);
-
-        const cards = deckCards
-          .map((dc) => cardsMap.get(dc.cardId))
-          .filter((c): c is NonNullable<typeof c> => !!c);
-
-        return {
-          ...deck,
-          cards,
-        };
-      })
-    );
-
-    return populated;
+    return await Promise.all(decks.map((deck) => this.populateDeckCards(deck)));
   }
 
   async findOne(userId: string, id: string) {

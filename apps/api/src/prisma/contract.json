@@ -355,6 +355,13 @@
                   "kind": "scalar"
                 }
               },
+              "sourceLang": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "title": {
                 "nullable": false,
                 "type": {
@@ -407,6 +414,9 @@
                 },
                 "jpText": {
                   "column": "jpText"
+                },
+                "sourceLang": {
+                  "column": "sourceLang"
                 },
                 "title": {
                   "column": "title"
@@ -821,6 +831,15 @@
                   "nativeType": "text",
                   "nullable": false
                 },
+                "sourceLang": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "EN"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
                 "title": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -936,7 +955,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "e3abe91048d3fba6f52e97e2e42e5968bcca4c6925d3eb6f1b61633e0bb27974"
+    "storageHash": "896bdf4a7e7e969ce8c4d079fd50768a63d27681f3e62fa048aa3ac8556e2ac2"
   },
   "execution": {
     "executionHash": "45ca6bf895649932b0b091c8c6773a7ecef0006e0d3c4624d8380f78c744c93d",

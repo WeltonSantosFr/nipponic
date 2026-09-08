@@ -31,6 +31,7 @@ export async function createNoteAction(note: {
   title: string;
   enText: string;
   jpText: string;
+  sourceLang?: "EN" | "JA";
 }): Promise<Note | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("nipponic.token")?.value;
@@ -64,6 +65,7 @@ export async function updateNoteAction(
     title: string;
     enText: string;
     jpText: string;
+    sourceLang: "EN" | "JA";
   }>
 ): Promise<Note | null> {
   const cookieStore = await cookies();

@@ -44,6 +44,12 @@ export class DecksController {
     return this.decksService.findAll(user.sub);
   }
 
+  @Get("public")
+  @UseGuards(AuthGuard)
+  findPublic(@CurrentUser() user: JwtPayload) {
+    return this.decksService.findPublic(user.sub);
+  }
+
   @Get(":id")
   @UseGuards(AuthGuard)
   findOne(@CurrentUser() user: JwtPayload, @Param("id") id: string) {

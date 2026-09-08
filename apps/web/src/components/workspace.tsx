@@ -49,7 +49,12 @@ export function Workspace({ initialNotes: _initialNotes }: WorkspaceProps = {}) 
   const [isTranslating, setIstranslating] = useState<boolean>(false);
 
   const handleTranslate = async () => {
-    if (!selectedNote?.enText.trim()) return;
+    if (!selectedNote) return;
+    const sourceLang = selectedNote.sourceLang || "EN";
+    const textToTranslate =
+      sourceLang === "JA" ? selectedNote.jpText : selectedNote.enText;
+
+    if (!textToTranslate.trim()) return;
     setIstranslating(true);
 
     try {
@@ -60,9 +65,9 @@ export function Workspace({ initialNotes: _initialNotes }: WorkspaceProps = {}) 
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          text: selectedNote.enText,
-          sourceLang: "EN",
-          targetLang: "JA",
+          text: textToTranslate,
+          sourceLang: sourceLang,
+          targetLang: sourceLang === "JA" ? "EN" : "JA",
           glossaryRules,
         }),
       });
@@ -73,8 +78,13 @@ export function Workspace({ initialNotes: _initialNotes }: WorkspaceProps = {}) 
       const translatedText = data.translatedText;
 
       if (translatedText) {
-        updateNoteContent(selectedNote.id, { jpText: translatedText });
-        await saveNote(selectedNote.id, { jpText: translatedText });
+        if (sourceLang === "JA") {
+          updateNoteContent(selectedNote.id, { enText: translatedText });
+          await saveNote(selectedNote.id, { enText: translatedText });
+        } else {
+          updateNoteContent(selectedNote.id, { jpText: translatedText });
+          await saveNote(selectedNote.id, { jpText: translatedText });
+        }
       }
     } catch (error) {
       console.error("Error on translating:", error);
@@ -90,21 +100,21 @@ export function Workspace({ initialNotes: _initialNotes }: WorkspaceProps = {}) 
         onSelectNote={(id) => setSelectedNoteId(id)}
       />
 
-      <SidebarInset className="flex flex-col min-h-screen">
-        <header className="flex h-14 items-center justify-between border-b px-6">
-          <div className="flex items-center gap-3">
+      <SidebarInset className="flex flex-col min-h-screen min-w-0 max-w-full overflow-x-hidden">
+        <header className="flex h-14 items-center justify-between border-b px-4 sm:px-6 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
             <SidebarTrigger />
             {activeSidebarView === "notes" ? (
               selectedNote && (
-                <span className="text-sm font-medium text-muted-foreground truncate max-w-sm">
+                <span className="text-sm font-medium text-muted-foreground truncate max-w-[180px] sm:max-w-sm">
                   {selectedNote.title}
                 </span>
               )
             ) : (
               selectedDeck && (
-                <span className="text-sm font-medium text-muted-foreground truncate max-w-sm flex items-center gap-1.5">
-                  <Layers size={15} className="text-primary" />
-                  {selectedDeck.name}
+                <span className="text-sm font-medium text-muted-foreground truncate max-w-[180px] sm:max-w-sm flex items-center gap-1.5">
+                  <Layers size={15} className="text-primary shrink-0" />
+                  <span className="truncate">{selectedDeck.name}</span>
                 </span>
               )
             )}
@@ -112,9 +122,9 @@ export function Workspace({ initialNotes: _initialNotes }: WorkspaceProps = {}) 
         </header>
 
         {activeSidebarView === "notes" ? (
-          <main className="flex-1 p-8 flex flex-col items-center justify-center">
+          <div className="flex-1 p-3 sm:p-6 md:p-8 flex flex-col items-center justify-start w-full min-w-0 max-w-full">
             {!selectedNote ? (
-              <Card className="w-full max-w-md text-center shadow-sm">
+              <Card className="w-full max-w-md text-center shadow-sm my-auto">
                 <CardHeader className="flex flex-col items-center">
                   <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
                     <BookOpen className="h-6 w-6 text-primary" />
@@ -132,7 +142,7 @@ export function Workspace({ initialNotes: _initialNotes }: WorkspaceProps = {}) 
                 </CardContent>
               </Card>
             ) : (
-              <div className="w-full max-w-3xl flex-1 flex flex-col gap-6 justify-start">
+              <div className="w-full max-w-3xl flex-1 flex flex-col gap-4 sm:gap-6 justify-start min-w-0">
                 <input
                   type="text"
                   value={selectedNote.title}
@@ -142,7 +152,7 @@ export function Workspace({ initialNotes: _initialNotes }: WorkspaceProps = {}) 
                   onBlur={() => {
                     saveNote(selectedNote.id);
                   }}
-                  className="text-3xl font-bold bg-transparent outline-none tracking-tight text-foreground border-b border-transparent focus:border-border pb-1"
+                  className="text-2xl sm:text-3xl font-bold bg-transparent outline-none tracking-tight text-foreground border-b border-transparent focus:border-border pb-1 w-full"
                   placeholder="Note title..."
                 />
 
@@ -162,16 +172,20 @@ export function Workspace({ initialNotes: _initialNotes }: WorkspaceProps = {}) 
                   onBlurJpContent={() => {
                     saveNote(selectedNote.id);
                   }}
+                  onChangeSourceLang={(newLang) => {
+                    updateNoteContent(selectedNote.id, { sourceLang: newLang });
+                    saveNote(selectedNote.id, { sourceLang: newLang });
+                  }}
                   isTranslating={isTranslating}
                   onTranslate={handleTranslate}
                 />
               </div>
             )}
-          </main>
+          </div>
         ) : (
-          <main className="flex-1 flex flex-col items-center justify-start">
+          <div className="flex-1 flex flex-col items-center justify-start w-full min-w-0 max-w-full">
             <DeckWorkspace deck={selectedDeck} />
-          </main>
+          </div>
         )}
       </SidebarInset>
 

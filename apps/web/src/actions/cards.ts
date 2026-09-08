@@ -30,6 +30,12 @@ export async function getCardsAction(): Promise<Card[]> {
 export async function createCardAction(card: {
   jpText: string;
   enText: string;
+  interval?: number;
+  easeFactor?: number;
+  repetitions?: number;
+  lapses?: number;
+  nextReviewAt?: string | null;
+  lastReviewedAt?: string | null;
 }): Promise<Card | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("nipponic.token")?.value;
@@ -59,10 +65,7 @@ export async function createCardAction(card: {
 
 export async function updateCardAction(
   id: string,
-  card: Partial<{
-    jpText: string;
-    enText: string;
-  }>
+  card: Partial<Card>
 ): Promise<Card | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("nipponic.token")?.value;

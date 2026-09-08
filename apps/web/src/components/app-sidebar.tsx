@@ -26,11 +26,14 @@ import { Note, Deck } from "@nipponic/shared";
 import {
   BookOpen,
   DoorOpen,
+  Globe,
   Layers,
+  Loader2,
   Play,
   Plus,
   Search,
   Settings,
+  Sparkles,
   Trash2,
   UserRound,
   X,
@@ -50,6 +53,10 @@ export function AppSidebar({
   const { notes, createNewNote, deleteNote } = useNotes();
   const {
     decks,
+    appDecks,
+    publicDecks,
+    activeDeckTab,
+    setActiveDeckTab,
     createDeck,
     deleteDeck,
     selectedDeckId,
@@ -57,10 +64,12 @@ export function AppSidebar({
     startPlayingDeck,
     activeSidebarView,
     setActiveSidebarView,
+    addDeckToMyDecks,
   } = useFlashCards();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [deckSearchQuery, setDeckSearchQuery] = useState("");
+  const [cloningDeckId, setCloningDeckId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
@@ -86,11 +95,24 @@ export function AppSidebar({
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase().trim();
     const titleMatch = (note.title || "").toLowerCase().includes(q);
-    const contentMatch = (note.enText || "").toLowerCase().includes(q);
-    return titleMatch || contentMatch;
+    const enMatch = (note.enText || "").toLowerCase().includes(q);
+    const jpMatch = (note.jpText || "").toLowerCase().includes(q);
+    return titleMatch || enMatch || jpMatch;
   });
 
-  const filteredDecks = decks.filter((deck) => {
+  const filteredMyDecks = decks.filter((deck) => {
+    if (!deckSearchQuery.trim()) return true;
+    const q = deckSearchQuery.toLowerCase().trim();
+    return (deck.name || "").toLowerCase().includes(q);
+  });
+
+  const filteredAppDecks = appDecks.filter((deck) => {
+    if (!deckSearchQuery.trim()) return true;
+    const q = deckSearchQuery.toLowerCase().trim();
+    return (deck.name || "").toLowerCase().includes(q);
+  });
+
+  const filteredPublicDecks = publicDecks.filter((deck) => {
     if (!deckSearchQuery.trim()) return true;
     const q = deckSearchQuery.toLowerCase().trim();
     return (deck.name || "").toLowerCase().includes(q);
@@ -210,13 +232,55 @@ export function AppSidebar({
           </>
         ) : (
           <>
-            <Button
-              onClick={() => createDeck("New Deck")}
-              className="w-full gap-1.5 cursor-pointer"
-            >
-              <Plus size={16} />
-              New Deck
-            </Button>
+            {/* 3-Tab Deck Switcher */}
+            <div className="flex p-0.5 bg-muted/60 rounded-lg border border-border/70 text-[11px] font-medium gap-0.5 w-full">
+              <button
+                type="button"
+                onClick={() => setActiveDeckTab("my")}
+                className={`flex-1 py-1.5 px-1 rounded-md transition-all cursor-pointer text-center truncate ${
+                  activeDeckTab === "my"
+                    ? "bg-background text-foreground shadow-xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                title={`My Decks (${decks.length})`}
+              >
+                My Decks ({decks.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveDeckTab("app")}
+                className={`flex-1 py-1.5 px-1 rounded-md transition-all cursor-pointer text-center truncate ${
+                  activeDeckTab === "app"
+                    ? "bg-background text-foreground shadow-xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                title="App Decks"
+              >
+                App Decks
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveDeckTab("public")}
+                className={`flex-1 py-1.5 px-1 rounded-md transition-all cursor-pointer text-center truncate ${
+                  activeDeckTab === "public"
+                    ? "bg-background text-foreground shadow-xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                title={`Public Decks (${publicDecks.length})`}
+              >
+                Public ({publicDecks.length})
+              </button>
+            </div>
+
+            {activeDeckTab === "my" ? (
+              <Button
+                onClick={() => createDeck("New Deck")}
+                className="w-full gap-1.5 cursor-pointer"
+              >
+                <Plus size={16} />
+                New Deck
+              </Button>
+            ) : null}
 
             {/* Deck Search Input */}
             <div className="relative w-full">
@@ -226,7 +290,13 @@ export function AppSidebar({
               />
               <Input
                 type="text"
-                placeholder="Search decks..."
+                placeholder={
+                  activeDeckTab === "my"
+                    ? "Search my decks..."
+                    : activeDeckTab === "app"
+                    ? "Search app decks..."
+                    : "Search public decks..."
+                }
                 value={deckSearchQuery}
                 onChange={(e) => setDeckSearchQuery(e.target.value)}
                 className="h-8 pl-8 pr-7 text-xs rounded-md bg-muted/40 border-border/60"
@@ -298,62 +368,159 @@ export function AppSidebar({
             </>
           )
         ) : (
-          /* Flash Cards Decks List */
+          /* Flash Cards Decks Area */
           <SidebarGroup>
-            <SidebarGroupLabel>
-              Decks ({filteredDecks.length})
-            </SidebarGroupLabel>
-            {filteredDecks.length === 0 ? (
-              <div className="p-6 text-center text-xs text-muted-foreground">
-                {deckSearchQuery.trim()
-                  ? `No decks matching "${deckSearchQuery}"`
-                  : "No decks yet. Click '+ New Deck' above to create one."}
-              </div>
-            ) : (
-              <SidebarMenu>
-                {filteredDecks.map((deck) => (
-                  <SidebarMenuItem key={deck.id} className="relative group/deck">
-                    <SidebarMenuButton
-                      isActive={selectedDeckId === deck.id}
-                      onClick={() => setSelectedDeckId(deck.id)}
-                      className="cursor-pointer pr-16"
-                    >
-                      <Layers size={16} />
-                      <span className="truncate">{deck.name || "Untitled Deck"}</span>
-                    </SidebarMenuButton>
-
-                    <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 z-10">
-                      {/* Badge or Play Button */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          startPlayingDeck(deck);
-                        }}
-                        title="Play deck"
-                        className="p-1 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+            {activeDeckTab === "my" && (
+              filteredMyDecks.length === 0 ? (
+                <div className="p-6 text-center text-xs text-muted-foreground">
+                  {deckSearchQuery.trim()
+                    ? `No decks matching "${deckSearchQuery}"`
+                    : "No decks yet. Click '+ New Deck' above to create one."}
+                </div>
+              ) : (
+                <SidebarMenu>
+                  {filteredMyDecks.map((deck) => (
+                    <SidebarMenuItem key={deck.id} className="relative group/deck">
+                      <SidebarMenuButton
+                        isActive={selectedDeckId === deck.id}
+                        onClick={() => setSelectedDeckId(deck.id)}
+                        className="cursor-pointer pr-16"
                       >
-                        <Play size={13} className="fill-current" />
-                        <span className="sr-only">Play deck</span>
-                      </button>
+                        <Layers size={16} />
+                        <span className="truncate">{deck.name || "Untitled Deck"}</span>
+                      </SidebarMenuButton>
 
-                      {/* Delete Button */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeckToDelete(deck);
-                        }}
-                        title="Delete deck"
-                        className="p-1 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                      <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 z-10">
+                        {/* Play Button */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startPlayingDeck(deck);
+                          }}
+                          title="Play deck"
+                          className="p-1 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                        >
+                          <Play size={13} className="fill-current" />
+                          <span className="sr-only">Play deck</span>
+                        </button>
+
+                        {/* Delete Button */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeckToDelete(deck);
+                          }}
+                          title="Delete deck"
+                          className="p-1 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                        >
+                          <Trash2 size={13} />
+                          <span className="sr-only">Delete deck</span>
+                        </button>
+                      </div>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              )
+            )}
+
+            {activeDeckTab === "app" && (
+              filteredAppDecks.length === 0 ? (
+                <div className="p-6 text-center text-xs text-muted-foreground">
+                  No app decks found
+                </div>
+              ) : (
+                <SidebarMenu>
+                  {filteredAppDecks.map((deck) => (
+                    <SidebarMenuItem key={deck.id} className="relative group/deck">
+                      <SidebarMenuButton
+                        isActive={selectedDeckId === deck.id}
+                        onClick={() => setSelectedDeckId(deck.id)}
+                        className="cursor-pointer pr-10"
                       >
-                        <Trash2 size={13} />
-                        <span className="sr-only">Delete deck</span>
-                      </button>
-                    </div>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
+                        <Layers size={16} className="text-primary shrink-0" />
+                        <span className="truncate flex-1 text-left">{deck.name}</span>
+                        <span className="text-[10px] text-muted-foreground shrink-0 mr-6">
+                          {deck.cards.length}
+                        </span>
+                      </SidebarMenuButton>
+
+                      <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 z-10">
+                        <button
+                          type="button"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            setCloningDeckId(deck.id);
+                            await addDeckToMyDecks(deck);
+                            setCloningDeckId(null);
+                          }}
+                          disabled={cloningDeckId === deck.id}
+                          title="Add to My Decks"
+                          className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                        >
+                          {cloningDeckId === deck.id ? (
+                            <Loader2 size={14} className="animate-spin text-primary" />
+                          ) : (
+                            <Plus size={15} />
+                          )}
+                          <span className="sr-only">Add to My Decks</span>
+                        </button>
+                      </div>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              )
+            )}
+
+            {activeDeckTab === "public" && (
+              filteredPublicDecks.length === 0 ? (
+                <div className="p-6 text-center text-xs text-muted-foreground">
+                  {deckSearchQuery.trim()
+                    ? `No public decks matching "${deckSearchQuery}"`
+                    : "No public decks from other users available yet."}
+                </div>
+              ) : (
+                <SidebarMenu>
+                  {filteredPublicDecks.map((deck) => (
+                    <SidebarMenuItem key={deck.id} className="relative group/deck">
+                      <SidebarMenuButton
+                        isActive={selectedDeckId === deck.id}
+                        onClick={() => setSelectedDeckId(deck.id)}
+                        className="cursor-pointer pr-10"
+                      >
+                        <Globe size={16} className="text-blue-500 shrink-0" />
+                        <span className="truncate flex-1 text-left">{deck.name}</span>
+                        <span className="text-[10px] text-muted-foreground shrink-0 mr-6">
+                          {deck.cards.length}
+                        </span>
+                      </SidebarMenuButton>
+
+                      <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 z-10">
+                        <button
+                          type="button"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            setCloningDeckId(deck.id);
+                            await addDeckToMyDecks(deck);
+                            setCloningDeckId(null);
+                          }}
+                          disabled={cloningDeckId === deck.id}
+                          title="Add to My Decks"
+                          className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                        >
+                          {cloningDeckId === deck.id ? (
+                            <Loader2 size={14} className="animate-spin text-primary" />
+                          ) : (
+                            <Plus size={15} />
+                          )}
+                          <span className="sr-only">Add to My Decks</span>
+                        </button>
+                      </div>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              )
             )}
           </SidebarGroup>
         )}

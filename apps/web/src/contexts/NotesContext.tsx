@@ -24,11 +24,11 @@ interface NotesContextData {
   createNewNote: () => Promise<Note>;
   updateNoteContent: (
     id: string,
-    updates: Partial<Pick<Note, "title" | "enText" | "jpText">>
+    updates: Partial<Pick<Note, "title" | "enText" | "jpText" | "sourceLang">>
   ) => void;
   saveNote: (
     id: string,
-    extraUpdates?: Partial<Pick<Note, "title" | "enText" | "jpText">>
+    extraUpdates?: Partial<Pick<Note, "title" | "enText" | "jpText" | "sourceLang">>
   ) => Promise<void>;
   deleteNote: (id: string) => Promise<void>;
   refreshNotes: () => Promise<void>;
@@ -71,6 +71,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       title: "Untitled Note",
       enText: "",
       jpText: "",
+      sourceLang: "EN",
       updatedAt: new Date().toISOString(),
     };
 
@@ -86,6 +87,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
             title: newNote.title,
             enText: newNote.enText,
             jpText: newNote.jpText,
+            sourceLang: newNote.sourceLang,
           });
 
           if (created && created.id) {
@@ -126,7 +128,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
 
   const updateNoteContent = (
     id: string,
-    updates: Partial<Pick<Note, "title" | "enText" | "jpText">>
+    updates: Partial<Pick<Note, "title" | "enText" | "jpText" | "sourceLang">>
   ) => {
     setNotes((prevNotes) =>
       prevNotes.map((note) =>
@@ -143,7 +145,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
 
   const saveNote = async (
     id: string,
-    extraUpdates?: Partial<Pick<Note, "title" | "enText" | "jpText">>
+    extraUpdates?: Partial<Pick<Note, "title" | "enText" | "jpText" | "sourceLang">>
   ) => {
     if (!isAuthenticated) return;
 
@@ -173,6 +175,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       title: extraUpdates?.title ?? currentNote.title,
       enText: extraUpdates?.enText ?? currentNote.enText,
       jpText: extraUpdates?.jpText ?? currentNote.jpText,
+      sourceLang: extraUpdates?.sourceLang ?? currentNote.sourceLang ?? "EN",
     };
 
     try {
