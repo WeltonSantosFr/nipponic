@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,9 @@ import {
   Check,
   Layers,
   Volume2,
+  Sun,
+  Moon,
+  Palette,
 } from "lucide-react";
 
 interface SettingsModalProps {
@@ -34,7 +38,7 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-type SettingsTab = "glossary" | "flashcards";
+type SettingsTab = "glossary" | "flashcards" | "appearance";
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>("glossary");
@@ -66,6 +70,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 isActive={activeTab === "flashcards"}
                 onClick={() => setActiveTab("flashcards")}
               />
+              <AppearanceSidebarTab
+                isActive={activeTab === "appearance"}
+                onClick={() => setActiveTab("appearance")}
+              />
             </nav>
           </aside>
 
@@ -73,6 +81,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           <main className="flex-1 flex flex-col h-full min-h-0 overflow-y-auto p-4 sm:p-6">
             {activeTab === "glossary" && <GlossarySettingsSection />}
             {activeTab === "flashcards" && <FlashCardsSettingsSection />}
+            {activeTab === "appearance" && <AppearanceSettingsSection />}
           </main>
         </div>
       </DialogContent>
@@ -141,6 +150,39 @@ function FlashCardsSidebarTab({
         className="text-[10px] px-1.5 py-0 h-4 ml-1"
       >
         {cards.length}
+      </Badge>
+    </button>
+  );
+}
+
+function AppearanceSidebarTab({
+  isActive,
+  onClick,
+}: {
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  const { theme } = useTheme();
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex-1 sm:w-full flex items-center justify-between px-2.5 py-1.5 sm:py-2 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+        isActive
+          ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+      }`}
+    >
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        <Palette size={14} />
+        <span>Appearance</span>
+      </div>
+      <Badge
+        variant={isActive ? "secondary" : "outline"}
+        className="text-[10px] px-1.5 py-0 h-4 ml-1 capitalize"
+      >
+        {theme || "Dark"}
       </Badge>
     </button>
   );
@@ -653,6 +695,123 @@ function FlashCardsSettingsSection() {
             </div>
           ))
         )}
+      </div>
+    </div>
+  );
+}
+
+function AppearanceSettingsSection() {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
+  const currentTheme = theme || "dark";
+
+  return (
+    <div className="flex flex-col h-full gap-6">
+      {/* Header */}
+      <div>
+        <div className="flex items-center gap-2">
+          <Palette className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-bold tracking-tight">Theme & Appearance</h2>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          Select your preferred visual style for Nipponic. Choose between Light and Dark mode.
+        </p>
+      </div>
+
+      {/* Theme Selection Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Light Theme Option */}
+        <div
+          onClick={() => setTheme("light")}
+          className={`relative p-5 rounded-xl border-2 transition-all cursor-pointer flex flex-col gap-3 group ${
+            currentTheme === "light"
+              ? "border-primary bg-primary/[0.04] shadow-sm"
+              : "border-border/80 hover:border-border hover:bg-muted/30"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-lg bg-amber-500/15 text-amber-600 flex items-center justify-center">
+                <Sun size={18} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-foreground">Light Mode</h3>
+                <p className="text-[11px] text-muted-foreground">Clear, high-contrast look</p>
+              </div>
+            </div>
+
+            <div
+              className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors ${
+                currentTheme === "light"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-muted-foreground/40"
+              }`}
+            >
+              {currentTheme === "light" && <Check size={12} strokeWidth={3} />}
+            </div>
+          </div>
+
+          {/* Light Mode Mock Preview */}
+          <div className="rounded-lg border border-zinc-200 bg-white p-3 space-y-2 select-none shadow-xs">
+            <div className="flex items-center justify-between">
+              <div className="h-2.5 w-16 bg-zinc-800 rounded" />
+              <div className="h-2 w-8 bg-emerald-600 rounded-full" />
+            </div>
+            <div className="h-2 w-full bg-zinc-200 rounded" />
+            <div className="h-2 w-3/4 bg-zinc-100 rounded" />
+          </div>
+        </div>
+
+        {/* Dark Theme Option */}
+        <div
+          onClick={() => setTheme("dark")}
+          className={`relative p-5 rounded-xl border-2 transition-all cursor-pointer flex flex-col gap-3 group ${
+            currentTheme === "dark"
+              ? "border-primary bg-primary/[0.04] shadow-sm"
+              : "border-border/80 hover:border-border hover:bg-muted/30"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-lg bg-indigo-500/15 text-indigo-400 flex items-center justify-center">
+                <Moon size={18} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-foreground">Dark Mode</h3>
+                <p className="text-[11px] text-muted-foreground">Gentle on the eyes at night</p>
+              </div>
+            </div>
+
+            <div
+              className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors ${
+                currentTheme === "dark"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-muted-foreground/40"
+              }`}
+            >
+              {currentTheme === "dark" && <Check size={12} strokeWidth={3} />}
+            </div>
+          </div>
+
+          {/* Dark Mode Mock Preview */}
+          <div className="rounded-lg border border-zinc-700 bg-zinc-900 p-3 space-y-2 select-none shadow-xs">
+            <div className="flex items-center justify-between">
+              <div className="h-2.5 w-16 bg-zinc-100 rounded" />
+              <div className="h-2 w-8 bg-emerald-500 rounded-full" />
+            </div>
+            <div className="h-2 w-full bg-zinc-800 rounded" />
+            <div className="h-2 w-3/4 bg-zinc-700 rounded" />
+          </div>
+        </div>
       </div>
     </div>
   );
