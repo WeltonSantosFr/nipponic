@@ -1,9 +1,7 @@
-export interface CreateCardDto {
-  jpText: string;
-  enText: string;
-}
+export type {
+  ReviewRating,
+  ReviewCardDto,
+  CreateCardDto,
+  UpdateCardDto,
+} from "@nipponic/shared";
 
-export interface UpdateCardDto {
-  jpText?: string;
-  enText?: string;
-}

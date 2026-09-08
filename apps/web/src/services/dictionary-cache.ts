@@ -1,10 +1,6 @@
-export interface DictionaryData {
-  reading: string;
-  meanings: string[];
-  jlpt: string | null;
-  isCommon: boolean;
-  isCustom?: boolean;
-}
+import type { DictionaryData } from "@nipponic/shared";
+
+export type { DictionaryData };
 
 const STORAGE_KEY = "nipponic:dict_cache_v1";
 const CUSTOM_STORAGE_KEY = "nipponic:custom_dict_v1";

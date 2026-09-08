@@ -5,18 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, BookOpen, Layers, Volume2 } from "lucide-react";
 import { useSpeech } from "@/hooks/use-speech";
 
-export interface KanjiInfo {
-  kanji: string;
-  grade: number | null;
-  strokeCount: number;
-  meanings: string[];
-  kunReadings: string[];
-  onReadings: string[];
-  nameReadings: string[];
-  jlpt: string | null;
-  unicode: string;
-  heisig: string | null;
-}
+import type { KanjiInfo } from "@nipponic/shared";
+
+export type { KanjiInfo };
 
 interface KanjiBreakdownProps {
   word: string;

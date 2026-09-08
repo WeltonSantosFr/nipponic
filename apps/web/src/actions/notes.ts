@@ -1,6 +1,6 @@
 "use server";
 import { cookies } from "next/headers";
-import { Note } from "@nipponic/shared";
+import { Note, CreateNoteInput, UpdateNoteInput } from "@nipponic/shared";
 
 const API_URL = process.env.API_URL || "http://localhost:3001";
 
@@ -27,12 +27,7 @@ export async function getNotesAction(): Promise<Note[]> {
   }
 }
 
-export async function createNoteAction(note: {
-  title: string;
-  enText: string;
-  jpText: string;
-  sourceLang?: "EN" | "JA";
-}): Promise<Note | null> {
+export async function createNoteAction(note: CreateNoteInput): Promise<Note | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("nipponic.token")?.value;
 
@@ -61,12 +56,7 @@ export async function createNoteAction(note: {
 
 export async function updateNoteAction(
   id: string,
-  note: Partial<{
-    title: string;
-    enText: string;
-    jpText: string;
-    sourceLang: "EN" | "JA";
-  }>
+  note: UpdateNoteInput
 ): Promise<Note | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("nipponic.token")?.value;

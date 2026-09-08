@@ -1,6 +1,4 @@
-export interface Note {
-  title: string;
-  enText: string;
-  jpText: string;
-  sourceLang?: "EN" | "JA" | string;
-}
+import type { CreateNoteDto, UpdateNoteDto } from "@nipponic/shared";
+
+export type { CreateNoteDto, UpdateNoteDto };
+export type Note = CreateNoteDto;

@@ -18,13 +18,8 @@ import type {
   AddCardsDto,
   ReorderCardsDto,
 } from "./decks.dto";
+import type { JwtPayload } from "@nipponic/shared";
 import { CurrentUser } from "../auth/current-user.decorator";
-
-interface JwtPayload {
-  sub: string;
-  email: string;
-  username: string;
-}
 
 @Controller("decks")
 export class DecksController {

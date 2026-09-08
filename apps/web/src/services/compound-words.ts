@@ -3,12 +3,9 @@ import { useEffect, useState } from "react";
 const COMPOUNDS_STORAGE_KEY = "nipponic:custom_compounds_v1";
 export const COMPOUNDS_UPDATE_EVENT = "nipponic:compounds_updated";
 
-export interface MergedToken {
-  surface_form: string;
-  reading?: string;
-  pos?: string;
-  isMerged?: boolean;
-}
+import type { MergedToken } from "@nipponic/shared";
+
+export type { MergedToken };
 
 export function getCustomCompounds(): string[] {
   if (typeof window === "undefined") return [];

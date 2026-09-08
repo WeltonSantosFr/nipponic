@@ -1,11 +1,10 @@
+import type { AuthResponse, LoginInput } from "@nipponic/shared";
+
 const API_URL = "http://localhost:3001";
 
-interface LoginProps {
-  email: string;
-  password: string;
-}
+export type LoginProps = LoginInput;
 
-export const login = async ({ email, password }: LoginProps) => {
+export const login = async ({ email, password }: LoginProps): Promise<AuthResponse> => {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: {

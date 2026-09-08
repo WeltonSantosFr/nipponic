@@ -1,6 +1,6 @@
 "use server";
 import { cookies } from "next/headers";
-import { Deck } from "@nipponic/shared";
+import { Deck, CreateDeckInput, UpdateDeckInput } from "@nipponic/shared";
 
 const API_URL = process.env.API_URL || "http://localhost:3001";
 
@@ -73,11 +73,7 @@ export async function getDeckAction(id: string): Promise<Deck | null> {
   }
 }
 
-export async function createDeckAction(deck: {
-  name: string;
-  isPublic?: boolean;
-  cardIds?: string[];
-}): Promise<Deck | null> {
+export async function createDeckAction(deck: CreateDeckInput): Promise<Deck | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("nipponic.token")?.value;
 
@@ -106,10 +102,7 @@ export async function createDeckAction(deck: {
 
 export async function updateDeckAction(
   id: string,
-  deck: Partial<{
-    name: string;
-    isPublic: boolean;
-  }>
+  deck: UpdateDeckInput
 ): Promise<Deck | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("nipponic.token")?.value;

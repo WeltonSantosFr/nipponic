@@ -1,6 +1,6 @@
 "use server";
 import { cookies } from "next/headers";
-import { Card } from "@nipponic/shared";
+import { Card, CreateCardInput, ReviewRating, UpdateCardInput } from "@nipponic/shared";
 
 const API_URL = process.env.API_URL || "http://localhost:3001";
 
@@ -27,16 +27,7 @@ export async function getCardsAction(): Promise<Card[]> {
   }
 }
 
-export async function createCardAction(card: {
-  jpText: string;
-  enText: string;
-  interval?: number;
-  easeFactor?: number;
-  repetitions?: number;
-  lapses?: number;
-  nextReviewAt?: string | null;
-  lastReviewedAt?: string | null;
-}): Promise<Card | null> {
+export async function createCardAction(card: CreateCardInput): Promise<Card | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("nipponic.token")?.value;
 
@@ -93,6 +84,36 @@ export async function updateCardAction(
   }
 }
 
+export async function reviewCardAction(
+  id: string,
+  rating: ReviewRating
+): Promise<Card | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("nipponic.token")?.value;
+
+  if (!token) return null;
+
+  try {
+    const res = await fetch(`${API_URL}/cards/${id}/review`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ rating }),
+    });
+
+    if (!res.ok) {
+      console.error("Failed to review card, status:", res.status);
+      return null;
+    }
+    return res.json();
+  } catch (error) {
+    console.error("Error reviewing card:", error);
+    return null;
+  }
+}
+
 export async function deleteCardAction(id: string): Promise<boolean> {
   const cookieStore = await cookies();
   const token = cookieStore.get("nipponic.token")?.value;
@@ -113,3 +134,4 @@ export async function deleteCardAction(id: string): Promise<boolean> {
     return false;
   }
 }
+

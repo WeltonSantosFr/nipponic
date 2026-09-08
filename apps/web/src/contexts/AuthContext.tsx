@@ -2,12 +2,9 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 import { saveAuthCookie, removeAuthCookie } from "../actions/auth";
 import { jwtDecode } from "jwt-decode";
+import type { UserPayload } from "@nipponic/shared";
 
-export interface UserPayload {
-  sub: string;
-  username: string;
-  email: string;
-}
+export type { UserPayload };
 
 interface AuthContextData {
   user: UserPayload | null;

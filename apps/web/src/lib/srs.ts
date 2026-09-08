@@ -1,15 +1,6 @@
-import { Card, ReviewRating } from "@nipponic/shared";
+import type { Card, CardSRSStage, ReviewRating, SRSResult } from "@nipponic/shared";
 
-export interface SRSResult {
-  interval: number; // in days
-  easeFactor: number;
-  repetitions: number;
-  lapses: number;
-  nextReviewAt: string;
-  lastReviewedAt: string;
-}
-
-export type CardSRSStage = "new" | "learning" | "review" | "mastered";
+export type { CardSRSStage, SRSResult };
 
 /**
  * Calculates next review parameters based on the SuperMemo-2 (SM-2) algorithm.
@@ -129,7 +120,7 @@ export function getCardSRSStage(card: Card): CardSRSStage {
 /**
  * Returns a friendly label for when a card is due
  */
-export function formatDueTime(nextReviewAt?: string | null): string {
+export function formatDueTime(nextReviewAt?: string | Date | null): string {
   if (!nextReviewAt) return "New (Due now)";
   const diffMs = new Date(nextReviewAt).getTime() - Date.now();
   if (diffMs <= 0) return "Due today";

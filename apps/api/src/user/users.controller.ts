@@ -12,14 +12,9 @@ import {
 
 import { UsersService } from "./users.service";
 import type { CreateUserDto, UpdateUserDto } from "./users.dto";
+import type { JwtPayload } from "@nipponic/shared";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
-
-interface JwtUserPayload {
-  sub: string;
-  email: string;
-  username: string;
-}
 
 @Controller("users")
 export class UsersController {
@@ -39,19 +34,19 @@ export class UsersController {
 
   @Get("me")
   @UseGuards(AuthGuard)
-  getMe(@CurrentUser() user: JwtUserPayload) {
+  getMe(@CurrentUser() user: JwtPayload) {
     return this.usersService.findOne(user.sub);
   }
 
   @Patch("me")
   @UseGuards(AuthGuard)
-  updateMe(@CurrentUser() user: JwtUserPayload, @Body() body: Partial<UpdateUserDto>) {
+  updateMe(@CurrentUser() user: JwtPayload, @Body() body: Partial<UpdateUserDto>) {
     return this.usersService.update(user.sub, body);
   }
 
   @Delete("me")
   @UseGuards(AuthGuard)
-  deleteMe(@CurrentUser() user: JwtUserPayload) {
+  deleteMe(@CurrentUser() user: JwtPayload) {
     return this.usersService.delete(user.sub);
   }
 

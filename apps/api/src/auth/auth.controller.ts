@@ -9,11 +9,9 @@ import {
   HttpStatus,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
+import type { LoginUserDto } from "@nipponic/shared";
 
-export interface LoginUserDto {
-  email: string;
-  password: string;
-}
+export type { LoginUserDto };
 
 @Controller("auth")
 export class AuthController {
