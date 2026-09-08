@@ -20,10 +20,10 @@ function createStaticCard(
   };
 }
 
-// 1. Hiragana Simples (46 Gojūon + 25 Dakuten/Handakuten = 71 Cards)
+// 1. Hiragana Basic (46 Gojūon + 25 Dakuten/Handakuten = 71 Cards)
 export const HIRAGANA_BASIC_DECK: Deck = {
   id: "app-deck-hiragana-basic",
-  name: "Hiragana (Básico)",
+  name: "Hiragana (Basic)",
   isPublic: true,
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-01T00:00:00.000Z",
@@ -131,10 +131,10 @@ export const HIRAGANA_BASIC_DECK: Deck = {
   ],
 };
 
-// 2. Hiragana Avançado (33 Yōon Compound Sounds)
+// 2. Hiragana Advanced (33 Yōon Compound Sounds)
 export const HIRAGANA_ADVANCED_DECK: Deck = {
   id: "app-deck-hiragana-advanced",
-  name: "Hiragana (Avançado)",
+  name: "Hiragana (Advanced)",
   isPublic: true,
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-01T00:00:00.000Z",
@@ -196,10 +196,10 @@ export const HIRAGANA_ADVANCED_DECK: Deck = {
   ],
 };
 
-// 3. Katakana Simples (46 Gojūon + 25 Dakuten/Handakuten = 71 Cards)
+// 3. Katakana Basic (46 Gojūon + 25 Dakuten/Handakuten = 71 Cards)
 export const KATAKANA_BASIC_DECK: Deck = {
   id: "app-deck-katakana-basic",
-  name: "Katakana (Básico)",
+  name: "Katakana (Basic)",
   isPublic: true,
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-01T00:00:00.000Z",
@@ -307,10 +307,10 @@ export const KATAKANA_BASIC_DECK: Deck = {
   ],
 };
 
-// 4. Katakana Avançado (33 Yōon + 17 Extended Foreign Sounds = 50 Cards)
+// 4. Katakana Advanced (33 Yōon + 17 Extended Foreign Sounds = 50 Cards)
 export const KATAKANA_ADVANCED_DECK: Deck = {
   id: "app-deck-katakana-advanced",
-  name: "Katakana (Avançado)",
+  name: "Katakana (Advanced)",
   isPublic: true,
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-01T00:00:00.000Z",

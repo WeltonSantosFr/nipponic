@@ -99,7 +99,7 @@ export function FlashcardPlayer({ deck, onClose }: FlashcardPlayerProps) {
       if (!isFlipped || !currentCard) return;
 
       // Update backend & context with SM-2 spaced repetition calculation
-      await reviewCard(currentCard.id, rating);
+      const updatedCard = await reviewCard(currentCard.id, rating);
 
       // Track statistics
       setStats((prev) => ({
@@ -114,7 +114,8 @@ export function FlashcardPlayer({ deck, onClose }: FlashcardPlayerProps) {
 
       if (rating === 1) {
         // Again (Forgot): place card at the end of current session queue to repeat
-        const nextQueue = [...queue.slice(1), currentCard];
+        const cardToQueue = updatedCard || currentCard;
+        const nextQueue = [...queue.slice(1), cardToQueue];
         setQueue(nextQueue);
       } else {
         // Hard / Good / Easy: advance card

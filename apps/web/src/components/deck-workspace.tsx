@@ -44,6 +44,7 @@ interface DeckWorkspaceProps {
 
 export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
   const {
+    decks,
     createDeck,
     updateDeck,
     removeCardFromDeck,
@@ -59,6 +60,20 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
   const [revealedCardIds, setRevealedCardIds] = useState<Set<string>>(
     new Set()
   );
+
+  const isAlreadyAdded = useMemo(() => {
+    if (isCurrentDeckOwner || !deck) return false;
+    const normalize = (n: string) =>
+      n
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\bbasico\b/g, "basic")
+        .replace(/\bavancado\b/g, "advanced");
+    const target = normalize(deck.name);
+    return decks.some((myDeck) => normalize(myDeck.name) === target);
+  }, [isCurrentDeckOwner, deck, decks]);
 
   const dueCards = useMemo(() => {
     if (!deck) return [];
@@ -239,6 +254,16 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
                 <span>Play All ({deck.cards.length})</span>
               </Button>
             </>
+          ) : isAlreadyAdded ? (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled
+              className="gap-1.5 h-9 text-xs font-semibold px-3 opacity-90 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 w-full sm:w-auto justify-center cursor-default"
+            >
+              <Check size={14} />
+              <span>Added to My Decks</span>
+            </Button>
           ) : (
             <Button
               size="sm"

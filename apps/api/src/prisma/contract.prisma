@@ -29,17 +29,23 @@ model Note {
 }
 
 model Card {
-  id        String   @id @default(uuid())
-  jpText    String
-  enText    String
+  id             String    @id @default(uuid())
+  jpText         String
+  enText         String
+  interval       Int       @default(0)
+  easeFactor     Float     @default(2.5)
+  repetitions    Int       @default(0)
+  lapses         Int       @default(0)
+  nextReviewAt   DateTime?
+  lastReviewedAt DateTime?
   
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  deckCards DeckCard[]
+  deckCards      DeckCard[]
   
-  createdAt DateTime @default(now())
-  updatedAt temporal.updatedAt()
+  createdAt      DateTime  @default(now())
+  updatedAt      temporal.updatedAt()
 }
 
 model Deck {

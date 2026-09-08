@@ -17,6 +17,7 @@ import {
   getCardsAction,
   createCardAction,
   updateCardAction,
+  reviewCardAction,
   deleteCardAction,
 } from "@/actions/cards";
 import {
@@ -130,8 +131,29 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
           getDecksAction(),
           getPublicDecksAction(),
         ]);
+
+        const renameMap: Record<string, string> = {
+          "Hiragana (Básico)": "Hiragana (Basic)",
+          "Hiragana (Avançado)": "Hiragana (Advanced)",
+          "Katakana (Básico)": "Katakana (Basic)",
+          "Katakana (Avançado)": "Katakana (Advanced)",
+          "Hiragana (Basico)": "Hiragana (Basic)",
+          "Hiragana (Avancado)": "Hiragana (Advanced)",
+          "Katakana (Basico)": "Katakana (Basic)",
+          "Katakana (Avancado)": "Katakana (Advanced)",
+        };
+
+        const sanitizedDecks: Deck[] = (fetchedDecks || []).map((deck) => {
+          const mappedName = renameMap[deck.name];
+          if (mappedName) {
+            updateDeckAction(deck.id, { name: mappedName }).catch(console.error);
+            return { ...deck, name: mappedName };
+          }
+          return deck;
+        });
+
         setCards(fetchedCards || []);
-        setDecks(fetchedDecks || []);
+        setDecks(sanitizedDecks);
         setPublicDecks(fetchedPublic || []);
       } catch (err) {
         console.error("Error fetching flash cards/decks:", err);
@@ -277,11 +299,86 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
     cardId: string,
     rating: ReviewRating
   ): Promise<Card | null> => {
-    const card = cardsRef.current.find((c) => c.id === cardId);
+    let card = cardsRef.current.find((c) => c.id === cardId);
+    if (!card) {
+      for (const d of decksRef.current) {
+        const found = d.cards.find((c) => c.id === cardId);
+        if (found) {
+          card = found;
+          break;
+        }
+      }
+    }
+    if (!card) {
+      for (const d of appDecks) {
+        const found = d.cards.find((c) => c.id === cardId);
+        if (found) {
+          card = found;
+          break;
+        }
+      }
+    }
     if (!card) return null;
 
     const srsData = calculateNextReview(card, rating);
-    return await updateCard(cardId, srsData);
+    const updatedCard: Card = {
+      ...card,
+      ...srsData,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Optimistically update cards list
+    setCards((prev) =>
+      prev.map((c) => (c.id === cardId ? updatedCard : c))
+    );
+
+    // Optimistically update decks list
+    setDecks((prevDecks) =>
+      prevDecks.map((d) => ({
+        ...d,
+        cards: d.cards.map((c) => (c.id === cardId ? updatedCard : c)),
+      }))
+    );
+
+    // Optimistically update playingDeck if currently playing
+    setPlayingDeck((prevPlaying) => {
+      if (!prevPlaying) return null;
+      return {
+        ...prevPlaying,
+        cards: prevPlaying.cards.map((c) => (c.id === cardId ? updatedCard : c)),
+      };
+    });
+
+    if (!isAuthenticated || cardId.startsWith("temp-") || cardId.startsWith("app-card-")) {
+      return updatedCard;
+    }
+
+    try {
+      const persisted = await reviewCardAction(cardId, rating);
+      if (persisted) {
+        setCards((prev) =>
+          prev.map((c) => (c.id === cardId ? persisted : c))
+        );
+        setDecks((prevDecks) =>
+          prevDecks.map((d) => ({
+            ...d,
+            cards: d.cards.map((c) => (c.id === cardId ? persisted : c)),
+          }))
+        );
+        setPlayingDeck((prevPlaying) => {
+          if (!prevPlaying) return null;
+          return {
+            ...prevPlaying,
+            cards: prevPlaying.cards.map((c) => (c.id === cardId ? persisted : c)),
+          };
+        });
+        return persisted;
+      }
+      return updatedCard;
+    } catch (err) {
+      console.error("Error reviewing card:", err);
+      return updatedCard;
+    }
   };
 
   const deleteCard = async (id: string): Promise<boolean> => {

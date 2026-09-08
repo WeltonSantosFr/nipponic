@@ -1,0 +1,254 @@
+[
+  {
+    "id": "column.public.card.easeFactor",
+    "label": "Add column \"easeFactor\" to \"card\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "easeFactor",
+        "table": "card"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"easeFactor\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "card",
+          "easeFactor"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"easeFactor\"",
+        "sql": "ALTER TABLE \"public\".\"card\" ADD COLUMN \"easeFactor\" float8 DEFAULT 2.5 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"easeFactor\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "card",
+          "easeFactor"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.card.interval",
+    "label": "Add column \"interval\" to \"card\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "interval",
+        "table": "card"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"interval\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "card",
+          "interval"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"interval\"",
+        "sql": "ALTER TABLE \"public\".\"card\" ADD COLUMN \"interval\" int4 DEFAULT 0 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"interval\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "card",
+          "interval"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.card.lapses",
+    "label": "Add column \"lapses\" to \"card\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "lapses",
+        "table": "card"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"lapses\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "card",
+          "lapses"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"lapses\"",
+        "sql": "ALTER TABLE \"public\".\"card\" ADD COLUMN \"lapses\" int4 DEFAULT 0 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"lapses\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "card",
+          "lapses"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.card.lastReviewedAt",
+    "label": "Add column \"lastReviewedAt\" to \"card\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "lastReviewedAt",
+        "table": "card"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"lastReviewedAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "card",
+          "lastReviewedAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"lastReviewedAt\"",
+        "sql": "ALTER TABLE \"public\".\"card\" ADD COLUMN \"lastReviewedAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"lastReviewedAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "card",
+          "lastReviewedAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.card.nextReviewAt",
+    "label": "Add column \"nextReviewAt\" to \"card\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "nextReviewAt",
+        "table": "card"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"nextReviewAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "card",
+          "nextReviewAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"nextReviewAt\"",
+        "sql": "ALTER TABLE \"public\".\"card\" ADD COLUMN \"nextReviewAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"nextReviewAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "card",
+          "nextReviewAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.card.repetitions",
+    "label": "Add column \"repetitions\" to \"card\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "repetitions",
+        "table": "card"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"repetitions\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "card",
+          "repetitions"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"repetitions\"",
+        "sql": "ALTER TABLE \"public\".\"card\" ADD COLUMN \"repetitions\" int4 DEFAULT 0 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"repetitions\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "card",
+          "repetitions"
+        ]
+      }
+    ]
+  }
+]
