@@ -10,6 +10,7 @@ describe('DecksService', () => {
   beforeEach(() => {
     prismaMock = {
       db: {
+        transaction: vi.fn(async (cb: (tx: any) => Promise<any>) => cb(prismaMock.db)),
         orm: {
           public: {
             Deck: {
@@ -18,6 +19,7 @@ describe('DecksService', () => {
             },
             DeckCard: {
               create: vi.fn(),
+              createAll: vi.fn(),
               where: vi.fn(),
             },
             Card: {
@@ -60,7 +62,7 @@ describe('DecksService', () => {
       };
 
       prismaMock.db.orm.public.Deck.create.mockResolvedValue(createdDeck);
-      prismaMock.db.orm.public.DeckCard.create.mockResolvedValue({});
+      prismaMock.db.orm.public.DeckCard.createAll.mockResolvedValue({});
 
       const deckCards = [
         { id: 'dc_1', deckId: 'deck_1', cardId: 'card_1', order: 0 },
@@ -80,17 +82,19 @@ describe('DecksService', () => {
         isPublic: true,
         userId,
       });
-      expect(prismaMock.db.orm.public.DeckCard.create).toHaveBeenCalledTimes(2);
-      expect(prismaMock.db.orm.public.DeckCard.create).toHaveBeenNthCalledWith(1, {
-        deckId: 'deck_1',
-        cardId: 'card_1',
-        order: 0,
-      });
-      expect(prismaMock.db.orm.public.DeckCard.create).toHaveBeenNthCalledWith(2, {
-        deckId: 'deck_1',
-        cardId: 'card_2',
-        order: 1,
-      });
+      expect(prismaMock.db.orm.public.DeckCard.createAll).toHaveBeenCalledTimes(1);
+      expect(prismaMock.db.orm.public.DeckCard.createAll).toHaveBeenCalledWith([
+        {
+          deckId: 'deck_1',
+          cardId: 'card_1',
+          order: 0,
+        },
+        {
+          deckId: 'deck_1',
+          cardId: 'card_2',
+          order: 1,
+        },
+      ]);
 
       expect(result.id).toBe('deck_1');
       expect(result.cards).toHaveLength(2);
@@ -287,7 +291,7 @@ describe('DecksService', () => {
 
       const deckCardAllMock = vi.fn().mockResolvedValue(existingDeckCards);
       prismaMock.db.orm.public.DeckCard.where.mockReturnValue({ all: deckCardAllMock });
-      prismaMock.db.orm.public.DeckCard.create.mockResolvedValue({});
+      prismaMock.db.orm.public.DeckCard.createAll.mockResolvedValue({});
 
       const cardWhereMock = vi.fn().mockReturnValue({ all: vi.fn().mockResolvedValue([]) });
       prismaMock.db.orm.public.Card.where = cardWhereMock;
@@ -296,17 +300,19 @@ describe('DecksService', () => {
 
       await service.addCards(userId, deckId, dto);
 
-      expect(prismaMock.db.orm.public.DeckCard.create).toHaveBeenCalledTimes(2);
-      expect(prismaMock.db.orm.public.DeckCard.create).toHaveBeenNthCalledWith(1, {
-        deckId,
-        cardId: 'new_card_1',
-        order: 1,
-      });
-      expect(prismaMock.db.orm.public.DeckCard.create).toHaveBeenNthCalledWith(2, {
-        deckId,
-        cardId: 'new_card_2',
-        order: 2,
-      });
+      expect(prismaMock.db.orm.public.DeckCard.createAll).toHaveBeenCalledTimes(1);
+      expect(prismaMock.db.orm.public.DeckCard.createAll).toHaveBeenCalledWith([
+        {
+          deckId,
+          cardId: 'new_card_1',
+          order: 1,
+        },
+        {
+          deckId,
+          cardId: 'new_card_2',
+          order: 2,
+        },
+      ]);
     });
 
     it('should throw NotFoundException if deck does not exist', async () => {
