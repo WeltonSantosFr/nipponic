@@ -30,10 +30,9 @@ describe('applyGlossaryRules', () => {
     const rules = [
       { id: '1', sourceTerm: '', targetTerm: 'こんにちは' },
       { id: '2', sourceTerm: 'Hello', targetTerm: '' },
-      // @ts-expect-error missing fields
       { id: '3' },
     ];
-    expect(applyGlossaryRules(enText, jpText, rules)).toBe(jpText);
+    expect(applyGlossaryRules(enText, jpText, rules as any)).toBe(jpText);
   });
 
   it('returns jpText when enText does not contain the sourceTerm', () => {
