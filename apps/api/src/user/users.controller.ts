@@ -8,6 +8,7 @@ import {
   Patch,
   Delete,
   UseGuards,
+  ForbiddenException,
 } from "@nestjs/common";
 
 import { UsersService } from "./users.service";
@@ -57,13 +58,19 @@ export class UsersController {
 
   @Patch(":id")
   @UseGuards(AuthGuard)
-  update(@Param("id") id: string, @Body() body: Partial<UpdateUserDto>) {
+  update(@Param("id") id: string, @Body() body: Partial<UpdateUserDto>, @CurrentUser() user: JwtPayload) {
+    if (id !== user.sub) {
+      throw new ForbiddenException("You can only modify your own profile.");
+    }
     return this.usersService.update(id, body);
   }
 
   @Delete(":id")
   @UseGuards(AuthGuard)
-  delete(@Param("id") id: string) {
+  delete(@Param("id") id: string, @CurrentUser() user: JwtPayload) {
+    if (id !== user.sub) {
+      throw new ForbiddenException("You can only delete your own profile.");
+    }
     return this.usersService.delete(id);
   }
 }
