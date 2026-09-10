@@ -48,13 +48,12 @@ export class DecksService {
     });
 
     if (deck.cardIds && deck.cardIds.length > 0) {
-      for (let i = 0; i < deck.cardIds.length; i++) {
-        await this.prisma.db.orm.public.DeckCard.create({
-          deckId: created.id,
-          cardId: deck.cardIds[i],
-          order: i,
-        });
-      }
+      const toCreate = deck.cardIds.map((cardId, i) => ({
+        deckId: created.id,
+        cardId,
+        order: i,
+      }));
+      await this.prisma.db.orm.public.DeckCard.createAll(toCreate);
     }
 
     return await this.populateDeckCards(created);
@@ -134,16 +133,21 @@ export class DecksService {
     );
     const existingCardIds = new Set(existingDeckCards.map((dc) => dc.cardId));
 
+    const toCreate = [];
     for (const cardId of dto.cardIds) {
       if (!existingCardIds.has(cardId)) {
         currentMax++;
-        await this.prisma.db.orm.public.DeckCard.create({
+        toCreate.push({
           deckId,
           cardId,
           order: currentMax,
         });
         existingCardIds.add(cardId);
       }
+    }
+
+    if (toCreate.length > 0) {
+      await this.prisma.db.orm.public.DeckCard.createAll(toCreate);
     }
 
     return await this.populateDeckCards(deck);
