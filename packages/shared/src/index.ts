@@ -20,6 +20,7 @@ export const LoginSchema = z.object({
 export type LoginInput = z.infer<typeof LoginSchema>;
 export type LoginDto = LoginInput;
 export type LoginUserDto = LoginInput;
+export type LoginProps = LoginInput;
 
 export const AuthResponseSchema = z.object({
   access_token: z.string(),
@@ -254,8 +255,9 @@ export const CreateDeckSchema = z.object({
   isPublic: z.boolean().optional().default(false),
   cardIds: z.array(z.string()).optional().default([]),
 });
-export type CreateDeckInput = z.infer<typeof CreateDeckSchema>;
+export type CreateDeckInput = z.input<typeof CreateDeckSchema>;
 export type CreateDeckDto = CreateDeckInput;
+export type CreateDeckOutput = z.output<typeof CreateDeckSchema>;
 
 export const UpdateDeckSchema = z.object({
   name: z.string().min(1, "Deck name is required").optional(),
@@ -291,6 +293,15 @@ export const DictionaryDataSchema = z.object({
 });
 export type DictionaryData = z.infer<typeof DictionaryDataSchema>;
 
+export const CustomDefinitionInputSchema = z.object({
+  reading: z.string(),
+  meanings: z.array(z.string()),
+  jlpt: z.string().nullable().optional(),
+  isCommon: z.boolean().optional(),
+});
+export type CustomDefinitionInput = z.infer<typeof CustomDefinitionInputSchema>;
+export type CustomDefinitionDto = CustomDefinitionInput;
+
 export const KanjiInfoSchema = z.object({
   kanji: z.string(),
   grade: z.number().nullable(),
@@ -312,4 +323,32 @@ export const MergedTokenSchema = z.object({
   isMerged: z.boolean().optional(),
 });
 export type MergedToken = z.infer<typeof MergedTokenSchema>;
+
+// ==========================================
+// Common API & Action Contracts
+// ==========================================
+
+export const ActionResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string().optional(),
+});
+export type ActionResponse = z.infer<typeof ActionResponseSchema>;
+export type ActionResult = ActionResponse;
+
+export const ApiErrorResponseSchema = z.object({
+  error: z.string(),
+});
+export type ApiErrorResponse = z.infer<typeof ApiErrorResponseSchema>;
+export type ApiError = ApiErrorResponse;
+
+export const MessageResponseSchema = z.object({
+  message: z.string(),
+});
+export type MessageResponse = z.infer<typeof MessageResponseSchema>;
+
+export const TtsRequestSchema = z.object({
+  text: z.string().min(1),
+  lang: z.string().optional(),
+});
+export type TtsRequest = z.infer<typeof TtsRequestSchema>;
 

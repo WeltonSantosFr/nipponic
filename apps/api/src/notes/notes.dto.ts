@@ -1,4 +1,3 @@
-import type { CreateNoteDto, UpdateNoteDto } from "@nipponic/shared";
+import type { CreateNoteDto, UpdateNoteDto, Note } from "@nipponic/shared";
 
-export type { CreateNoteDto, UpdateNoteDto };
-export type Note = CreateNoteDto;
+export type { CreateNoteDto, UpdateNoteDto, Note };

@@ -197,12 +197,12 @@ describe('CardsService', () => {
     const result = await service.review(userId, cardId, 1);
 
     // Assert
-    expect(result.repetitions).toBe(0);
-    expect(result.interval).toBe(0);
-    expect(result.lapses).toBe(2);
-    expect(result.easeFactor).toBe(2.3);
-    expect(result.nextReviewAt).toBeInstanceOf(Date);
-    expect(result.lastReviewedAt).toBeInstanceOf(Date);
+    expect(result!.repetitions).toBe(0);
+    expect(result!.interval).toBe(0);
+    expect(result!.lapses).toBe(2);
+    expect(result!.easeFactor).toBe(2.3);
+    expect(result!.nextReviewAt).toBeInstanceOf(Date);
+    expect(result!.lastReviewedAt).toBeInstanceOf(Date);
     expect(updateMock).toHaveBeenCalledWith(
       expect.objectContaining({
         interval: 0,
@@ -236,12 +236,12 @@ describe('CardsService', () => {
     const result = await service.review(userId, cardId, 2);
 
     // Assert
-    expect(result.repetitions).toBe(3);
-    expect(result.interval).toBe(12);
-    expect(result.easeFactor).toBe(2.35);
-    expect(result.lapses).toBe(0);
-    expect(result.nextReviewAt).toBeInstanceOf(Date);
-    expect(result.lastReviewedAt).toBeInstanceOf(Date);
+    expect(result!.repetitions).toBe(3);
+    expect(result!.interval).toBe(12);
+    expect(result!.easeFactor).toBe(2.35);
+    expect(result!.lapses).toBe(0);
+    expect(result!.nextReviewAt).toBeInstanceOf(Date);
+    expect(result!.lastReviewedAt).toBeInstanceOf(Date);
     expect(updateMock).toHaveBeenCalledWith(
       expect.objectContaining({
         interval: 12,
@@ -275,12 +275,12 @@ describe('CardsService', () => {
     const result = await service.review(userId, cardId, 3);
 
     // Assert
-    expect(result.repetitions).toBe(1);
-    expect(result.interval).toBe(1);
-    expect(result.easeFactor).toBe(2.5);
-    expect(result.lapses).toBe(0);
-    expect(result.nextReviewAt).toBeInstanceOf(Date);
-    expect(result.lastReviewedAt).toBeInstanceOf(Date);
+    expect(result!.repetitions).toBe(1);
+    expect(result!.interval).toBe(1);
+    expect(result!.easeFactor).toBe(2.5);
+    expect(result!.lapses).toBe(0);
+    expect(result!.nextReviewAt).toBeInstanceOf(Date);
+    expect(result!.lastReviewedAt).toBeInstanceOf(Date);
     expect(updateMock).toHaveBeenCalledWith(
       expect.objectContaining({
         interval: 1,
@@ -314,12 +314,12 @@ describe('CardsService', () => {
     const result = await service.review(userId, cardId, 4);
 
     // Assert
-    expect(result.repetitions).toBe(1);
-    expect(result.interval).toBe(4);
-    expect(result.easeFactor).toBe(2.65);
-    expect(result.lapses).toBe(0);
-    expect(result.nextReviewAt).toBeInstanceOf(Date);
-    expect(result.lastReviewedAt).toBeInstanceOf(Date);
+    expect(result!.repetitions).toBe(1);
+    expect(result!.interval).toBe(4);
+    expect(result!.easeFactor).toBe(2.65);
+    expect(result!.lapses).toBe(0);
+    expect(result!.nextReviewAt).toBeInstanceOf(Date);
+    expect(result!.lastReviewedAt).toBeInstanceOf(Date);
     expect(updateMock).toHaveBeenCalledWith(
       expect.objectContaining({
         interval: 4,
@@ -354,10 +354,10 @@ describe('CardsService', () => {
 
     // Assert
     // newInterval = Math.round(6 * 2.5) = 15
-    expect(result.repetitions).toBe(3);
-    expect(result.interval).toBe(15);
-    expect(result.easeFactor).toBe(2.5);
-    expect(result.lapses).toBe(0);
+    expect(result!.repetitions).toBe(3);
+    expect(result!.interval).toBe(15);
+    expect(result!.easeFactor).toBe(2.5);
+    expect(result!.lapses).toBe(0);
     expect(updateMock).toHaveBeenCalledWith(
       expect.objectContaining({
         interval: 15,
