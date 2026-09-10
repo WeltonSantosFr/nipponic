@@ -1,4 +1,5 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { calculateNextReview } from "@nipponic/shared";
 import { PrismaService } from "../prisma.service";
 import type { CreateCardDto, ReviewRating, UpdateCardDto } from "./cards.dto";
 
@@ -61,66 +62,23 @@ export class CardsService {
     const currentInterval = existingCard.interval ?? 0;
     const currentLapses = existingCard.lapses ?? 0;
 
-    let newInterval = 1;
-    let newEase = currentEase;
-    let newReps = currentReps;
-    let newLapses = currentLapses;
-    let nextReviewDate: Date;
-
-    const now = new Date();
-
-    switch (rating) {
-      case 1: // Again (Forgot)
-        newReps = 0;
-        newInterval = 0; // Due in 10 minutes
-        newLapses = currentLapses + 1;
-        newEase = Math.max(1.3, currentEase - 0.2);
-        nextReviewDate = new Date(now.getTime() + 10 * 60 * 1000);
-        break;
-
-      case 2: // Hard (Difficult recall)
-        newReps = currentReps + 1;
-        newInterval = currentInterval <= 1 ? 1 : Math.max(1, Math.round(currentInterval * 1.2));
-        newEase = Math.max(1.3, currentEase - 0.15);
-        nextReviewDate = new Date(now.getTime() + newInterval * 24 * 60 * 60 * 1000);
-        break;
-
-      case 3: // Good (Standard correct recall)
-        if (currentReps === 0) {
-          newInterval = 1;
-        } else if (currentReps === 1) {
-          newInterval = 3;
-        } else {
-          newInterval = Math.max(1, Math.round((currentInterval || 1) * currentEase));
-        }
-        newReps = currentReps + 1;
-        newEase = currentEase;
-        nextReviewDate = new Date(now.getTime() + newInterval * 24 * 60 * 60 * 1000);
-        break;
-
-      case 4: // Easy (Instant effortless recall)
-        if (currentReps === 0) {
-          newInterval = 4;
-        } else if (currentReps === 1) {
-          newInterval = 7;
-        } else {
-          newInterval = Math.max(1, Math.round((currentInterval || 1) * currentEase * 1.3));
-        }
-        newReps = currentReps + 1;
-        newEase = currentEase + 0.15;
-        nextReviewDate = new Date(now.getTime() + newInterval * 24 * 60 * 60 * 1000);
-        break;
-    }
-
-    const roundedEase = Math.round(newEase * 100) / 100;
+    const result = calculateNextReview(
+      {
+        interval: currentInterval,
+        easeFactor: currentEase,
+        repetitions: currentReps,
+        lapses: currentLapses,
+      },
+      rating
+    );
 
     return await this.prisma.db.orm.public.Card.where({ id, userId }).update({
-      interval: newInterval,
-      easeFactor: roundedEase,
-      repetitions: newReps,
-      lapses: newLapses,
-      nextReviewAt: nextReviewDate,
-      lastReviewedAt: now,
+      interval: result.interval,
+      easeFactor: result.easeFactor,
+      repetitions: result.repetitions,
+      lapses: result.lapses,
+      nextReviewAt: new Date(result.nextReviewAt),
+      lastReviewedAt: new Date(result.lastReviewedAt),
     });
   }
 }

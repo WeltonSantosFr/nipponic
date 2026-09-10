@@ -1,10 +1,12 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
 import type { CreateUserDto, UpdateUserDto } from "./users.dto";
 import { hashSync } from "bcrypt";
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   async create(data: CreateUserDto) {
@@ -35,7 +37,9 @@ export class UsersService {
   async delete(id: string) {
     try {
       await this.prisma.db.orm.public.Note.where({ userId: id }).delete();
-    } catch {}
+    } catch (error) {
+      this.logger.error(`Failed to delete notes for user ${id}`, error);
+    }
     return this.prisma.db.orm.public.User.where({ id: id }).delete();
   }
 }

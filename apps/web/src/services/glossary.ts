@@ -132,13 +132,16 @@ export function applyGlossaryRules(
     if (!rule.sourceTerm || !rule.targetTerm) continue;
 
     // Check if the English source contains the rule's source term (case-insensitive)
-    const enRegex = new RegExp(`\\b${escapeRegExp(rule.sourceTerm)}\\b`, "i");
+    // We shouldn't use \b boundaries for things that might not be words, or we can use a simpler test
+    // Let's use string.includes or a regex without word boundaries if \b causes issues with special chars like '('
+    const enRegex = new RegExp(escapeRegExp(rule.sourceTerm), "i");
     if (enRegex.test(enText)) {
       // If found, apply glossary substitution or check common transliterations
       // If the target term is already in the Japanese text, skip
       if (!result.includes(rule.targetTerm)) {
-        // Look for common transliterations or replace generic translations
-        // Ex: if source term is found in enText, we ensure rule.targetTerm is substituted appropriately
+        // Replace occurrences of the source term in the Japanese text with the target term
+        const replaceRegex = new RegExp(escapeRegExp(rule.sourceTerm), "ig");
+        result = result.replace(replaceRegex, rule.targetTerm);
       }
     }
   }
