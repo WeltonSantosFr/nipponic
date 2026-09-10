@@ -180,15 +180,18 @@ export class DecksService {
     const existingDeckCards =
       await this.prisma.db.orm.public.DeckCard.where({ deckId }).all();
 
-    for (let i = 0; i < dto.cardIds.length; i++) {
-      const cardId = dto.cardIds[i];
-      const target = existingDeckCards.find((dc) => dc.cardId === cardId);
-      if (target) {
-        await this.prisma.db.orm.public.DeckCard.where({ id: target.id }).update({
-          order: i,
-        });
-      }
-    }
+    await this.prisma.db.transaction(async (tx) => {
+      const updatePromises = dto.cardIds.map((cardId, i) => {
+        const target = existingDeckCards.find((dc) => dc.cardId === cardId);
+        if (target) {
+          return tx.orm.public.DeckCard.where({ id: target.id }).update({
+            order: i,
+          });
+        }
+        return Promise.resolve();
+      });
+      await Promise.all(updatePromises);
+    });
 
     return await this.populateDeckCards(deck);
   }
