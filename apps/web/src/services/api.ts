@@ -1,8 +1,8 @@
-import type { AuthResponse, LoginInput } from "@nipponic/shared";
+import type { AuthResponse, LoginInput, LoginProps } from "@nipponic/shared";
 
 const API_URL = "http://localhost:3001";
 
-export type LoginProps = LoginInput;
+export type { LoginProps };
 
 export const login = async ({ email, password }: LoginProps): Promise<AuthResponse> => {
   const response = await fetch(`${API_URL}/auth/login`, {

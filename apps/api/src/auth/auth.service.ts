@@ -1,7 +1,7 @@
 import { Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { compareSync } from "bcrypt";
 import { PrismaService } from "../prisma.service";
-import type { LoginUserDto } from "./auth.controller";
+import type { LoginUserDto } from "@nipponic/shared";
 import { JwtService } from "@nestjs/jwt";
 
 @Injectable()

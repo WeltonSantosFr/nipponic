@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AuthGuard } from './auth.guard';
 import { JwtService } from '@nestjs/jwt';
-import { UnauthorizedException, ExecutionContext } from '@nestjs/common';
+import { UnauthorizedException, type ExecutionContext } from '@nestjs/common';
 
 describe('AuthGuard', () => {
   let authGuard: AuthGuard;

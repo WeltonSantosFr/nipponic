@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import type { GlossaryRule } from '@nipponic/shared';
 import { applyGlossaryRules } from '../glossary';
 
 describe('applyGlossaryRules', () => {
@@ -27,7 +28,7 @@ describe('applyGlossaryRules', () => {
   it('skips rules with missing sourceTerm or targetTerm', () => {
     const enText = 'Hello world';
     const jpText = 'こんにちは世界';
-    const rules = [
+    const rules: GlossaryRule[] = [
       { id: '1', sourceTerm: '', targetTerm: 'こんにちは' },
       { id: '2', sourceTerm: 'Hello', targetTerm: '' },
       // @ts-expect-error missing fields

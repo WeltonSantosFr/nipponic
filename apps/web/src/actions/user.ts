@@ -1,12 +1,13 @@
 "use server";
 
 import { cookies } from "next/headers";
+import type { ActionResponse } from "@nipponic/shared";
 
 const API_URL = process.env.API_URL || "http://localhost:3001";
 
 export async function changePasswordAction(
   newPassword: string
-): Promise<{ success: boolean; message?: string }> {
+): Promise<ActionResponse> {
   const cookieStore = await cookies();
   const token = cookieStore.get("nipponic.token")?.value;
 
@@ -42,10 +43,7 @@ export async function changePasswordAction(
   }
 }
 
-export async function deleteAccountAction(): Promise<{
-  success: boolean;
-  message?: string;
-}> {
+export async function deleteAccountAction(): Promise<ActionResponse> {
   const cookieStore = await cookies();
   const token = cookieStore.get("nipponic.token")?.value;
 

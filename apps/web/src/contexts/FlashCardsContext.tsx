@@ -10,7 +10,7 @@ import {
   useMemo,
   ReactNode,
 } from "react";
-import { Card, Deck, ReviewRating } from "@nipponic/shared";
+import { Card, Deck, ReviewRating, CreateCardInput, UpdateDeckInput } from "@nipponic/shared";
 import { calculateNextReview, isCardDue } from "@/lib/srs";
 import { APP_DECKS } from "@/data/app-decks";
 import {
@@ -52,16 +52,7 @@ interface FlashCardsContextData {
   startPlayingDeck: (deck: Deck) => void;
   stopPlayingDeck: () => void;
   createCard: (
-    data: {
-      jpText: string;
-      enText: string;
-      interval?: number;
-      easeFactor?: number;
-      repetitions?: number;
-      lapses?: number;
-      nextReviewAt?: string | null;
-      lastReviewedAt?: string | null;
-    },
+    data: CreateCardInput,
     deckId?: string
   ) => Promise<Card | null>;
   updateCard: (id: string, data: Partial<Card>) => Promise<Card | null>;
@@ -75,7 +66,7 @@ interface FlashCardsContextData {
   ) => Promise<Deck | null>;
   updateDeck: (
     id: string,
-    data: Partial<{ name: string; isPublic: boolean }>
+    data: UpdateDeckInput
   ) => Promise<Deck | null>;
   deleteDeck: (id: string) => Promise<boolean>;
   addCardsToDeck: (deckId: string, cardIds: string[]) => Promise<void>;
@@ -190,16 +181,7 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
   );
 
   const createCard = async (
-    data: {
-      jpText: string;
-      enText: string;
-      interval?: number;
-      easeFactor?: number;
-      repetitions?: number;
-      lapses?: number;
-      nextReviewAt?: string | null;
-      lastReviewedAt?: string | null;
-    },
+    data: CreateCardInput,
     deckId?: string
   ): Promise<Card | null> => {
     const tempId = `temp-card-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -474,7 +456,7 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
 
   const updateDeck = async (
     id: string,
-    data: Partial<{ name: string; isPublic: boolean }>
+    data: UpdateDeckInput
   ): Promise<Deck | null> => {
     setDecks((prev) =>
       prev.map((d) =>

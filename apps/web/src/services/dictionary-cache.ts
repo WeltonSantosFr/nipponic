@@ -1,6 +1,6 @@
-import type { DictionaryData } from "@nipponic/shared";
+import type { DictionaryData, CustomDefinitionInput } from "@nipponic/shared";
 
-export type { DictionaryData };
+export type { DictionaryData, CustomDefinitionInput };
 
 const STORAGE_KEY = "nipponic:dict_cache_v1";
 const CUSTOM_STORAGE_KEY = "nipponic:custom_dict_v1";
@@ -76,12 +76,7 @@ function persistToLocalStorage(word: string, data: DictionaryData | null) {
  */
 export function saveCustomDefinition(
   word: string,
-  data: {
-    reading: string;
-    meanings: string[];
-    jlpt?: string | null;
-    isCommon?: boolean;
-  }
+  data: CustomDefinitionInput
 ): DictionaryData {
   loadLocalStorage();
 

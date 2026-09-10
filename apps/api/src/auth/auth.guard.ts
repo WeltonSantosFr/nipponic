@@ -7,14 +7,14 @@ import {
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { type Request } from "express";
-import type { User } from "../user/users.dto";
+import type { JwtPayload } from "@nipponic/shared";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(@Inject(JwtService) private readonly jwtService: JwtService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<Request & {user?: User}>();
+    const request = context.switchToHttp().getRequest<Request & {user?: JwtPayload}>();
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
