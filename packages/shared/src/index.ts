@@ -143,6 +143,79 @@ export interface SRSResult {
   lastReviewedAt: string;
 }
 
+/**
+ * Calculates next review parameters based on the SuperMemo-2 (SM-2) algorithm.
+ */
+export function calculateNextReview(
+  card: Pick<Card, "interval" | "easeFactor" | "repetitions" | "lapses">,
+  rating: ReviewRating
+): SRSResult {
+  const currentEase = card.easeFactor ?? 2.5;
+  const currentReps = card.repetitions ?? 0;
+  const currentInterval = card.interval ?? 0;
+  const currentLapses = card.lapses ?? 0;
+
+  let newInterval = 1;
+  let newEase = currentEase;
+  let newReps = currentReps;
+  let newLapses = currentLapses;
+  let nextReviewDate: Date;
+
+  const now = new Date();
+
+  switch (rating) {
+    case 1: // Again (Forgot)
+      newReps = 0;
+      newInterval = 0; // Due immediately / in 10 minutes
+      newLapses = currentLapses + 1;
+      newEase = Math.max(1.3, currentEase - 0.2);
+      nextReviewDate = new Date(now.getTime() + 10 * 60 * 1000); // in 10 min
+      break;
+
+    case 2: // Hard (Difficult recall)
+      newReps = currentReps + 1;
+      newInterval = currentInterval <= 1 ? 1 : Math.max(1, Math.round(currentInterval * 1.2));
+      newEase = Math.max(1.3, currentEase - 0.15);
+      nextReviewDate = new Date(now.getTime() + newInterval * 24 * 60 * 60 * 1000);
+      break;
+
+    case 3: // Good (Standard correct recall)
+      if (currentReps === 0) {
+        newInterval = 1;
+      } else if (currentReps === 1) {
+        newInterval = 3;
+      } else {
+        newInterval = Math.max(1, Math.round((currentInterval || 1) * currentEase));
+      }
+      newReps = currentReps + 1;
+      newEase = currentEase;
+      nextReviewDate = new Date(now.getTime() + newInterval * 24 * 60 * 60 * 1000);
+      break;
+
+    case 4: // Easy (Instant effortless recall)
+      if (currentReps === 0) {
+        newInterval = 4;
+      } else if (currentReps === 1) {
+        newInterval = 7;
+      } else {
+        newInterval = Math.max(1, Math.round((currentInterval || 1) * currentEase * 1.3));
+      }
+      newReps = currentReps + 1;
+      newEase = currentEase + 0.15;
+      nextReviewDate = new Date(now.getTime() + newInterval * 24 * 60 * 60 * 1000);
+      break;
+  }
+
+  return {
+    interval: newInterval,
+    easeFactor: Math.round(newEase * 100) / 100,
+    repetitions: newReps,
+    lapses: newLapses,
+    nextReviewAt: nextReviewDate.toISOString(),
+    lastReviewedAt: now.toISOString(),
+  };
+}
+
 export type CardSRSStage = "new" | "learning" | "review" | "mastered";
 
 export const CreateCardSchema = z.object({
