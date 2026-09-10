@@ -447,11 +447,16 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
     const createdCards: Card[] = [];
     const createdCardIds: string[] = [];
 
-    for (const card of sourceDeck.cards) {
-      const created = await createCard({
+    const createPromises = sourceDeck.cards.map((card) =>
+      createCard({
         jpText: card.jpText,
         enText: card.enText,
-      });
+      })
+    );
+
+    const results = await Promise.all(createPromises);
+
+    for (const created of results) {
       if (created) {
         createdCards.push(created);
         createdCardIds.push(created.id);
