@@ -1,7 +1,7 @@
 import { Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { compareSync } from "bcrypt";
 import { PrismaService } from "../prisma.service";
-import type { LoginUserDto } from "@nipponic/shared";
+import type { LoginUserDto, AuthResponse } from "@nipponic/shared";
 import { JwtService } from "@nestjs/jwt";
 
 @Injectable()
@@ -13,7 +13,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async login({ email, password }: LoginUserDto) {
+  async login({ email, password }: LoginUserDto): Promise<AuthResponse> {
     const user = await this.prisma.db.orm.public.User.first({ email });
 
     if (!user) {

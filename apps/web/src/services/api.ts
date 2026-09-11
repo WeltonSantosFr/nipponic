@@ -1,4 +1,4 @@
-import type { AuthResponse, LoginInput, LoginProps } from "@nipponic/shared";
+import type { AuthResponse, LoginInput, LoginProps, Note, CreateNoteInput } from "@nipponic/shared";
 
 const API_URL = "http://localhost:3001";
 
@@ -19,8 +19,8 @@ export const login = async ({ email, password }: LoginProps): Promise<AuthRespon
   return response.json();
 };
 
-export const fetchNotes = async (token: string) => {
-  await fetch(`${API_URL}/notes`, {
+export const fetchNotes = async (token: string): Promise<Note[] | void> => {
+  return await fetch(`${API_URL}/notes`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -32,8 +32,11 @@ export const fetchNotes = async (token: string) => {
     .catch((err) => console.error(err));
 };
 
-export const createNote = async (token: string, noteData: any) => {
-  await fetch(`${API_URL}/notes`, {
+export const createNote = async (
+  token: string,
+  noteData: CreateNoteInput
+): Promise<Note | void> => {
+  return await fetch(`${API_URL}/notes`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,

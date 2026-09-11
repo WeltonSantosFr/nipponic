@@ -50,16 +50,25 @@ export const UpdateUserSchema = z.object({
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
 export type UpdateUserDto = UpdateUserInput;
 
+export const ChangePasswordSchema = z.object({
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>;
+export type ChangePasswordDto = ChangePasswordInput;
+
 // ==========================================
 // Notes Contracts
 // ==========================================
+
+export const NoteSourceLangSchema = z.enum(["EN", "JA"]);
+export type NoteSourceLang = z.infer<typeof NoteSourceLangSchema>;
 
 export const NoteSchema = z.object({
   id: z.string(),
   title: z.string().min(1, "Title is required"),
   enText: z.string(),
   jpText: z.string(),
-  sourceLang: z.enum(["EN", "JA"]).default("EN"),
+  sourceLang: NoteSourceLangSchema.default("EN"),
   updatedAt: z.string(),
 });
 export type Note = z.infer<typeof NoteSchema>;
@@ -68,7 +77,7 @@ export const CreateNoteSchema = z.object({
   title: z.string().min(1, "Title is required"),
   enText: z.string(),
   jpText: z.string(),
-  sourceLang: z.enum(["EN", "JA"]).default("EN").optional(),
+  sourceLang: NoteSourceLangSchema.default("EN").optional(),
 });
 export type CreateNoteInput = z.infer<typeof CreateNoteSchema>;
 export type CreateNoteDto = CreateNoteInput;
@@ -77,7 +86,7 @@ export const UpdateNoteSchema = z.object({
   title: z.string().min(1).optional(),
   enText: z.string().optional(),
   jpText: z.string().optional(),
-  sourceLang: z.enum(["EN", "JA"]).optional(),
+  sourceLang: NoteSourceLangSchema.optional(),
 });
 export type UpdateNoteInput = z.infer<typeof UpdateNoteSchema>;
 export type UpdateNoteDto = UpdateNoteInput;
@@ -219,6 +228,14 @@ export function calculateNextReview(
 
 export type CardSRSStage = "new" | "learning" | "review" | "mastered";
 
+export interface ReviewSessionStats {
+  again: number;
+  hard: number;
+  good: number;
+  easy: number;
+}
+export type FlashcardSessionStats = ReviewSessionStats;
+
 export const CreateCardSchema = z.object({
   jpText: z.string().min(1, "Japanese text is required"),
   enText: z.string().min(1, "English text is required"),
@@ -280,6 +297,9 @@ export type AddCardsToDeckInput = z.infer<typeof AddCardsToDeckSchema>;
 export type AddCardsDto = AddCardsToDeckInput;
 export type AddCardsToDeckDto = AddCardsToDeckInput;
 
+export type DeckTabMode = "my" | "app" | "public";
+export type SidebarViewMode = "notes" | "flashcards";
+
 // ==========================================
 // Dictionary & Kanji Contracts
 // ==========================================
@@ -315,6 +335,15 @@ export const KanjiInfoSchema = z.object({
   heisig: z.string().nullable(),
 });
 export type KanjiInfo = z.infer<typeof KanjiInfoSchema>;
+
+export const RawTokenSchema = z.object({
+  surface_form: z.string(),
+  pos: z.string().optional(),
+  pos_detail_1: z.string().optional(),
+  reading: z.string().optional(),
+});
+export type RawToken = z.infer<typeof RawTokenSchema>;
+export type KuromojiRawToken = RawToken;
 
 export const MergedTokenSchema = z.object({
   surface_form: z.string(),

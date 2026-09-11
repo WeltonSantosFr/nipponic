@@ -10,7 +10,15 @@ import {
   useMemo,
   ReactNode,
 } from "react";
-import { Card, Deck, ReviewRating, CreateCardInput, UpdateDeckInput } from "@nipponic/shared";
+import {
+  Card,
+  Deck,
+  ReviewRating,
+  CreateCardInput,
+  UpdateDeckInput,
+  SidebarViewMode,
+  DeckTabMode,
+} from "@nipponic/shared";
 import { calculateNextReview, isCardDue } from "@/lib/srs";
 import { APP_DECKS } from "@/data/app-decks";
 import {
@@ -32,8 +40,7 @@ import {
 } from "@/actions/decks";
 import { useAuth } from "./AuthContext";
 
-export type SidebarViewMode = "notes" | "flashcards";
-export type DeckTabMode = "my" | "app" | "public";
+export type { SidebarViewMode, DeckTabMode };
 
 interface FlashCardsContextData {
   cards: Card[];

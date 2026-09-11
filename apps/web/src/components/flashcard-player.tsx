@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Card, Deck, ReviewRating } from "@nipponic/shared";
+import { Card, Deck, ReviewRating, ReviewSessionStats } from "@nipponic/shared";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useSpeech } from "@/hooks/use-speech";
@@ -36,12 +36,12 @@ export function FlashcardPlayer({ deck, onClose }: FlashcardPlayerProps) {
   const [speechRate, setSpeechRate] = useState<number>(1.0);
 
   // Stats tracking for session
-  const [stats, setStats] = useState<{
-    again: number;
-    hard: number;
-    good: number;
-    easy: number;
-  }>({ again: 0, hard: 0, good: 0, easy: 0 });
+  const [stats, setStats] = useState<ReviewSessionStats>({
+    again: 0,
+    hard: 0,
+    good: 0,
+    easy: 0,
+  });
 
   const { speak, stop, isPlaying } = useSpeech();
 

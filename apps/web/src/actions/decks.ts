@@ -1,6 +1,12 @@
 "use server";
 import { cookies } from "next/headers";
-import { Deck, CreateDeckInput, UpdateDeckInput } from "@nipponic/shared";
+import {
+  Deck,
+  CreateDeckInput,
+  UpdateDeckInput,
+  AddCardsToDeckInput,
+  ReorderDeckCardsInput,
+} from "@nipponic/shared";
 
 const API_URL = process.env.API_URL || "http://localhost:3001";
 
@@ -153,7 +159,7 @@ export async function deleteDeckAction(id: string): Promise<boolean> {
 
 export async function addCardsToDeckAction(
   deckId: string,
-  cardIds: string[]
+  cardIds: AddCardsToDeckInput["cardIds"]
 ): Promise<Deck | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("nipponic.token")?.value;
@@ -211,7 +217,7 @@ export async function removeCardFromDeckAction(
 
 export async function reorderDeckCardsAction(
   deckId: string,
-  cardIds: string[]
+  cardIds: ReorderDeckCardsInput["cardIds"]
 ): Promise<Deck | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("nipponic.token")?.value;
