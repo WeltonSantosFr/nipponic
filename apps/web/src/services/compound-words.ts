@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 const COMPOUNDS_STORAGE_KEY = "nipponic:custom_compounds_v1";
 export const COMPOUNDS_UPDATE_EVENT = "nipponic:compounds_updated";
 
-import type { MergedToken } from "@nipponic/shared";
+import type { MergedToken, RawToken, KuromojiRawToken } from "@nipponic/shared";
 
-export type { MergedToken };
+export type { MergedToken, RawToken, KuromojiRawToken };
 
 export function getCustomCompounds(): string[] {
   if (typeof window === "undefined") return [];
@@ -81,12 +81,7 @@ export function useCompoundWords() {
  * Tokens remain separated by default unless explicitly combined by the user.
  */
 export function smartMergeTokens(
-  rawTokens: Array<{
-    surface_form: string;
-    pos?: string;
-    pos_detail_1?: string;
-    reading?: string;
-  }>,
+  rawTokens: RawToken[],
   customCompounds: string[] = []
 ): MergedToken[] {
   if (!rawTokens || rawTokens.length === 0) return [];

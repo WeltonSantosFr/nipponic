@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { ApiErrorResponse } from "@nipponic/shared";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -6,7 +7,7 @@ export async function GET(request: Request) {
   const lang = searchParams.get("lang") || "en";
 
   if (!text || !text.trim()) {
-    return NextResponse.json(
+    return NextResponse.json<ApiErrorResponse>(
       { error: "Text parameter is required" },
       { status: 400 }
     );
@@ -41,7 +42,7 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error("Error generating TTS audio:", error);
-    return NextResponse.json(
+    return NextResponse.json<ApiErrorResponse>(
       { error: "Failed to generate TTS audio" },
       { status: 500 }
     );

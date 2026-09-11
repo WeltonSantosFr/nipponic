@@ -9,7 +9,7 @@ import {
   HttpStatus,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import type { LoginUserDto } from "@nipponic/shared";
+import type { LoginUserDto, AuthResponse } from "@nipponic/shared";
 
 export type { LoginUserDto };
 
@@ -19,7 +19,7 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post("/login")
-  login(@Body() body: LoginUserDto) { 
+  login(@Body() body: LoginUserDto): Promise<AuthResponse> { 
     const { email, password } = body;
     return this.authService.login({ email, password });
   }

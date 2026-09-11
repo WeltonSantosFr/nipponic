@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
+import type { KanjiInfo, ApiErrorResponse } from "@nipponic/shared";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const char = searchParams.get("char");
 
   if (!char || !char.trim()) {
-    return NextResponse.json(
+    return NextResponse.json<ApiErrorResponse>(
       { error: "Kanji character parameter is required" },
       { status: 400 }
     );
@@ -25,7 +26,7 @@ export async function GET(request: Request) {
 
     if (!res.ok) {
       if (res.status === 404) {
-        return NextResponse.json(
+        return NextResponse.json<ApiErrorResponse>(
           { error: "Kanji not found" },
           { status: 404 }
         );
@@ -35,7 +36,7 @@ export async function GET(request: Request) {
 
     const data = await res.json();
 
-    return NextResponse.json(
+    return NextResponse.json<KanjiInfo>(
       {
         kanji: data.kanji,
         grade: data.grade,
@@ -57,7 +58,7 @@ export async function GET(request: Request) {
     );
   } catch (error) {
     console.error("Error fetching kanji data:", error);
-    return NextResponse.json(
+    return NextResponse.json<ApiErrorResponse>(
       { error: "Internal server error fetching kanji details" },
       { status: 500 }
     );

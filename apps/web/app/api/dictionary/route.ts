@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
+import type { DictionaryData, ApiErrorResponse } from "@nipponic/shared";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const word = searchParams.get("word");
 
   if (!word || !word.trim()) {
-    return NextResponse.json(
+    return NextResponse.json<ApiErrorResponse>(
       { error: "Word parameter is required" },
       { status: 400 },
     );
@@ -77,7 +78,7 @@ export async function GET(request: Request) {
       jlpt = targetItem.jlpt[0].replace("jlpt-", "").toUpperCase();
     }
 
-    return NextResponse.json(
+    return NextResponse.json<DictionaryData>(
       {
         reading,
         meanings:
@@ -96,7 +97,7 @@ export async function GET(request: Request) {
     );
   } catch (error) {
     console.error(`Error fetching dictionary for "${cleanWord}":`, error);
-    return NextResponse.json(
+    return NextResponse.json<ApiErrorResponse>(
       { error: "Failed to fetch word definition from dictionary" },
       { status: 502 },
     );

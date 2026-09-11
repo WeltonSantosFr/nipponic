@@ -56,7 +56,7 @@ export async function createCardAction(card: CreateCardInput): Promise<Card | nu
 
 export async function updateCardAction(
   id: string,
-  card: Partial<Card>
+  card: UpdateCardInput
 ): Promise<Card | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("nipponic.token")?.value;

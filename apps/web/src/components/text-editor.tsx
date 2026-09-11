@@ -5,7 +5,7 @@ import { TokenizedText } from "@/components/tokenized-text";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useSpeech } from "@/hooks/use-speech";
-import { Note } from "@nipponic/shared";
+import { Note, NoteSourceLang } from "@nipponic/shared";
 import {
   ArrowLeftRight,
   ArrowRight,
@@ -29,7 +29,7 @@ interface TextEditorProps {
   onBlurContent?: () => void;
   onChangeJpContent?: (newContent: string) => void;
   onBlurJpContent?: () => void;
-  onChangeSourceLang?: (newLang: "EN" | "JA") => void;
+  onChangeSourceLang?: (newLang: NoteSourceLang) => void;
   onTranslate: () => void;
   isTranslating: boolean;
 }
