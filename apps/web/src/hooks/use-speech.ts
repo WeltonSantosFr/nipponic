@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { SpeechLang } from "@nipponic/shared";
+
+export type { SpeechLang };
 
 export function useSpeech() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -27,7 +30,7 @@ export function useSpeech() {
   }, [stop]);
 
   const speak = useCallback(
-    (text: string, lang: "en-US" | "ja-JP", rate = 1.0, onEnd?: () => void): Promise<void> => {
+    (text: string, lang: SpeechLang, rate = 1.0, onEnd?: () => void): Promise<void> => {
       return new Promise((resolve) => {
         console.log(`[useSpeech] Playing [${lang}]:`, text);
 

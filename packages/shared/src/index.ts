@@ -102,10 +102,15 @@ export const GlossaryRuleSchema = z.object({
 });
 export type GlossaryRule = z.infer<typeof GlossaryRuleSchema>;
 
+export const TranslationLangSchema = z.enum(["PT", "EN", "JA"]);
+export type TranslationLang = z.infer<typeof TranslationLangSchema>;
+export type TranslateSourceLang = TranslationLang;
+export type TranslateTargetLang = TranslationLang;
+
 export const TranslateRequestSchema = z.object({
   text: z.string().min(1, "The text to translate should not be empty"),
-  sourceLang: z.enum(["PT", "EN", "JA"]).default("EN"),
-  targetLang: z.enum(["JA", "EN", "PT"]).default("JA"),
+  sourceLang: TranslationLangSchema.default("EN"),
+  targetLang: TranslationLangSchema.default("JA"),
   glossaryRules: z.array(GlossaryRuleSchema).optional(),
 });
 export type TranslateRequest = z.infer<typeof TranslateRequestSchema>;
@@ -144,6 +149,12 @@ export const ReviewCardSchema = z.object({
 export type ReviewCardInput = z.infer<typeof ReviewCardSchema>;
 export type ReviewCardDto = ReviewCardInput;
 
+export type SRSCardState = Pick<
+  Card,
+  "interval" | "easeFactor" | "repetitions" | "lapses"
+>;
+export type CardSRSData = SRSCardState;
+
 export interface SRSResult {
   interval: number; // in days
   easeFactor: number;
@@ -157,7 +168,7 @@ export interface SRSResult {
  * Calculates next review parameters based on the SuperMemo-2 (SM-2) algorithm.
  */
 export function calculateNextReview(
-  card: Pick<Card, "interval" | "easeFactor" | "repetitions" | "lapses">,
+  card: SRSCardState,
   rating: ReviewRating
 ): SRSResult {
   const currentEase = card.easeFactor ?? 2.5;
@@ -300,6 +311,18 @@ export type AddCardsToDeckDto = AddCardsToDeckInput;
 export type DeckTabMode = "my" | "app" | "public";
 export type SidebarViewMode = "notes" | "flashcards";
 
+export const DeckCardFilterModeSchema = z.enum(["all", "due"]);
+export type DeckCardFilterMode = z.infer<typeof DeckCardFilterModeSchema>;
+export type CardFilterMode = DeckCardFilterMode;
+
+export const SettingsTabSchema = z.enum(["glossary", "flashcards", "appearance"]);
+export type SettingsTab = z.infer<typeof SettingsTabSchema>;
+export type SettingsTabMode = SettingsTab;
+
+export const TokenDetailTabSchema = z.enum(["def", "kanji"]);
+export type TokenDetailTab = z.infer<typeof TokenDetailTabSchema>;
+export type TokenTabMode = TokenDetailTab;
+
 // ==========================================
 // Dictionary & Kanji Contracts
 // ==========================================
@@ -374,6 +397,12 @@ export const MessageResponseSchema = z.object({
   message: z.string(),
 });
 export type MessageResponse = z.infer<typeof MessageResponseSchema>;
+
+export const SpeechLangSchema = z.enum(["en-US", "ja-JP"]);
+export type SpeechLang = z.infer<typeof SpeechLangSchema>;
+
+export const TtsLangSchema = z.enum(["en", "ja"]);
+export type TtsLang = z.infer<typeof TtsLangSchema>;
 
 export const TtsRequestSchema = z.object({
   text: z.string().min(1),
