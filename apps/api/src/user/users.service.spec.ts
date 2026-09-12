@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ConflictException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { PrismaService } from '../prisma.service';
 
@@ -86,6 +87,20 @@ describe('UsersService', () => {
       email: createUserDto.email,
       password: 'hashed_plainPassword123',
     });
+  });
+
+  it('create - should throw ConflictException if user already exists', async () => {
+    // Arrange
+    const createUserDto = {
+      username: 'sakura',
+      email: 'sakura@nipponic.com',
+      password: 'plainPassword123',
+    };
+    prismaMock.db.orm.public.User.first.mockResolvedValue({ id: 'existing_id' });
+
+    // Act & Assert
+    await expect(service.create(createUserDto)).rejects.toThrow(ConflictException);
+    expect(prismaMock.db.orm.public.User.create).not.toHaveBeenCalled();
   });
 
   it('update - should update user and re-hash password if password is provided', async () => {
