@@ -14,7 +14,7 @@ import {
   deleteNoteAction,
 } from "@/actions/notes";
 import { useAuth } from "./AuthContext";
-import { Note } from "@nipponic/shared";
+import { Note, UpdateNoteInput } from "@nipponic/shared";
 
 interface NotesContextData {
   notes: Note[];
@@ -24,11 +24,11 @@ interface NotesContextData {
   createNewNote: () => Promise<Note>;
   updateNoteContent: (
     id: string,
-    updates: Partial<Pick<Note, "title" | "enText" | "jpText" | "sourceLang">>
+    updates: UpdateNoteInput
   ) => void;
   saveNote: (
     id: string,
-    extraUpdates?: Partial<Pick<Note, "title" | "enText" | "jpText" | "sourceLang">>
+    extraUpdates?: UpdateNoteInput
   ) => Promise<void>;
   deleteNote: (id: string) => Promise<void>;
   refreshNotes: () => Promise<void>;
@@ -128,7 +128,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
 
   const updateNoteContent = (
     id: string,
-    updates: Partial<Pick<Note, "title" | "enText" | "jpText" | "sourceLang">>
+    updates: UpdateNoteInput
   ) => {
     setNotes((prevNotes) =>
       prevNotes.map((note) =>
@@ -145,7 +145,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
 
   const saveNote = async (
     id: string,
-    extraUpdates?: Partial<Pick<Note, "title" | "enText" | "jpText" | "sourceLang">>
+    extraUpdates?: UpdateNoteInput
   ) => {
     if (!isAuthenticated) return;
 

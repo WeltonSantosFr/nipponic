@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { SpeechLang } from "@nipponic/shared";
+
+export type { SpeechLang };
 
 export function useSpeech() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -25,7 +28,7 @@ export function useSpeech() {
   }, []);
 
   const speak = useCallback(
-    (text: string, lang: "en-US" | "ja-JP", rate = 1.0) => {
+    (text: string, lang: SpeechLang, rate = 1.0) => {
       console.log(`[useSpeech] Playing [${lang}]:`, text);
 
       if (!text || !text.trim()) {

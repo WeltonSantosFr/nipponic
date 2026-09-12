@@ -18,6 +18,7 @@ import {
   UpdateDeckInput,
   SidebarViewMode,
   DeckTabMode,
+  DeckCardFilterMode,
 } from "@nipponic/shared";
 import { calculateNextReview, isCardDue } from "@/lib/srs";
 import { APP_DECKS } from "@/data/app-decks";
@@ -40,7 +41,7 @@ import {
 } from "@/actions/decks";
 import { useAuth } from "./AuthContext";
 
-export type { SidebarViewMode, DeckTabMode };
+export type { SidebarViewMode, DeckTabMode, DeckCardFilterMode };
 
 interface FlashCardsContextData {
   cards: Card[];

@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { useGlossaryRules } from "@/services/glossary";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
 import { useSpeech } from "@/hooks/use-speech";
-import { Card } from "@nipponic/shared";
+import { Card, SettingsTab } from "@nipponic/shared";
 import {
   BookMarked,
   Pencil,
@@ -38,7 +38,7 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-type SettingsTab = "glossary" | "flashcards" | "appearance";
+export type { SettingsTab };
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>("glossary");

@@ -28,6 +28,7 @@ import {
   X,
 } from "lucide-react";
 
+import type { TokenDetailTab } from "@nipponic/shared";
 import {
   DictionaryData,
   getCachedDictionaryWord,
@@ -58,6 +59,8 @@ function extractSentence(fullText: string, targetWord: string): string {
   const matched = sentences.find((s) => s.includes(targetWord));
   return matched || fullText.trim();
 }
+
+export type { TokenDetailTab };
 
 interface TokenItemProps {
   word: string;
@@ -92,7 +95,7 @@ function TokenItem({
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState<"def" | "kanji">("def");
+  const [activeTab, setActiveTab] = useState<TokenDetailTab>("def");
   const [isMinerOpen, setIsMinerOpen] = useState(false);
 
   // Edit form state

@@ -1,14 +1,14 @@
-import type { Card, CardSRSStage, ReviewRating, SRSResult } from "@nipponic/shared";
+import type { Card, CardSRSStage, ReviewRating, SRSResult, SRSCardState } from "@nipponic/shared";
 import { calculateNextReview } from "@nipponic/shared";
 
-export type { CardSRSStage, SRSResult };
+export type { CardSRSStage, SRSResult, SRSCardState };
 export { calculateNextReview };
 
 /**
  * Formats a predicted interval preview (e.g. "<10m", "1d", "3d", "2mo")
  */
 export function formatIntervalPreview(
-  card: Pick<Card, "interval" | "easeFactor" | "repetitions" | "lapses">,
+  card: SRSCardState,
   rating: ReviewRating
 ): string {
   const result = calculateNextReview(card, rating);

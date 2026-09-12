@@ -4,5 +4,7 @@ export type {
   UpdateUserDto,
   ChangePasswordDto,
   ChangePasswordInput,
+  JwtPayload,
+  UserPayload,
 } from "@nipponic/shared";
 
