@@ -181,4 +181,116 @@ describe('dictionary-cache', () => {
       expect(fetchMock).not.toHaveBeenCalled();
     });
   });
+
+  describe('saveCustomDefinition', () => {
+    it('should save custom definition and dispatch event', async () => {
+      const { saveCustomDefinition } = await import('./dictionary-cache');
+      const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
+
+      // Act
+      const result = saveCustomDefinition('犬', {
+        reading: 'いぬ',
+        meanings: ['dog'],
+        jlpt: 'N5',
+        isCommon: true,
+      });
+
+      // Assert
+      expect(result).toEqual({
+        reading: 'いぬ',
+        meanings: ['dog'],
+        jlpt: 'N5',
+        isCommon: true,
+        isCustom: true,
+      });
+      expect(dispatchSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'nipponic:custom_dict_updated' })
+      );
+    });
+
+    it('should filter empty meanings', async () => {
+      const { saveCustomDefinition } = await import('./dictionary-cache');
+
+      const result = saveCustomDefinition('猫', {
+        reading: 'ねこ',
+        meanings: ['cat', '', '  '],
+      });
+
+      expect(result.meanings).toEqual(['cat']);
+    });
+  });
+
+  describe('resetCustomDefinition', () => {
+    it('should remove a custom definition and dispatch event', async () => {
+      const { saveCustomDefinition, resetCustomDefinition, isCustomDefinition } =
+        await import('./dictionary-cache');
+      const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
+
+      // Arrange — save a custom definition first
+      saveCustomDefinition('鳥', {
+        reading: 'とり',
+        meanings: ['bird'],
+      });
+      expect(isCustomDefinition('鳥')).toBe(true);
+
+      // Act
+      resetCustomDefinition('鳥');
+
+      // Assert
+      expect(isCustomDefinition('鳥')).toBe(false);
+      expect(dispatchSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'nipponic:custom_dict_updated',
+          detail: expect.objectContaining({ word: '鳥', reset: true }),
+        })
+      );
+    });
+  });
+
+  describe('isCustomDefinition', () => {
+    it('should return false for non-custom words', async () => {
+      const { isCustomDefinition } = await import('./dictionary-cache');
+
+      expect(isCustomDefinition('未知の単語')).toBe(false);
+    });
+
+    it('should return true after saving a custom definition', async () => {
+      const { saveCustomDefinition, isCustomDefinition } = await import('./dictionary-cache');
+
+      saveCustomDefinition('空', { reading: 'そら', meanings: ['sky'] });
+      expect(isCustomDefinition('空')).toBe(true);
+    });
+  });
+
+  describe('getCachedDictionaryWord', () => {
+    it('should return undefined for words not in cache', async () => {
+      const { getCachedDictionaryWord } = await import('./dictionary-cache');
+
+      expect(getCachedDictionaryWord('存在しない')).toBeUndefined();
+    });
+
+    it('should return custom definition when word has custom override', async () => {
+      const { saveCustomDefinition, getCachedDictionaryWord } = await import('./dictionary-cache');
+
+      saveCustomDefinition('花', { reading: 'はな', meanings: ['flower'] });
+      const result = getCachedDictionaryWord('花');
+
+      expect(result).toEqual(expect.objectContaining({
+        reading: 'はな',
+        isCustom: true,
+      }));
+    });
+
+    it('should return memory-cached data for fetched words', async () => {
+      const { fetchDictionaryWord, getCachedDictionaryWord } = await import('./dictionary-cache');
+
+      const mockData = { reading: 'み', meanings: ['fruit'], jlpt: 'N3', isCommon: true };
+      fetchMock.mockResolvedValueOnce({ ok: true, json: async () => mockData });
+
+      await fetchDictionaryWord('実');
+      const cached = getCachedDictionaryWord('実');
+
+      expect(cached).toEqual(mockData);
+    });
+  });
 });
