@@ -1,8 +1,7 @@
 "use server";
 import { cookies } from "next/headers";
 import { Note, CreateNoteInput, UpdateNoteInput } from "@nipponic/shared";
-
-const API_URL = process.env.API_URL || "http://localhost:3001";
+import { API_URL } from "@/lib/api-config";
 
 export async function getNotesAction(): Promise<Note[]> {
   const cookieStore = await cookies();
