@@ -37,6 +37,7 @@ import {
   Settings,
   Sparkles,
   Trash2,
+  UserPlus,
   UserRound,
   X,
   Zap,
@@ -74,6 +75,7 @@ export function AppSidebar({
   const [deckSearchQuery, setDeckSearchQuery] = useState("");
   const [cloningDeckId, setCloningDeckId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [authModalMode, setAuthModalMode] = useState<"login" | "register">("login");
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
@@ -655,14 +657,34 @@ export function AppSidebar({
           </>
         ) : (
           <>
-            <p className="text-xs px-3">Login to keep your notes and decks</p>
-            <SidebarMenuButton onClick={() => setIsModalOpen(true)}>
-              <UserRound size={16} />
-              Login
-            </SidebarMenuButton>
+            <p className="text-xs px-3 text-muted-foreground">Sign in to keep your notes and decks</p>
+            <div className="flex flex-col gap-1.5 px-2 pt-1">
+              <Button
+                size="sm"
+                onClick={() => {
+                  setAuthModalMode("register");
+                  setIsModalOpen(true);
+                }}
+                className="w-full gap-1.5 cursor-pointer text-xs h-8 font-medium shadow-xs"
+              >
+                <UserPlus size={14} />
+                Create Account
+              </Button>
+              <SidebarMenuButton
+                onClick={() => {
+                  setAuthModalMode("login");
+                  setIsModalOpen(true);
+                }}
+                className="cursor-pointer"
+              >
+                <UserRound size={16} />
+                <span>Login</span>
+              </SidebarMenuButton>
+            </div>
             <LoginModal
               isOpen={isModalOpen}
               onClose={() => setIsModalOpen(false)}
+              initialMode={authModalMode}
             />
           </>
         )}
