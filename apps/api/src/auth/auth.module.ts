@@ -4,12 +4,15 @@ import { AuthService } from "./auth.service";
 import { AuthController } from "./auth.controller";
 import { PrismaService } from "../prisma.service";
 
+const jwtSecret =
+  process.env.JWT_SECRET || "nipponic-jwt-secret-dev-2026-key";
+
 @Module({
   imports: [
     JwtModule.register({
       global: true,
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: "1h" },
+      secret: jwtSecret,
+      signOptions: { expiresIn: "7d" },
     }),
   ],
   controllers: [AuthController],

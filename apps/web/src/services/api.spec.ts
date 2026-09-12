@@ -1,9 +1,48 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createNote, fetchNotes, login } from "./api";
+import { createNote, fetchNotes, login, registerUser } from "./api";
 
 describe("api service", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  describe("registerUser", () => {
+    it("should post user data and return created user on success", async () => {
+      // Arrange
+      const mockUserData = { username: "kenji", email: "kenji@example.com", password: "password123" };
+      const mockCreatedUser = { id: "user-1", username: "kenji", email: "kenji@example.com" };
+      const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockCreatedUser,
+      } as Response);
+
+      // Act
+      const result = await registerUser(mockUserData);
+
+      // Assert
+      expect(fetchSpy).toHaveBeenCalledWith("http://localhost:3001/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(mockUserData),
+      });
+      expect(result).toEqual(mockCreatedUser);
+    });
+
+    it("should throw error with API message when response is not ok", async () => {
+      // Arrange
+      vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: async () => ({ message: "Email already exists" }),
+      } as Response);
+
+      // Act & Assert
+      await expect(
+        registerUser({ username: "kenji", email: "exists@example.com", password: "pwd" })
+      ).rejects.toThrow("Email already exists");
+    });
   });
 
   describe("login", () => {

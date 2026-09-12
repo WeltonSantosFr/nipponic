@@ -26,7 +26,32 @@ import {
   AlertCircle,
   Sparkles,
   Radio,
+  Trash2,
 } from "lucide-react";
+
+function DynamicAudioWave({ level }: { level: number }) {
+  const barScales = [
+    Math.max(0.2, Math.min(1, level * 1.3 + 0.15)),
+    Math.max(0.25, Math.min(1, level * 2.2 + 0.2)),
+    Math.max(0.2, Math.min(1, level * 1.8 + 0.18)),
+    Math.max(0.15, Math.min(1, level * 1.4 + 0.12)),
+  ];
+
+  return (
+    <span className="inline-flex items-center gap-[2.5px] h-4 px-1" aria-hidden="true">
+      {barScales.map((scale, i) => (
+        <span
+          key={i}
+          className="w-[3px] bg-white rounded-full transition-transform duration-75 ease-out origin-center"
+          style={{
+            height: "14px",
+            transform: `scaleY(${scale})`,
+          }}
+        />
+      ))}
+    </span>
+  );
+}
 
 interface ShadowingModalProps {
   isOpen: boolean;
@@ -60,6 +85,7 @@ export function ShadowingModal({
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [recordedAudioUrl, setRecordedAudioUrl] = useState<string | null>(null);
   const [recordDuration, setRecordDuration] = useState<number>(0);
+  const [audioLevel, setAudioLevel] = useState<number>(0);
   const [isComparing, setIsComparing] = useState<boolean>(false);
   const [isPlayingUserAudio, setIsPlayingUserAudio] = useState<boolean>(false);
   const [micError, setMicError] = useState<string | null>(null);
@@ -68,40 +94,73 @@ export function ShadowingModal({
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const userAudioPlayerRef = useRef<HTMLAudioElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animFrameRef = useRef<number | null>(null);
+  const recordedAudioUrlRef = useRef<string | null>(null);
+  const compareAbortRef = useRef<boolean>(false);
 
   const { speak, stop: stopNativeSpeech, isPlaying: isPlayingNative } = useSpeech();
 
   const currentSentenceJp = sentencesJp[currentIndex] || jpText;
   const currentSentenceEn = sentencesEn[currentIndex] || enText;
 
-  // Cleanup on unmount or sentence switch
-  const resetRecording = useCallback(() => {
+  // Stop active hardware / animation resources
+  const stopHardwareStreams = useCallback(() => {
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(() => {});
+      audioContextRef.current = null;
+    }
+    analyserRef.current = null;
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    setAudioLevel(0);
+  }, []);
+
+  // Discard user recording and reset to initial state
+  const discardRecording = useCallback(() => {
+    compareAbortRef.current = true;
+    stopNativeSpeech();
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
-      mediaRecorderRef.current.stop();
+      try {
+        mediaRecorderRef.current.stop();
+      } catch (e) {}
     }
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    stopHardwareStreams();
+
     if (userAudioPlayerRef.current) {
       userAudioPlayerRef.current.pause();
       userAudioPlayerRef.current = null;
     }
-    if (recordedAudioUrl) {
-      URL.revokeObjectURL(recordedAudioUrl);
+    if (recordedAudioUrlRef.current) {
+      URL.revokeObjectURL(recordedAudioUrlRef.current);
+      recordedAudioUrlRef.current = null;
     }
+
     setIsRecording(false);
     setRecordedAudioUrl(null);
     setRecordDuration(0);
     setIsComparing(false);
     setIsPlayingUserAudio(false);
     setMicError(null);
-  }, [recordedAudioUrl]);
+  }, [stopHardwareStreams]);
 
+  // Reset recording only when switching sentences or closing modal
   useEffect(() => {
-    resetRecording();
+    discardRecording();
     stopNativeSpeech();
-  }, [currentIndex, isOpen, resetRecording, stopNativeSpeech]);
+  }, [currentIndex, isOpen, discardRecording, stopNativeSpeech]);
 
   const handleStartRecording = async () => {
     setMicError(null);
@@ -114,7 +173,42 @@ export function ShadowingModal({
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
       audioChunksRef.current = [];
+
+      // Setup Web Audio Analyser for dynamic voice reactivity
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContextClass) {
+        try {
+          const audioCtx = new AudioContextClass();
+          const analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 64;
+          analyser.smoothingTimeConstant = 0.5;
+
+          const source = audioCtx.createMediaStreamSource(stream);
+          source.connect(analyser);
+
+          audioContextRef.current = audioCtx;
+          analyserRef.current = analyser;
+
+          const dataArray = new Uint8Array(analyser.frequencyBinCount);
+          const updateVolume = () => {
+            if (!analyserRef.current) return;
+            analyserRef.current.getByteFrequencyData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+              sum += dataArray[i] ?? 0;
+            }
+            const avg = sum / dataArray.length;
+            const normalized = Math.min(1, Math.max(0, avg / 75));
+            setAudioLevel(normalized);
+            animFrameRef.current = requestAnimationFrame(updateVolume);
+          };
+          animFrameRef.current = requestAnimationFrame(updateVolume);
+        } catch (audioErr) {
+          console.warn("Audio visualizer initialization failed:", audioErr);
+        }
+      }
 
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
@@ -130,8 +224,9 @@ export function ShadowingModal({
           type: "audio/webm",
         });
         const url = URL.createObjectURL(audioBlob);
+        recordedAudioUrlRef.current = url;
         setRecordedAudioUrl(url);
-        stream.getTracks().forEach((track) => track.stop());
+        stopHardwareStreams();
       };
 
       mediaRecorder.start();
@@ -160,52 +255,90 @@ export function ShadowingModal({
     setIsRecording(false);
   };
 
-  const handlePlayUserRecording = () => {
-    if (!recordedAudioUrl) return;
-    stopNativeSpeech();
+  const handlePlayUserRecording = useCallback((): Promise<void> => {
+    return new Promise((resolve) => {
+      if (!recordedAudioUrl) {
+        resolve();
+        return;
+      }
+      stopNativeSpeech();
 
+      if (userAudioPlayerRef.current) {
+        userAudioPlayerRef.current.pause();
+        userAudioPlayerRef.current = null;
+      }
+
+      const audio = new Audio(recordedAudioUrl);
+      userAudioPlayerRef.current = audio;
+      setIsPlayingUserAudio(true);
+
+      let isFinished = false;
+      const finish = () => {
+        if (isFinished) return;
+        isFinished = true;
+        setIsPlayingUserAudio(false);
+        userAudioPlayerRef.current = null;
+        resolve();
+      };
+
+      audio.onended = () => {
+        finish();
+      };
+
+      audio.onerror = () => {
+        finish();
+      };
+
+      audio.play().catch(() => {
+        finish();
+      });
+    });
+  }, [recordedAudioUrl, stopNativeSpeech]);
+
+  const handlePauseUserRecording = () => {
+    if (userAudioPlayerRef.current) {
+      userAudioPlayerRef.current.pause();
+      userAudioPlayerRef.current = null;
+      setIsPlayingUserAudio(false);
+    }
+  };
+
+  const handleStopCompare = useCallback(() => {
+    compareAbortRef.current = true;
+    stopNativeSpeech();
     if (userAudioPlayerRef.current) {
       userAudioPlayerRef.current.pause();
       userAudioPlayerRef.current = null;
     }
+    setIsPlayingUserAudio(false);
+    setIsComparing(false);
+  }, [stopNativeSpeech]);
 
-    const audio = new Audio(recordedAudioUrl);
-    userAudioPlayerRef.current = audio;
-    setIsPlayingUserAudio(true);
-
-    audio.onended = () => {
-      setIsPlayingUserAudio(false);
-      userAudioPlayerRef.current = null;
-    };
-
-    audio.onerror = () => {
-      setIsPlayingUserAudio(false);
-      userAudioPlayerRef.current = null;
-    };
-
-    audio.play().catch(() => setIsPlayingUserAudio(false));
-  };
-
-  // Compare mode: Play native audio, then automatically play user recording
-  const handleSequentialCompare = () => {
-    if (!recordedAudioUrl || !currentSentenceJp) return;
+  // Compare mode: Play full native Japanese audio, wait for it to complete, then play full user recording
+  const handleSequentialCompare = async () => {
+    if (!recordedAudioUrl || !currentSentenceJp || isComparing) return;
     setIsComparing(true);
+    compareAbortRef.current = false;
 
-    // 1. Play native
-    speak(currentSentenceJp, "ja-JP", speed);
+    try {
+      // 1. Play native Japanese audio and wait until it completely finishes
+      await speak(currentSentenceJp, "ja-JP", speed);
 
-    // Watch for native speech completion to trigger user recording
-    const checkInterval = setInterval(() => {
-      // Once native finishes playing
-      if (!isPlayingNative) {
-        clearInterval(checkInterval);
-        // Short pause before user playback
-        setTimeout(() => {
-          handlePlayUserRecording();
-          setIsComparing(false);
-        }, 500);
-      }
-    }, 200);
+      // If comparison was stopped or cancelled, abort
+      if (compareAbortRef.current) return;
+
+      // Natural pause between native model and user voice (400ms)
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      if (compareAbortRef.current) return;
+
+      // 2. Play full user recording and wait until it completely finishes
+      await handlePlayUserRecording();
+    } catch (err) {
+      console.error("Error during sequential comparison:", err);
+    } finally {
+      setIsComparing(false);
+    }
   };
 
   const formatTimer = (seconds: number) => {
@@ -389,10 +522,11 @@ export function ShadowingModal({
                     variant="destructive"
                     size="lg"
                     onClick={handleStopRecording}
-                    className="flex-1 h-11 gap-2 cursor-pointer animate-pulse font-semibold"
+                    className="flex-1 h-11 gap-2.5 cursor-pointer font-semibold shadow-xs bg-red-600 hover:bg-red-700 text-white"
                   >
-                    <Square size={16} className="fill-current" />
+                    <DynamicAudioWave level={audioLevel} />
                     <span>Stop Recording ({formatTimer(recordDuration)})</span>
+                    <Square size={14} className="fill-current ml-auto opacity-80" />
                   </Button>
                 ) : (
                   <Button
@@ -406,40 +540,56 @@ export function ShadowingModal({
                 )}
               </div>
             ) : (
-              /* Recorded state: User audio playback & Retake */
+              /* Recorded state: User audio playback & Delete */
               <div className="flex flex-col gap-3 animate-in fade-in duration-200">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={handlePlayUserRecording}
-                    disabled={isPlayingUserAudio}
-                    className="flex-1 h-10 gap-2 text-xs font-semibold cursor-pointer"
-                  >
-                    <Play size={15} className={isPlayingUserAudio ? "animate-spin" : "fill-current"} />
-                    <span>{isPlayingUserAudio ? "Playing..." : "Play Your Recording"}</span>
-                  </Button>
+                <div className="flex items-center justify-between bg-card border rounded-xl p-3 shadow-xs">
+                  <div className="flex items-center gap-2.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={isPlayingUserAudio ? handlePauseUserRecording : handlePlayUserRecording}
+                      className="h-9 gap-2 text-xs font-semibold cursor-pointer border-primary/30 hover:bg-primary/10"
+                    >
+                      {isPlayingUserAudio ? (
+                        <>
+                          <Square size={13} className="fill-current text-primary" />
+                          <span>Pause</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play size={13} className="fill-current text-primary" />
+                          <span>Play Your Recording</span>
+                        </>
+                      )}
+                    </Button>
+
+                    <span className="text-xs font-mono text-muted-foreground">
+                      {formatTimer(recordDuration)}
+                    </span>
+                  </div>
 
                   <Button
                     variant="ghost"
-                    size="icon"
-                    onClick={resetRecording}
-                    className="h-10 w-10 text-muted-foreground hover:text-foreground cursor-pointer"
-                    title="Record again"
+                    size="sm"
+                    onClick={discardRecording}
+                    className="h-9 px-2.5 text-xs text-red-500 hover:text-red-600 hover:bg-red-500/10 gap-1.5 cursor-pointer"
+                    title="Delete recording to record again"
                   >
-                    <RotateCcw size={16} />
+                    <Trash2 size={14} />
+                    <span>Delete</span>
                   </Button>
                 </div>
 
                 {/* Compare Button */}
                 <Button
-                  onClick={handleSequentialCompare}
-                  disabled={isComparing || isPlayingNative || isPlayingUserAudio}
+                  onClick={isComparing ? handleStopCompare : handleSequentialCompare}
+                  disabled={(isPlayingNative && !isComparing) || (isPlayingUserAudio && !isComparing)}
                   className="w-full h-11 gap-2 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white font-semibold cursor-pointer shadow-md"
                 >
-                  <Radio size={16} className={isComparing ? "animate-ping" : ""} />
+                  <Radio size={16} className={isComparing ? "animate-pulse text-amber-300" : ""} />
                   <span>
                     {isComparing
-                      ? "Comparing (Playing sequence)..."
+                      ? "Stop Comparison"
                       : "Compare: Native vs Your Voice"}
                   </span>
                 </Button>
