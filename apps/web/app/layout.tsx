@@ -25,6 +25,9 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "https://nipponic-web.vercel.app"
+  ),
   title: "Nipponic",
   description: "Learn Japanese with ease",
 };

@@ -1,7 +1,7 @@
-import type { AuthResponse, LoginInput, LoginProps, Note, CreateNoteInput } from "@nipponic/shared";
+import type { AuthResponse, LoginProps, Note, CreateNoteInput } from "@nipponic/shared";
+import { API_URL } from "@/lib/api-config";
 
-const API_URL = "http://localhost:3001";
-
+export { API_URL };
 export type { LoginProps };
 
 export const login = async ({ email, password }: LoginProps): Promise<AuthResponse> => {

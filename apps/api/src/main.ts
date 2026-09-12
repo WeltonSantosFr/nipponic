@@ -5,8 +5,17 @@ import { AppModule } from "./app.module";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  const defaultOrigins: (string | RegExp)[] = [
+    "http://localhost:3000",
+    "https://nipponic-web.vercel.app",
+    /^https:\/\/nipponic-web.*\.vercel\.app$/,
+  ];
+  const envOrigins = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(",").map((origin) => origin.trim()).filter(Boolean)
+    : [];
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: [...defaultOrigins, ...envOrigins],
     credentials: true,
   });
   
