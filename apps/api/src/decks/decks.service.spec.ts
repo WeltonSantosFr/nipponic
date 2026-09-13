@@ -381,5 +381,38 @@ describe('DecksService', () => {
 
       await expect(service.reorderCards('user_1', 'deck_1', { cardIds: [] })).rejects.toThrow(NotFoundException);
     });
+
+    it('should skip cards that are not in the deck during reordering', async () => {
+      // Arrange
+      const userId = 'user_1';
+      const deckId = 'deck_1';
+      const mockDeck = { id: deckId, userId };
+
+      const deckFirstMock = vi.fn().mockResolvedValue(mockDeck);
+      prismaMock.db.orm.public.Deck.where.mockReturnValue({ first: deckFirstMock });
+
+      const deckCards = [
+        { id: 'dc_1', deckId, cardId: 'card_1', order: 0 },
+      ];
+      const deckCardAllMock = vi.fn().mockResolvedValue(deckCards);
+      const deckCardUpdateMock = vi.fn().mockResolvedValue({});
+
+      setupPopulateMocks(deckCards, []);
+
+      prismaMock.db.orm.public.DeckCard.where.mockImplementation((params: any) => {
+        if (params.id) return { update: deckCardUpdateMock, all: deckCardAllMock };
+        return { all: deckCardAllMock, update: deckCardUpdateMock };
+      });
+
+      const dto = { cardIds: ['card_1', 'non_existent_card'] };
+
+      // Act
+      await service.reorderCards(userId, deckId, dto);
+
+      // Assert
+      expect(prismaMock.db.orm.public.DeckCard.where).toHaveBeenCalledWith({ id: 'dc_1' });
+      expect(deckCardUpdateMock).toHaveBeenCalledTimes(1);
+      expect(deckCardUpdateMock).toHaveBeenCalledWith({ order: 0 });
+    });
   });
 });
