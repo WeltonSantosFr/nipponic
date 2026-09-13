@@ -142,4 +142,43 @@ describe("GET /api/dictionary", () => {
     expect(data).toEqual({ error: "Failed to fetch word definition from dictionary" });
     expect(console.error).toHaveBeenCalled();
   });
+
+  it("should match by japanese word or reading when slug differs", async () => {
+    // Arrange
+    const mockJishoData = {
+      data: [
+        {
+          slug: "different-slug",
+          is_common: false,
+          jlpt: [],
+          japanese: [
+            { word: "猫", reading: "ねこ" }
+          ],
+          senses: [
+            { english_definitions: ["cat"] }
+          ]
+        }
+      ]
+    };
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockJishoData),
+    });
+
+    const req = mockRequest("http://localhost/api/dictionary?word=猫");
+
+    // Act
+    const response = await GET(req);
+    const data = await response.json();
+
+    // Assert
+    expect(response.status).toBe(200);
+    expect(data).toEqual({
+      reading: "ねこ",
+      meanings: ["cat"],
+      jlpt: null,
+      isCommon: false,
+    });
+  });
 });

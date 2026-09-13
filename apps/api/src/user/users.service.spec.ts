@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { UsersService } from './users.service';
 import { PrismaService } from '../prisma.service';
+import { Logger } from '@nestjs/common';
 
 vi.mock('bcrypt', () => ({
   hashSync: vi.fn((pwd: string) => `hashed_${pwd}`),
@@ -151,5 +152,26 @@ describe('UsersService', () => {
     expect(noteDeleteMock).toHaveBeenCalledTimes(1);
     expect(prismaMock.db.orm.public.User.where).toHaveBeenCalledWith({ id: 'usr_123' });
     expect(userDeleteMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('delete - should log error and continue deleting user when deleting notes fails', async () => {
+    // Arrange
+    const loggerErrorSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+    const noteError = new Error('Database connection failure');
+    const noteDeleteMock = vi.fn().mockRejectedValue(noteError);
+    prismaMock.db.orm.public.Note.where.mockReturnValue({ delete: noteDeleteMock });
+
+    const userDeleteMock = vi.fn().mockResolvedValue({ id: 'usr_123' });
+    prismaMock.db.orm.public.User.where.mockReturnValue({ delete: userDeleteMock });
+
+    // Act
+    const result = await service.delete('usr_123');
+
+    // Assert
+    expect(result).toEqual({ id: 'usr_123' });
+    expect(loggerErrorSpy).toHaveBeenCalledWith('Failed to delete notes for user usr_123', noteError);
+    expect(prismaMock.db.orm.public.User.where).toHaveBeenCalledWith({ id: 'usr_123' });
+    expect(userDeleteMock).toHaveBeenCalledTimes(1);
+    loggerErrorSpy.mockRestore();
   });
 });
