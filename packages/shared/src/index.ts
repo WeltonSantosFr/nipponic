@@ -364,6 +364,7 @@ export const RawTokenSchema = z.object({
   pos: z.string().optional(),
   pos_detail_1: z.string().optional(),
   reading: z.string().optional(),
+  basic_form: z.string().optional(),
 });
 export type RawToken = z.infer<typeof RawTokenSchema>;
 export type KuromojiRawToken = RawToken;
@@ -372,6 +373,7 @@ export const MergedTokenSchema = z.object({
   surface_form: z.string(),
   reading: z.string().optional(),
   pos: z.string().optional(),
+  basic_form: z.string().optional(),
   isMerged: z.boolean().optional(),
 });
 export type MergedToken = z.infer<typeof MergedTokenSchema>;
