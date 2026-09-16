@@ -1,6 +1,6 @@
 "use client";
 
-import { Deck } from "@nipponic/shared";
+import { Deck, DeleteDeckModalProps } from "@nipponic/shared";
 import {
   Dialog,
   DialogContent,
@@ -12,12 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 
-interface DeleteDeckModalProps {
-  deck: Deck | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-}
+export type { DeleteDeckModalProps };
 
 export function DeleteDeckModal({
   deck,

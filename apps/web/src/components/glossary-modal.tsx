@@ -13,13 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useGlossaryRules } from "@/services/glossary";
 import { BookMarked, Plus, Trash2 } from "lucide-react";
+import type { GlossaryModalProps } from "@nipponic/shared";
 
-interface GlossaryModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  initialSourceTerm?: string;
-  initialTargetTerm?: string;
-}
+export type { GlossaryModalProps };
 
 export function GlossaryModal({
   isOpen,

@@ -6,16 +6,13 @@ import { Label } from "@/components/ui/label";
 import { login as apiLogin, registerUser } from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { AlertCircle } from "lucide-react";
+import type { AuthMode, LoginModalProps } from "@nipponic/shared";
 
-interface LoginModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  initialMode?: "login" | "register";
-}
+export type { AuthMode, LoginModalProps };
 
 export function LoginModal({ isOpen, onClose, initialMode = "login" }: LoginModalProps) {
   const { login } = useAuth();
-  const [mode, setMode] = useState<"login" | "register">(initialMode);
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
