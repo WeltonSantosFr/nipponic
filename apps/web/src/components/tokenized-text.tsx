@@ -28,7 +28,7 @@ import {
   X,
 } from "lucide-react";
 
-import type { TokenDetailTab } from "@nipponic/shared";
+import type { TokenDetailTab, TokenizedTextProps } from "@nipponic/shared";
 import {
   DictionaryData,
   getCachedDictionaryWord,
@@ -66,7 +66,7 @@ function extractSentence(fullText: string, targetWord: string): string {
   return matched || fullText.trim();
 }
 
-export type { TokenDetailTab };
+export type { TokenDetailTab, TokenizedTextProps };
 
 interface TokenItemProps {
   word: string;
@@ -570,13 +570,7 @@ export function TokenizedText({
   enContext = "",
   flashcardWords: propFlashcardWords,
   onFlashcardWordsCountChange,
-}: {
-  text: string;
-  showFurigana?: boolean;
-  enContext?: string;
-  flashcardWords?: Set<string>;
-  onFlashcardWordsCountChange?: (count: number) => void;
-}) {
+}: TokenizedTextProps) {
   const tokenizer = useKuromoji();
   const { compounds, addCompound, removeCompound } = useCompoundWords();
   const { cards, decks } = useFlashCards();

@@ -24,11 +24,9 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
+import type { ProfileModalProps } from "@nipponic/shared";
 
-interface ProfileModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+export type { ProfileModalProps };
 
 export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const { user, logout } = useAuth();

@@ -22,7 +22,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotes } from "@/contexts/NotesContext";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
-import { Note, Deck } from "@nipponic/shared";
+import { Note, Deck, AuthMode } from "@nipponic/shared";
 import { isCardDue } from "@/lib/srs";
 import {
   BookOpen,
@@ -75,7 +75,7 @@ export function AppSidebar({
   const [deckSearchQuery, setDeckSearchQuery] = useState("");
   const [cloningDeckId, setCloningDeckId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [authModalMode, setAuthModalMode] = useState<"login" | "register">("login");
+  const [authModalMode, setAuthModalMode] = useState<AuthMode>("login");
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);

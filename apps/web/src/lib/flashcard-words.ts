@@ -1,4 +1,6 @@
-import { Card } from "@nipponic/shared";
+import { Card, FlashcardWordSource, TokenWordItem } from "@nipponic/shared";
+
+export type { FlashcardWordSource, TokenWordItem };
 
 /**
  * Extracts the core target word from a flashcard's Japanese text.
@@ -30,7 +32,7 @@ export function extractWordFromCard(cardJpText: string): string {
  * Extracts all unique Japanese words from an array of flashcards into a Set for O(1) lookups.
  */
 export function extractFlashcardWords(
-  cards: (Pick<Card, "jpText"> | { jpText?: string | null })[]
+  cards: FlashcardWordSource[]
 ): Set<string> {
   const words = new Set<string>();
 
@@ -77,7 +79,7 @@ export function isWordInFlashcards(
  * Counts how many unique words in the tokens list are already in the flashcards.
  */
 export function countFlashcardWordsInTokens(
-  tokens: { surface_form: string; basic_form?: string }[],
+  tokens: TokenWordItem[],
   flashcardWords: Set<string>
 ): number {
   if (!tokens || tokens.length === 0 || !flashcardWords || flashcardWords.size === 0) {

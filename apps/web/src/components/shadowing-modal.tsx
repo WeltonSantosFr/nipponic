@@ -53,12 +53,9 @@ function DynamicAudioWave({ level }: { level: number }) {
   );
 }
 
-interface ShadowingModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  jpText: string;
-  enText?: string;
-}
+import type { ShadowingModalProps } from "@nipponic/shared";
+
+export type { ShadowingModalProps };
 
 export function ShadowingModal({
   isOpen,

@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { useGlossaryRules } from "@/services/glossary";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
 import { useSpeech } from "@/hooks/use-speech";
-import { Card, SettingsTab } from "@nipponic/shared";
+import { Card, SettingsTab, SettingsModalProps } from "@nipponic/shared";
 import {
   BookMarked,
   Pencil,
@@ -33,12 +33,7 @@ import {
   Palette,
 } from "lucide-react";
 
-interface SettingsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-export type { SettingsTab };
+export type { SettingsTab, SettingsModalProps };
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>("glossary");

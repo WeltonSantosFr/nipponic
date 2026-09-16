@@ -323,6 +323,10 @@ export const TokenDetailTabSchema = z.enum(["def", "kanji"]);
 export type TokenDetailTab = z.infer<typeof TokenDetailTabSchema>;
 export type TokenTabMode = TokenDetailTab;
 
+export const AuthModeSchema = z.enum(["login", "register"]);
+export type AuthMode = z.infer<typeof AuthModeSchema>;
+export type AuthModalMode = AuthMode;
+
 // ==========================================
 // Dictionary & Kanji Contracts
 // ==========================================
@@ -378,6 +382,17 @@ export const MergedTokenSchema = z.object({
 });
 export type MergedToken = z.infer<typeof MergedTokenSchema>;
 
+export const TokenWordItemSchema = z.object({
+  surface_form: z.string(),
+  basic_form: z.string().optional(),
+});
+export type TokenWordItem = z.infer<typeof TokenWordItemSchema>;
+export type FlashcardWordToken = TokenWordItem;
+
+export type FlashcardWordSource = Pick<Card, "jpText"> | { jpText?: string | null };
+export type FlashcardWordCard = FlashcardWordSource;
+export type FlashcardWordInput = FlashcardWordSource;
+
 // ==========================================
 // Common API & Action Contracts
 // ==========================================
@@ -411,4 +426,92 @@ export const TtsRequestSchema = z.object({
   lang: z.string().optional(),
 });
 export type TtsRequest = z.infer<typeof TtsRequestSchema>;
+
+// ==========================================
+// Learning & Study Modals Contracts
+// ==========================================
+
+export const SentenceMinerDataSchema = z.object({
+  word: z.string(),
+  reading: z.string().optional(),
+  meanings: z.array(z.string()).optional(),
+  sentenceJp: z.string(),
+  sentenceEn: z.string().optional(),
+});
+export type SentenceMinerData = z.infer<typeof SentenceMinerDataSchema>;
+export type SentenceMinerInput = SentenceMinerData;
+export type SentenceMinerPayload = SentenceMinerData;
+
+export interface SentenceMinerModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  word: string;
+  reading?: string;
+  meanings?: string[];
+  sentenceJp: string;
+  sentenceEn?: string;
+}
+export type SentenceMinerProps = SentenceMinerModalProps;
+
+export const ShadowingDataSchema = z.object({
+  jpText: z.string(),
+  enText: z.string().optional(),
+});
+export type ShadowingData = z.infer<typeof ShadowingDataSchema>;
+export type ShadowingInput = ShadowingData;
+
+export interface ShadowingModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  jpText: string;
+  enText?: string;
+}
+export type ShadowingProps = ShadowingModalProps;
+
+export interface DeleteNoteModalProps {
+  note: Note | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}
+
+export interface DeleteDeckModalProps {
+  deck: Deck | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}
+
+export interface ProfileModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export interface SettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export interface GlossaryModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  initialSourceTerm?: string;
+  initialTargetTerm?: string;
+}
+
+export interface LoginModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  initialMode?: AuthMode;
+}
+
+export interface TokenizedTextProps {
+  text: string;
+  showFurigana?: boolean;
+  enContext?: string;
+  flashcardWords?: Set<string>;
+  onFlashcardWordsCountChange?: (count: number) => void;
+}
+
+
 

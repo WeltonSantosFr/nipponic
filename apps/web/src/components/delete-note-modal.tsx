@@ -7,15 +7,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Note } from "@nipponic/shared";
+import { Note, DeleteNoteModalProps } from "@nipponic/shared";
 import { Trash2 } from "lucide-react";
 
-interface DeleteNoteModalProps {
-  note: Note | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-}
+export type { DeleteNoteModalProps };
 
 export function DeleteNoteModal({
   note,

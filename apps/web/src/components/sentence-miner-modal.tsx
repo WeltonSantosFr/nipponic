@@ -15,16 +15,9 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Layers, Sparkles, Check, Plus, Loader2 } from "lucide-react";
+import type { SentenceMinerModalProps } from "@nipponic/shared";
 
-interface SentenceMinerModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  word: string;
-  reading?: string;
-  meanings?: string[];
-  sentenceJp: string;
-  sentenceEn?: string;
-}
+export type { SentenceMinerModalProps };
 
 export function SentenceMinerModal({
   isOpen,
