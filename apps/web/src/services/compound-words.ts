@@ -130,6 +130,7 @@ export function smartMergeTokens(
       surface_form: currentToken.surface_form,
       reading: currentToken.reading,
       pos: currentToken.pos,
+      basic_form: currentToken.basic_form,
       isMerged: false,
     });
 

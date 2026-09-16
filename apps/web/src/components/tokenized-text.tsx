@@ -41,6 +41,12 @@ import {
   smartMergeTokens,
   useCompoundWords,
 } from "@/services/compound-words";
+import { useFlashCards } from "@/contexts/FlashCardsContext";
+import {
+  extractFlashcardWords,
+  isWordInFlashcards,
+  countFlashcardWordsInTokens,
+} from "@/lib/flashcard-words";
 
 export function toHiragana(str: string): string {
   if (!str) return "";
@@ -65,9 +71,11 @@ export type { TokenDetailTab };
 interface TokenItemProps {
   word: string;
   reading?: string;
+  basicForm?: string;
   nextWord?: string;
   isMerged?: boolean;
   showFurigana?: boolean;
+  hasFlashcard?: boolean;
   fullText?: string;
   enContext?: string;
   onMergeWithNext?: () => void;
@@ -80,12 +88,13 @@ function TokenItem({
   nextWord,
   isMerged,
   showFurigana = false,
+  hasFlashcard = false,
   fullText = "",
   enContext = "",
   onMergeWithNext,
   onUnmerge,
 }: TokenItemProps) {
-  const isPunctuation = /^[「」『』、。！？\s\(\)\[\]…:;,-]+$/.test(word);
+  const isPunctuation = /^[「」『』、。！？\s()[\]…:;,-]+$/.test(word);
   const hasKanji = /[\u4e00-\u9faf]/.test(word);
 
   const [isOpen, setIsOpen] = useState(false);
@@ -204,10 +213,22 @@ function TokenItem({
   return (
     <>
       <Popover open={isOpen} onOpenChange={handleOpenChange}>
-        <PopoverTrigger className="cursor-pointer transition-all duration-150 hover:bg-primary/20 hover:text-primary rounded-sm px-0.5 inline-block select-text outline-none data-open:bg-primary/25 data-open:text-primary">
+        <PopoverTrigger
+          className={
+            hasFlashcard
+              ? "cursor-pointer transition-all duration-150 bg-amber-500/15 dark:bg-amber-500/25 text-amber-950 dark:text-amber-100 border-b-2 border-amber-500/60 font-medium rounded-sm px-1 py-0.5 mx-0.5 inline-block select-text outline-none shadow-2xs hover:bg-amber-500/30 dark:hover:bg-amber-500/35 hover:border-amber-500 hover:text-amber-950 dark:hover:text-amber-50 data-open:bg-amber-500/35 data-open:border-amber-500"
+              : "cursor-pointer transition-all duration-150 hover:bg-primary/20 hover:text-primary rounded-sm px-0.5 inline-block select-text outline-none data-open:bg-primary/25 data-open:text-primary"
+          }
+        >
           {showFurigana && hasKanji && furiganaText ? (
             <ruby className="inline-flex flex-col items-center leading-none text-center">
-              <span className="text-[10px] text-muted-foreground font-normal select-none pb-0.5 leading-none">
+              <span
+                className={`text-[10px] font-normal select-none pb-0.5 leading-none ${
+                  hasFlashcard
+                    ? "text-amber-800 dark:text-amber-200"
+                    : "text-muted-foreground"
+                }`}
+              >
                 {furiganaText}
               </span>
               <span className="leading-tight">{word}</span>
@@ -414,6 +435,15 @@ function TokenItem({
                   <div className="flex flex-col gap-2">
                     {/* Tags */}
                     <div className="flex items-center gap-1.5 flex-wrap">
+                      {hasFlashcard && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 h-4 gap-0.5 font-medium"
+                        >
+                          <Sparkles size={9} className="text-amber-500" />
+                          In Flashcards
+                        </Badge>
+                      )}
                       {dictData.isCustom ? (
                         <Badge
                           variant="default"
@@ -464,11 +494,19 @@ function TokenItem({
                     handleOpenChange(false);
                     setIsMinerOpen(true);
                   }}
-                  className="h-7 text-xs gap-1.5 px-3 bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer shadow-xs font-semibold"
-                  title="Create a flashcard with this word and note sentence"
+                  className={`h-7 text-xs gap-1.5 px-3 cursor-pointer shadow-xs font-semibold ${
+                    hasFlashcard
+                      ? "bg-amber-600 hover:bg-amber-700 text-white"
+                      : "bg-primary text-primary-foreground hover:bg-primary/90"
+                  }`}
+                  title={
+                    hasFlashcard
+                      ? "Create another flashcard with this word and note sentence"
+                      : "Create a flashcard with this word and note sentence"
+                  }
                 >
                   <Sparkles size={12} />
-                  <span>Create Flashcard</span>
+                  <span>{hasFlashcard ? "Flashcard Added" : "Create Flashcard"}</span>
                 </Button>
 
                 <div className="flex items-center gap-1">
@@ -530,19 +568,52 @@ export function TokenizedText({
   text,
   showFurigana = false,
   enContext = "",
+  flashcardWords: propFlashcardWords,
+  onFlashcardWordsCountChange,
 }: {
   text: string;
   showFurigana?: boolean;
   enContext?: string;
+  flashcardWords?: Set<string>;
+  onFlashcardWordsCountChange?: (count: number) => void;
 }) {
   const tokenizer = useKuromoji();
   const { compounds, addCompound, removeCompound } = useCompoundWords();
+  const { cards, decks } = useFlashCards();
+
+  const flashcardWords = useMemo(() => {
+    if (propFlashcardWords) return propFlashcardWords;
+    const userCards = [
+      ...(cards || []),
+      ...(decks || []).flatMap((d) => d.cards || []),
+    ];
+    return extractFlashcardWords(userCards);
+  }, [propFlashcardWords, cards, decks]);
+
+  // Combine custom compounds with multi-character flashcard words
+  // so multi-word flashcards (e.g. "東京大学") are properly tokenized as single units
+  const effectiveCompounds = useMemo(() => {
+    const list = [...compounds];
+    for (const word of flashcardWords) {
+      if (word.length > 1 && !list.includes(word)) {
+        list.push(word);
+      }
+    }
+    return list;
+  }, [compounds, flashcardWords]);
 
   const mergedTokens = useMemo(() => {
     if (!tokenizer || !text) return [];
     const raw = tokenizer.tokenize(text);
-    return smartMergeTokens(raw, compounds);
-  }, [tokenizer, text, compounds]);
+    return smartMergeTokens(raw, effectiveCompounds);
+  }, [tokenizer, text, effectiveCompounds]);
+
+  useEffect(() => {
+    if (onFlashcardWordsCountChange) {
+      const count = countFlashcardWordsInTokens(mergedTokens, flashcardWords);
+      onFlashcardWordsCountChange(count);
+    }
+  }, [mergedTokens, flashcardWords, onFlashcardWordsCountChange]);
 
   if (!tokenizer) {
     return (
@@ -556,14 +627,22 @@ export function TokenizedText({
     <p className="text-base text-foreground leading-loose font-sans whitespace-pre-wrap">
       {mergedTokens.map((token, index) => {
         const nextToken = mergedTokens[index + 1];
+        const hasFlashcard = isWordInFlashcards(
+          token.surface_form,
+          token.basic_form,
+          flashcardWords
+        );
+
         return (
           <TokenItem
             key={`${index}-${token.surface_form}`}
             word={token.surface_form}
             reading={token.reading}
+            basicForm={token.basic_form}
             nextWord={nextToken?.surface_form}
             isMerged={token.isMerged}
             showFurigana={showFurigana}
+            hasFlashcard={hasFlashcard}
             fullText={text}
             enContext={enContext}
             onMergeWithNext={
