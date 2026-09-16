@@ -93,4 +93,46 @@ describe("useSpeech hook", () => {
     expect(speakFinished).toBe(true);
     expect(result.current.isPlaying).toBe(false);
   });
+
+  it("should resolve immediately and call onEnd when text is empty or whitespace", async () => {
+    // Arrange
+    const { result } = renderHook(() => useSpeech());
+    const onEnd = vi.fn();
+
+    // Act
+    await act(async () => {
+      await result.current.speak("   ", "ja-JP", 1.0, onEnd);
+    });
+
+    // Assert
+    expect(onEnd).toHaveBeenCalledTimes(1);
+    expect(result.current.isPlaying).toBe(false);
+    expect(mockAudioInstances.length).toBe(0);
+  });
+
+  it("should handle audio playback error gracefully and complete", async () => {
+    // Arrange
+    const { result } = renderHook(() => useSpeech());
+    const onEnd = vi.fn();
+    let promise: Promise<void>;
+
+    // Act
+    act(() => {
+      promise = result.current.speak("エラー", "ja-JP", 1.0, onEnd);
+    });
+
+    expect(result.current.isPlaying).toBe(true);
+
+    await act(async () => {
+      mockAudioInstances[0].onerror?.(new Error("Audio error"));
+      await promise;
+    });
+
+    // Assert
+    expect(onEnd).toHaveBeenCalledTimes(1);
+    expect(result.current.isPlaying).toBe(false);
+    expect(result.current.activeLang).toBeNull();
+  });
 });
+
+

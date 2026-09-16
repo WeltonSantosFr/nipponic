@@ -181,4 +181,38 @@ describe("GET /api/dictionary", () => {
       isCommon: false,
     });
   });
+
+  it("should provide fallback meaning when senses have no definitions and default isCommon to false", async () => {
+    // Arrange
+    const mockJishoData = {
+      data: [
+        {
+          slug: "fallback-word",
+          japanese: [{ word: "犬" }],
+          senses: [],
+        },
+      ],
+    };
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockJishoData),
+    });
+
+    const req = mockRequest("http://localhost/api/dictionary?word=fallback-word");
+
+    // Act
+    const response = await GET(req);
+    const data = await response.json();
+
+    // Assert
+    expect(response.status).toBe(200);
+    expect(data).toEqual({
+      reading: "犬",
+      meanings: ["No English definition found."],
+      jlpt: null,
+      isCommon: false,
+    });
+  });
 });
+

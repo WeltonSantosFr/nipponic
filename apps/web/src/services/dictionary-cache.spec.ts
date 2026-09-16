@@ -1,12 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import {
-  fetchDictionaryWord,
-  saveCustomDefinition,
-  resetCustomDefinition,
-  isCustomDefinition,
-  getCachedDictionaryWord,
-  type DictionaryData
-} from './dictionary-cache';
+import type { DictionaryData } from './dictionary-cache';
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -66,6 +59,35 @@ describe('dictionary-cache', () => {
         jlpt: null,
         isCommon: false,
         isCustom: true
+      });
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('loads custom definitions pre-existing in localStorage on initialization', async () => {
+      // Arrange
+      localStorageMock.setItem(
+        'nipponic:custom_dict_v1',
+        JSON.stringify({
+          '猫': {
+            reading: 'ねこ',
+            meanings: ['gato'],
+            jlpt: 'N5',
+            isCommon: true,
+          },
+        })
+      );
+
+      // Act
+      const { fetchDictionaryWord } = await import('./dictionary-cache');
+      const result = await fetchDictionaryWord('猫');
+
+      // Assert
+      expect(result).toEqual({
+        reading: 'ねこ',
+        meanings: ['gato'],
+        jlpt: 'N5',
+        isCommon: true,
+        isCustom: true,
       });
       expect(fetchMock).not.toHaveBeenCalled();
     });
@@ -218,6 +240,25 @@ describe('dictionary-cache', () => {
 
       expect(result.meanings).toEqual(['cat']);
     });
+
+    it('should catch and log warning when saving to localStorage fails', async () => {
+      // Arrange
+      const { saveCustomDefinition } = await import('./dictionary-cache');
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      localStorageMock.setItem.mockImplementationOnce(() => {
+        throw new Error('Quota exceeded');
+      });
+
+      // Act
+      const result = saveCustomDefinition('魚', { reading: 'さかな', meanings: ['fish'] });
+
+      // Assert
+      expect(result.reading).toBe('さかな');
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Failed to save custom definition to localStorage:',
+        expect.any(Error)
+      );
+    });
   });
 
   describe('resetCustomDefinition', () => {
@@ -245,7 +286,27 @@ describe('dictionary-cache', () => {
         })
       );
     });
+
+    it('should catch and log warning when resetting custom definition in localStorage fails', async () => {
+      // Arrange
+      const { saveCustomDefinition, resetCustomDefinition } = await import('./dictionary-cache');
+      saveCustomDefinition('犬', { reading: 'いぬ', meanings: ['dog'] });
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      localStorageMock.setItem.mockImplementationOnce(() => {
+        throw new Error('Reset failed');
+      });
+
+      // Act
+      resetCustomDefinition('犬');
+
+      // Assert
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Failed to reset custom definition:',
+        expect.any(Error)
+      );
+    });
   });
+
 
   describe('isCustomDefinition', () => {
     it('should return false for non-custom words', async () => {

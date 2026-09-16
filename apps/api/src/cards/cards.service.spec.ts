@@ -63,6 +63,48 @@ describe('CardsService', () => {
     });
   });
 
+  it('create - should create a card with custom values when optional fields are provided', async () => {
+    // Arrange
+    const nextReviewDateStr = '2026-09-20T10:00:00.000Z';
+    const lastReviewedDateStr = '2026-09-15T10:00:00.000Z';
+    const createDto = {
+      jpText: '本',
+      enText: 'Book',
+      interval: 3,
+      easeFactor: 2.7,
+      repetitions: 2,
+      lapses: 1,
+      nextReviewAt: nextReviewDateStr,
+      lastReviewedAt: lastReviewedDateStr,
+    };
+    const userId = 'usr_123';
+    const mockCreatedCard = {
+      id: 'crd_2',
+      ...createDto,
+      nextReviewAt: new Date(nextReviewDateStr),
+      lastReviewedAt: new Date(lastReviewedDateStr),
+      userId,
+    };
+    prismaMock.db.orm.public.Card.create.mockResolvedValue(mockCreatedCard);
+
+    // Act
+    const result = await service.create(createDto, userId);
+
+    // Assert
+    expect(result).toEqual(mockCreatedCard);
+    expect(prismaMock.db.orm.public.Card.create).toHaveBeenCalledWith({
+      jpText: '本',
+      enText: 'Book',
+      interval: 3,
+      easeFactor: 2.7,
+      repetitions: 2,
+      lapses: 1,
+      nextReviewAt: new Date(nextReviewDateStr),
+      lastReviewedAt: new Date(lastReviewedDateStr),
+      userId,
+    });
+  });
+
   it('findAll - should return all cards belonging to the user', async () => {
     // Arrange
     const userId = 'usr_123';
@@ -140,6 +182,35 @@ describe('CardsService', () => {
       lapses: 1,
       nextReviewAt: new Date(nextReviewDateStr),
       lastReviewedAt: new Date(lastReviewedDateStr),
+    });
+  });
+
+  it('update - should set review dates to null when falsy review dates are passed', async () => {
+    // Arrange
+    const userId = 'usr_123';
+    const cardId = 'crd_456';
+    const updateDto = {
+      nextReviewAt: null as any,
+      lastReviewedAt: null as any,
+    };
+    const updatedCard = {
+      id: cardId,
+      nextReviewAt: null,
+      lastReviewedAt: null,
+      userId,
+    };
+    const updateMock = vi.fn().mockResolvedValue(updatedCard);
+    prismaMock.db.orm.public.Card.where.mockReturnValue({ update: updateMock });
+
+    // Act
+    const result = await service.update(userId, cardId, updateDto);
+
+    // Assert
+    expect(result).toEqual(updatedCard);
+    expect(prismaMock.db.orm.public.Card.where).toHaveBeenCalledWith({ id: cardId, userId });
+    expect(updateMock).toHaveBeenCalledWith({
+      nextReviewAt: null,
+      lastReviewedAt: null,
     });
   });
 
@@ -367,4 +438,42 @@ describe('CardsService', () => {
       }),
     );
   });
+
+  it('review - should fallback to default SM-2 values when card fields are null or undefined', async () => {
+    // Arrange
+    const userId = 'usr_123';
+    const cardId = 'crd_456';
+    const existingCardWithNulls = {
+      id: cardId,
+      userId,
+      easeFactor: null,
+      repetitions: null,
+      interval: null,
+      lapses: null,
+    };
+    const firstMock = vi.fn().mockResolvedValue(existingCardWithNulls);
+    const updateMock = vi.fn().mockImplementation((data) => Promise.resolve({ ...existingCardWithNulls, ...data }));
+    prismaMock.db.orm.public.Card.where.mockReturnValue({
+      first: firstMock,
+      update: updateMock,
+    });
+
+    // Act
+    const result = await service.review(userId, cardId, 3);
+
+    // Assert
+    expect(result!.repetitions).toBe(1);
+    expect(result!.interval).toBe(1);
+    expect(result!.easeFactor).toBe(2.5);
+    expect(result!.lapses).toBe(0);
+    expect(updateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        interval: 1,
+        easeFactor: 2.5,
+        repetitions: 1,
+        lapses: 0,
+      }),
+    );
+  });
 });
+
