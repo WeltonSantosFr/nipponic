@@ -80,7 +80,22 @@ describe("api service", () => {
         "Authentication failed"
       );
     });
+
+    it("should throw custom API error message when login fails with message payload", async () => {
+      // Arrange
+      vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        json: async () => ({ message: "Invalid credentials provided" }),
+      } as Response);
+
+      // Act & Assert
+      await expect(login({ email: "test@example.com", password: "bad" })).rejects.toThrow(
+        "Invalid credentials provided"
+      );
+    });
   });
+
 
   describe("fetchNotes", () => {
     it("should fetch notes with authorization header and return notes array", async () => {

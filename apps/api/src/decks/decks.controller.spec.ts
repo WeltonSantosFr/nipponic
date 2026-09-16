@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DecksController } from './decks.controller';
 import { DecksService } from './decks.service';
-import type { CreateDeckDto, UpdateDeckDto } from './decks.dto';
+import type { CreateDeckDto, UpdateDeckDto, AddCardsDto, ReorderCardsDto } from './decks.dto';
 import type { JwtPayload } from '@nipponic/shared';
 
 describe('DecksController', () => {
@@ -130,4 +130,69 @@ describe('DecksController', () => {
     expect(result).toEqual(expectedDeck);
     expect(decksServiceMock.update).toHaveBeenCalledWith(mockUser.sub, deckId, updateDeckDto);
   });
+
+  it('delete - should call decksService.delete with user sub and deck id', async () => {
+    // Arrange
+    const deckId = 'deck_123';
+    const expectedResponse = { id: deckId, message: 'Deck deleted successfully' };
+    decksServiceMock.delete.mockResolvedValue(expectedResponse);
+
+    // Act
+    const result = await controller.delete(mockUser, deckId);
+
+    // Assert
+    expect(result).toEqual(expectedResponse);
+    expect(decksServiceMock.delete).toHaveBeenCalledWith(mockUser.sub, deckId);
+  });
+
+  it('addCards - should call decksService.addCards with user sub, deck id, and AddCardsDto', async () => {
+    // Arrange
+    const deckId = 'deck_123';
+    const addCardsDto: AddCardsDto = { cardIds: ['card_1', 'card_2'] };
+    const expectedResponse = [{ id: 'deck_card_1', deckId, cardId: 'card_1' }];
+    decksServiceMock.addCards.mockResolvedValue(expectedResponse);
+
+    // Act
+    const result = await controller.addCards(mockUser, deckId, addCardsDto);
+
+    // Assert
+    expect(result).toEqual(expectedResponse);
+    expect(decksServiceMock.addCards).toHaveBeenCalledWith(mockUser.sub, deckId, addCardsDto);
+  });
+
+  it('removeCard - should call decksService.removeCard with user sub, deck id, and card id', async () => {
+    // Arrange
+    const deckId = 'deck_123';
+    const cardId = 'card_456';
+    const expectedResponse = { id: 'deck_card_1', deckId, cardId };
+    decksServiceMock.removeCard.mockResolvedValue(expectedResponse);
+
+    // Act
+    const result = await controller.removeCard(mockUser, deckId, cardId);
+
+    // Assert
+    expect(result).toEqual(expectedResponse);
+    expect(decksServiceMock.removeCard).toHaveBeenCalledWith(mockUser.sub, deckId, cardId);
+  });
+
+  it('reorderCards - should call decksService.reorderCards with user sub, deck id, and ReorderCardsDto', async () => {
+    // Arrange
+    const deckId = 'deck_123';
+    const reorderDto: ReorderCardsDto = {
+      cardIds: ['card_1', 'card_2'],
+    };
+    const expectedResponse = { success: true };
+    decksServiceMock.reorderCards.mockResolvedValue(expectedResponse);
+
+    // Act
+    const result = await controller.reorderCards(mockUser, deckId, reorderDto);
+
+    // Assert
+    expect(result).toEqual(expectedResponse);
+    expect(decksServiceMock.reorderCards).toHaveBeenCalledWith(mockUser.sub, deckId, reorderDto);
+  });
 });
+
+
+
+
