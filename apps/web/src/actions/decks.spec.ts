@@ -8,6 +8,7 @@ import {
   updateDeckAction,
   deleteDeckAction,
   addCardsToDeckAction,
+  removeCardFromDeckAction,
 } from "./decks";
 
 vi.mock("next/headers", () => ({
@@ -605,6 +606,23 @@ describe("decks actions", () => {
       expect(result).toBeNull();
       expect(consoleSpy).toHaveBeenCalledWith("Error adding cards to deck:", expect.any(Error));
       consoleSpy.mockRestore();
+    });
+  });
+
+  describe("removeCardFromDeckAction", () => {
+    it("should return null when authentication token cookie is missing", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue(undefined),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      // Act
+      const result = await removeCardFromDeckAction("deck-123", "card-1");
+
+      // Assert
+      expect(result).toBeNull();
+      expect(mockCookieStore.get).toHaveBeenCalledWith("nipponic.token");
     });
   });
 });
