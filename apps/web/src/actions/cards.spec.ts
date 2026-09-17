@@ -160,5 +160,27 @@ describe("cards actions", () => {
         }
       );
     });
+
+    it("should return null and log error when upstream fetch fails with non-ok status", async () => {
+      // Arrange
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+      });
+
+      // Act
+      const result = await createCardAction({ front: "犬", back: "Dog" } as any);
+
+      // Assert
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith("Failed to create card, status:", 400);
+      consoleSpy.mockRestore();
+    });
   });
 });
