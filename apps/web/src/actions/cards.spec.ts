@@ -255,5 +255,27 @@ describe("cards actions", () => {
         }
       );
     });
+
+    it("should return null and log error when upstream fetch fails with non-ok status", async () => {
+      // Arrange
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+      });
+
+      // Act
+      const result = await updateCardAction("card-123", { front: "更新" } as any);
+
+      // Assert
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith("Failed to update card, status:", 404);
+      consoleSpy.mockRestore();
+    });
   });
 });
