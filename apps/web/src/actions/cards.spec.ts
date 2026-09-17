@@ -414,5 +414,32 @@ describe("cards actions", () => {
       expect(result).toBe(false);
       expect(mockCookieStore.get).toHaveBeenCalledWith("nipponic.token");
     });
+
+    it("should return true when token is present and fetch succeeds", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+      });
+
+      // Act
+      const result = await deleteCardAction("card-123");
+
+      // Assert
+      expect(result).toBe(true);
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/cards/card-123"),
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: "Bearer valid-jwt-token",
+          },
+        }
+      );
+    });
   });
 });
