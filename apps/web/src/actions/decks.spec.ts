@@ -417,5 +417,27 @@ describe("decks actions", () => {
         body: JSON.stringify(input),
       });
     });
+
+    it("should return null when response is not ok", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "test-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.mocked(global.fetch).mockResolvedValue({
+        ok: false,
+        status: 400,
+      } as any);
+
+      // Act
+      const result = await updateDeckAction("deck-123", { name: "Updated Deck" } as any);
+
+      // Assert
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith("Failed to update deck, status:", 400);
+      consoleSpy.mockRestore();
+    });
   });
 });
