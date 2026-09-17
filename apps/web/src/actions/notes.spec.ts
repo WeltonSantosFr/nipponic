@@ -146,5 +146,27 @@ describe("notes actions", () => {
         })
       );
     });
+
+    it("should return null and log error when upstream fetch fails with non-ok status", async () => {
+      // Arrange
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+      });
+
+      // Act
+      const result = await createNoteAction({ title: "Bad Note", content: "" });
+
+      // Assert
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith("Failed to create note, status:", 400);
+      consoleSpy.mockRestore();
+    });
   });
 });
