@@ -672,5 +672,24 @@ describe("decks actions", () => {
       expect(consoleSpy).toHaveBeenCalledWith("Failed to remove card from deck, status:", 404);
       consoleSpy.mockRestore();
     });
+
+    it("should return null and log error when upstream fetch throws an error", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "test-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.mocked(global.fetch).mockRejectedValue(new Error("Remove card failed"));
+
+      // Act
+      const result = await removeCardFromDeckAction("deck-123", "card-1");
+
+      // Assert
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith("Error removing card from deck:", expect.any(Error));
+      consoleSpy.mockRestore();
+    });
   });
 });
