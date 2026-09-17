@@ -58,5 +58,27 @@ describe("user actions", () => {
         }
       );
     });
+
+    it("should return error message from response when upstream request fails", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        json: vi.fn().mockResolvedValue({ message: "Password is too weak" }),
+      });
+
+      // Act
+      const result = await changePasswordAction("123");
+
+      // Assert
+      expect(result).toEqual({
+        success: false,
+        message: "Password is too weak",
+      });
+    });
   });
 });
