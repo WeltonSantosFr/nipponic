@@ -259,5 +259,24 @@ describe("notes actions", () => {
       expect(consoleSpy).toHaveBeenCalledWith("Failed to update note, status:", 404);
       consoleSpy.mockRestore();
     });
+
+    it("should return null and log error when upstream fetch throws an error", async () => {
+      // Arrange
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockRejectedValue(new Error("Network drop"));
+
+      // Act
+      const result = await updateNoteAction("note_1", { title: "Title" });
+
+      // Assert
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith("Error updating note:", expect.any(Error));
+      consoleSpy.mockRestore();
+    });
   });
 });
