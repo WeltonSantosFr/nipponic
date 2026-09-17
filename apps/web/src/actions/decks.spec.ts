@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { cookies } from "next/headers";
-import { getDecksAction, getPublicDecksAction } from "./decks";
+import { getDecksAction, getPublicDecksAction, getDeckAction } from "./decks";
 
 vi.mock("next/headers", () => ({
   cookies: vi.fn(),
@@ -185,6 +185,23 @@ describe("decks actions", () => {
       expect(result).toEqual([]);
       expect(consoleSpy).toHaveBeenCalledWith("Error fetching public decks:", expect.any(Error));
       consoleSpy.mockRestore();
+    });
+  });
+
+  describe("getDeckAction", () => {
+    it("should return null when authentication token cookie is missing", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue(undefined),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      // Act
+      const result = await getDeckAction("deck-123");
+
+      // Assert
+      expect(result).toBeNull();
+      expect(mockCookieStore.get).toHaveBeenCalledWith("nipponic.token");
     });
   });
 });
