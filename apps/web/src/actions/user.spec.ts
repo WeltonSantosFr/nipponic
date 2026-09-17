@@ -102,5 +102,27 @@ describe("user actions", () => {
         message: "Failed to update password",
       });
     });
+
+    it("should return network error message and log error when upstream fetch throws an error", async () => {
+      // Arrange
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockRejectedValue(new Error("Connection reset"));
+
+      // Act
+      const result = await changePasswordAction("secret123");
+
+      // Assert
+      expect(result).toEqual({
+        success: false,
+        message: "Network error while updating password",
+      });
+      expect(consoleSpy).toHaveBeenCalledWith("Error changing password:", expect.any(Error));
+      consoleSpy.mockRestore();
+    });
   });
 });
