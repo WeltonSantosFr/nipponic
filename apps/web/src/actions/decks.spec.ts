@@ -298,5 +298,35 @@ describe("decks actions", () => {
       expect(result).toBeNull();
       expect(mockCookieStore.get).toHaveBeenCalledWith("nipponic.token");
     });
+
+    it("should successfully create deck and return data when response is ok", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "test-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const mockDeck = { id: "deck-123", name: "New Deck", isPublic: false };
+      vi.mocked(global.fetch).mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockDeck),
+      } as any);
+
+      const input = { name: "New Deck", isPublic: false };
+
+      // Act
+      const result = await createDeckAction(input as any);
+
+      // Assert
+      expect(result).toEqual(mockDeck);
+      expect(global.fetch).toHaveBeenCalledWith("http://localhost:3001/decks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer test-token",
+        },
+        body: JSON.stringify(input),
+      });
+    });
   });
 });
