@@ -6,6 +6,7 @@ import {
   getDeckAction,
   createDeckAction,
   updateDeckAction,
+  deleteDeckAction,
 } from "./decks";
 
 vi.mock("next/headers", () => ({
@@ -457,6 +458,23 @@ describe("decks actions", () => {
       expect(result).toBeNull();
       expect(consoleSpy).toHaveBeenCalledWith("Error updating deck:", expect.any(Error));
       consoleSpy.mockRestore();
+    });
+  });
+
+  describe("deleteDeckAction", () => {
+    it("should return false when authentication token cookie is missing", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue(undefined),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      // Act
+      const result = await deleteDeckAction("deck-123");
+
+      // Assert
+      expect(result).toBe(false);
+      expect(mockCookieStore.get).toHaveBeenCalledWith("nipponic.token");
     });
   });
 });
