@@ -439,5 +439,24 @@ describe("decks actions", () => {
       expect(consoleSpy).toHaveBeenCalledWith("Failed to update deck, status:", 400);
       consoleSpy.mockRestore();
     });
+
+    it("should return null and log error when upstream fetch throws an error", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "test-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.mocked(global.fetch).mockRejectedValue(new Error("Update failed"));
+
+      // Act
+      const result = await updateDeckAction("deck-123", { name: "Updated Deck" } as any);
+
+      // Assert
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith("Error updating deck:", expect.any(Error));
+      consoleSpy.mockRestore();
+    });
   });
 });
