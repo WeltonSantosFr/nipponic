@@ -537,5 +537,33 @@ describe("decks actions", () => {
       expect(result).toBeNull();
       expect(mockCookieStore.get).toHaveBeenCalledWith("nipponic.token");
     });
+
+    it("should successfully add cards to deck and return data when response is ok", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "test-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const mockDeck = { id: "deck-123", name: "Deck", cards: [{ id: "c1" }, { id: "c2" }] };
+      vi.mocked(global.fetch).mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockDeck),
+      } as any);
+
+      // Act
+      const result = await addCardsToDeckAction("deck-123", ["c1", "c2"]);
+
+      // Assert
+      expect(result).toEqual(mockDeck);
+      expect(global.fetch).toHaveBeenCalledWith("http://localhost:3001/decks/deck-123/cards", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer test-token",
+        },
+        body: JSON.stringify({ cardIds: ["c1", "c2"] }),
+      });
+    });
   });
 });
