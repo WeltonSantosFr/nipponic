@@ -107,7 +107,7 @@ describe("notes actions", () => {
       vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
 
       // Act
-      const result = await createNoteAction({ title: "New Note", content: "Content" });
+      const result = await createNoteAction({ title: "New Note", jpText: "日本語", enText: "Japanese" });
 
       // Assert
       expect(result).toBeNull();
@@ -116,7 +116,7 @@ describe("notes actions", () => {
 
     it("should send POST request and return created note on success", async () => {
       // Arrange
-      const noteInput = { title: "Kanji Note", content: "Learn N4" };
+      const noteInput = { title: "Kanji Note", jpText: "日本語", enText: "Learn N4" };
       const createdNote = { id: "note_123", ...noteInput, userId: "user_1" };
       const mockCookieStore = {
         get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
@@ -161,7 +161,7 @@ describe("notes actions", () => {
       });
 
       // Act
-      const result = await createNoteAction({ title: "Bad Note", content: "" });
+      const result = await createNoteAction({ title: "Bad Note", jpText: "", enText: "" });
 
       // Assert
       expect(result).toBeNull();
@@ -180,7 +180,7 @@ describe("notes actions", () => {
       global.fetch = vi.fn().mockRejectedValue(new Error("Server timeout"));
 
       // Act
-      const result = await createNoteAction({ title: "Timeout Note", content: "..." });
+      const result = await createNoteAction({ title: "Timeout Note", jpText: "...", enText: "..." });
 
       // Assert
       expect(result).toBeNull();
