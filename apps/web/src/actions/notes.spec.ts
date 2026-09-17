@@ -26,5 +26,37 @@ describe("notes actions", () => {
       expect(result).toEqual([]);
       expect(mockCookieStore.get).toHaveBeenCalledWith("nipponic.token");
     });
+
+    it("should return notes when token is present and fetch succeeds", async () => {
+      // Arrange
+      const mockNotes = [
+        { id: "note_1", title: "Kanji Notes", content: "Learn N5 kanji", userId: "user_1" },
+      ];
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockNotes),
+      });
+      global.fetch = fetchMock;
+
+      // Act
+      const result = await getNotesAction();
+
+      // Assert
+      expect(result).toEqual(mockNotes);
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining("/notes"),
+        expect.objectContaining({
+          method: "GET",
+          headers: {
+            Authorization: "Bearer valid-jwt-token",
+          },
+        })
+      );
+    });
   });
 });
