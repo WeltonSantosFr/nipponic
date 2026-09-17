@@ -709,5 +709,33 @@ describe("decks actions", () => {
       expect(result).toBeNull();
       expect(mockCookieStore.get).toHaveBeenCalledWith("nipponic.token");
     });
+
+    it("should successfully reorder deck cards and return data when response is ok", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "test-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const mockDeck = { id: "deck-123", name: "Deck", cards: [{ id: "c2" }, { id: "c1" }] };
+      vi.mocked(global.fetch).mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockDeck),
+      } as any);
+
+      // Act
+      const result = await reorderDeckCardsAction("deck-123", ["c2", "c1"]);
+
+      // Assert
+      expect(result).toEqual(mockDeck);
+      expect(global.fetch).toHaveBeenCalledWith("http://localhost:3001/decks/deck-123/reorder", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer test-token",
+        },
+        body: JSON.stringify({ cardIds: ["c2", "c1"] }),
+      });
+    });
   });
 });
