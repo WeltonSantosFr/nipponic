@@ -203,5 +203,40 @@ describe("decks actions", () => {
       expect(result).toBeNull();
       expect(mockCookieStore.get).toHaveBeenCalledWith("nipponic.token");
     });
+
+    it("should return deck when token is present and fetch succeeds", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const mockDeck = {
+        id: "deck-123",
+        name: "Kanji N3",
+        isPublic: false,
+      };
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockDeck),
+      });
+
+      // Act
+      const result = await getDeckAction("deck-123");
+
+      // Assert
+      expect(result).toEqual(mockDeck);
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/decks/deck-123"),
+        {
+          method: "GET",
+          headers: {
+            Authorization: "Bearer valid-jwt-token",
+          },
+          cache: "no-store",
+        }
+      );
+    });
   });
 });
