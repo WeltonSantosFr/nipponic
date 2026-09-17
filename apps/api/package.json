@@ -19,7 +19,7 @@
     "migration:show": "prisma migration show",
     "migration:status": "prisma migration status",
     "skills:sync": "prisma skills sync || exit 0",
-    "start": "prisma db migrate && node --dns-result-order=ipv4first dist/server.mjs",
+    "start": "node --dns-result-order=ipv4first dist/server.mjs",
     "postinstall": "prisma skills sync || exit 0",
     "check-types": "tsc --noEmit",
     "test": "vitest run",
