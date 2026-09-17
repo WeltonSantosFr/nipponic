@@ -60,5 +60,24 @@ describe("decks actions", () => {
         }
       );
     });
+
+    it("should return empty array when upstream fetch fails with non-ok status", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+
+      // Act
+      const result = await getDecksAction();
+
+      // Assert
+      expect(result).toEqual([]);
+    });
   });
 });
