@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { cookies } from "next/headers";
-import { getNotesAction, createNoteAction } from "./notes";
+import { getNotesAction, createNoteAction, updateNoteAction } from "./notes";
 
 vi.mock("next/headers", () => ({
   cookies: vi.fn(),
@@ -186,6 +186,23 @@ describe("notes actions", () => {
       expect(result).toBeNull();
       expect(consoleSpy).toHaveBeenCalledWith("Error creating note:", expect.any(Error));
       consoleSpy.mockRestore();
+    });
+  });
+
+  describe("updateNoteAction", () => {
+    it("should return null when authentication token cookie is missing", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue(undefined),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      // Act
+      const result = await updateNoteAction("note_1", { title: "Updated Title" });
+
+      // Assert
+      expect(result).toBeNull();
+      expect(mockCookieStore.get).toHaveBeenCalledWith("nipponic.token");
     });
   });
 });
