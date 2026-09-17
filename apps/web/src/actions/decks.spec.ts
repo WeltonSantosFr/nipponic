@@ -115,5 +115,38 @@ describe("decks actions", () => {
       expect(result).toEqual([]);
       expect(mockCookieStore.get).toHaveBeenCalledWith("nipponic.token");
     });
+
+    it("should return public decks when token is present and fetch succeeds", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const mockPublicDecks = [
+        { id: "pub-1", name: "JLPT N5 Public", isPublic: true },
+      ];
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockPublicDecks),
+      });
+
+      // Act
+      const result = await getPublicDecksAction();
+
+      // Assert
+      expect(result).toEqual(mockPublicDecks);
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/decks/public"),
+        {
+          method: "GET",
+          headers: {
+            Authorization: "Bearer valid-jwt-token",
+          },
+          cache: "no-store",
+        }
+      );
+    });
   });
 });
