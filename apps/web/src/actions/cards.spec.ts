@@ -441,5 +441,24 @@ describe("cards actions", () => {
         }
       );
     });
+
+    it("should return false and log error when upstream fetch throws an error", async () => {
+      // Arrange
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockRejectedValue(new Error("Network disconnect"));
+
+      // Act
+      const result = await deleteCardAction("card-123");
+
+      // Assert
+      expect(result).toBe(false);
+      expect(consoleSpy).toHaveBeenCalledWith("Error deleting card:", expect.any(Error));
+      consoleSpy.mockRestore();
+    });
   });
 });
