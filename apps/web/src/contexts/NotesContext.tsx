@@ -15,25 +15,9 @@ import {
   deleteNoteAction,
 } from "@/actions/notes";
 import { useAuth } from "./AuthContext";
-import { Note, UpdateNoteInput } from "@nipponic/shared";
+import { Note, UpdateNoteInput, NotesContextData } from "@nipponic/shared";
 
-interface NotesContextData {
-  notes: Note[];
-  selectedNoteId: string | null;
-  selectedNote: Note | undefined;
-  setSelectedNoteId: (id: string | null) => void;
-  createNewNote: () => Promise<Note>;
-  updateNoteContent: (
-    id: string,
-    updates: UpdateNoteInput
-  ) => void;
-  saveNote: (
-    id: string,
-    extraUpdates?: UpdateNoteInput
-  ) => Promise<void>;
-  deleteNote: (id: string) => Promise<void>;
-  refreshNotes: () => Promise<void>;
-}
+export type { NotesContextData };
 
 const NotesContext = createContext<NotesContextData>({} as NotesContextData);
 

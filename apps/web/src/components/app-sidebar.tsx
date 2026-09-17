@@ -22,7 +22,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotes } from "@/contexts/NotesContext";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
-import { Note, Deck, AuthMode } from "@nipponic/shared";
+import { Note, Deck, AuthMode, AppSidebarProps } from "@nipponic/shared";
 import { isCardDue } from "@/lib/srs";
 import {
   BookOpen,
@@ -44,10 +44,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-interface AppSidebarProps {
-  selectedNoteId: string | null;
-  onSelectNote: (id: string) => void;
-}
+export type { AppSidebarProps };
 
 export function AppSidebar({
   selectedNoteId,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
-import { Deck, Card, DeckCardFilterMode } from "@nipponic/shared";
+import { Deck, Card, DeckCardFilterMode, DeckWorkspaceProps } from "@nipponic/shared";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
 import { isCardDue, getCardSRSStage, formatDueTime } from "@/lib/srs";
 import { Button } from "@/components/ui/button";
@@ -38,11 +38,7 @@ import {
   Loader2,
 } from "lucide-react";
 
-export type { DeckCardFilterMode };
-
-interface DeckWorkspaceProps {
-  deck?: Deck;
-}
+export type { DeckCardFilterMode, DeckWorkspaceProps };
 
 export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
   const {

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { cookies } from "next/headers";
 import { validateSessionAction, saveAuthCookie, removeAuthCookie } from "./auth";
 
 const mockCookieStore = {
