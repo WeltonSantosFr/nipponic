@@ -1,7 +1,13 @@
 import "dotenv/config";
 import "reflect-metadata";
+import dns from "node:dns";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
+
+// Render containers do not have outbound IPv6 routing. When connecting to databases
+// hosted on AWS/Supabase/Neon that have dual-stack DNS records, Node.js attempts
+// IPv6 first and fails with `ENETUNREACH`. Prioritizing IPv4 resolves this issue.
+dns.setDefaultResultOrder("ipv4first");
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
