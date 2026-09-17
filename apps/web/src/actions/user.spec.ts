@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { cookies } from "next/headers";
-import { changePasswordAction } from "./user";
+import { changePasswordAction, deleteAccountAction } from "./user";
 
 vi.mock("next/headers", () => ({
   cookies: vi.fn(),
@@ -123,6 +123,26 @@ describe("user actions", () => {
       });
       expect(consoleSpy).toHaveBeenCalledWith("Error changing password:", expect.any(Error));
       consoleSpy.mockRestore();
+    });
+  });
+
+  describe("deleteAccountAction", () => {
+    it("should return error when authentication token cookie is missing", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue(undefined),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      // Act
+      const result = await deleteAccountAction();
+
+      // Assert
+      expect(result).toEqual({
+        success: false,
+        message: "User not authenticated",
+      });
+      expect(mockCookieStore.get).toHaveBeenCalledWith("nipponic.token");
     });
   });
 });
