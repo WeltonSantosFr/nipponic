@@ -5,6 +5,7 @@ import {
   getPublicDecksAction,
   getDeckAction,
   createDeckAction,
+  updateDeckAction,
 } from "./decks";
 
 vi.mock("next/headers", () => ({
@@ -368,6 +369,23 @@ describe("decks actions", () => {
       expect(result).toBeNull();
       expect(consoleSpy).toHaveBeenCalledWith("Error creating deck:", expect.any(Error));
       consoleSpy.mockRestore();
+    });
+  });
+
+  describe("updateDeckAction", () => {
+    it("should return null when authentication token cookie is missing", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue(undefined),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      // Act
+      const result = await updateDeckAction("deck-123", { name: "Updated Deck" } as any);
+
+      // Assert
+      expect(result).toBeNull();
+      expect(mockCookieStore.get).toHaveBeenCalledWith("nipponic.token");
     });
   });
 });
