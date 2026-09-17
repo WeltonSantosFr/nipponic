@@ -53,10 +53,11 @@ describe("ServerWakeupOverlay", () => {
     render(<ServerWakeupOverlay />);
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText("Conectando ao servidor...")).toBeInTheDocument();
+    expect(screen.getByText("Connecting to server...")).toBeInTheDocument();
     expect(
-      screen.getByText(/Estamos inicializando o servidor gratuito/i)
+      screen.getByText(/We are waking up our free cloud server/i)
     ).toBeInTheDocument();
+
   });
 
   it("wakes up and sets user if session is valid", async () => {

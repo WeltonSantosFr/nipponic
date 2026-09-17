@@ -137,12 +137,12 @@ export function ServerWakeupOverlay() {
                 id="server-wakeup-title"
                 className="text-lg sm:text-xl font-bold tracking-tight text-foreground"
               >
-                Conectando ao servidor...
+                Connecting to server...
               </h2>
               <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                Estamos inicializando o servidor gratuito. Como ele entra em
-                repouso após períodos de inatividade, o primeiro acesso pode
-                levar cerca de 1 minuto. Suas notas e flashcards estão seguros!
+                We are waking up our free cloud server. Because it spins down
+                after periods of inactivity, the initial connection may take up
+                to 1 minute. Your notes and flashcards are safe!
               </p>
             </div>
 
@@ -150,7 +150,7 @@ export function ServerWakeupOverlay() {
             <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-muted/60 border border-border/60 text-xs font-mono text-muted-foreground">
               <Loader2 className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />
               <span>
-                Aguardando resposta ({elapsedSeconds}s)
+                Waiting for server ({elapsedSeconds}s)
               </span>
             </div>
 
@@ -171,12 +171,11 @@ export function ServerWakeupOverlay() {
                 id="server-wakeup-title"
                 className="text-lg sm:text-xl font-bold tracking-tight text-foreground"
               >
-                O servidor está demorando a responder
+                Server is taking longer to respond
               </h2>
               <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                A inicialização no Render demorou mais que {MAX_WAIT_SECONDS}{" "}
-                segundos. Você pode tentar novamente ou continuar para navegar no
-                aplicativo.
+                Starting up the server took longer than {MAX_WAIT_SECONDS}{" "}
+                seconds. You can try again or continue to use the app.
               </p>
             </div>
 
@@ -187,14 +186,14 @@ export function ServerWakeupOverlay() {
                 onClick={handleRetry}
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Tentar novamente
+                Try again
               </Button>
               <Button
                 variant="outline"
                 className="flex-1"
                 onClick={handleContinueAsGuest}
               >
-                Continuar mesmo assim
+                Continue anyway
               </Button>
             </div>
           </>
