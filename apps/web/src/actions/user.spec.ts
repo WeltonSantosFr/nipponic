@@ -195,5 +195,27 @@ describe("user actions", () => {
         message: "Account deletion forbidden",
       });
     });
+
+    it("should return network error message and log error when upstream fetch throws an error", async () => {
+      // Arrange
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockRejectedValue(new Error("Connection reset"));
+
+      // Act
+      const result = await deleteAccountAction();
+
+      // Assert
+      expect(result).toEqual({
+        success: false,
+        message: "Network error while deleting account",
+      });
+      expect(consoleSpy).toHaveBeenCalledWith("Error deleting account:", expect.any(Error));
+      consoleSpy.mockRestore();
+    });
   });
 });
