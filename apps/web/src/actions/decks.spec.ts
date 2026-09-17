@@ -350,5 +350,24 @@ describe("decks actions", () => {
       expect(consoleSpy).toHaveBeenCalledWith("Failed to create deck, status:", 500);
       consoleSpy.mockRestore();
     });
+
+    it("should return null and log error when upstream fetch throws an error", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "test-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.mocked(global.fetch).mockRejectedValue(new Error("Network failure"));
+
+      // Act
+      const result = await createDeckAction({ name: "New Deck", isPublic: false } as any);
+
+      // Assert
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith("Error creating deck:", expect.any(Error));
+      consoleSpy.mockRestore();
+    });
   });
 });
