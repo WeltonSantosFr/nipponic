@@ -116,5 +116,49 @@ describe("cards actions", () => {
       expect(result).toBeNull();
       expect(mockCookieStore.get).toHaveBeenCalledWith("nipponic.token");
     });
+
+    it("should return created card when token is present and fetch succeeds", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const inputCard = {
+        front: "日本語",
+        back: "Japanese",
+        deckId: "deck-1",
+      };
+
+      const mockCreatedCard = {
+        id: "card-123",
+        ...inputCard,
+        interval: 1,
+        repetition: 0,
+        easeFactor: 2.5,
+      };
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockCreatedCard),
+      });
+
+      // Act
+      const result = await createCardAction(inputCard as any);
+
+      // Assert
+      expect(result).toEqual(mockCreatedCard);
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/cards"),
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer valid-jwt-token",
+          },
+          body: JSON.stringify(inputCard),
+        }
+      );
+    });
   });
 });
