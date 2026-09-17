@@ -89,7 +89,7 @@ const FlashCardsContext = createContext<FlashCardsContextData>(
 );
 
 export function FlashCardsProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isWakingServer } = useAuth();
   const [cards, setCards] = useState<Card[]>([]);
   const [decks, setDecks] = useState<Deck[]>([]);
   const [publicDecks, setPublicDecks] = useState<Deck[]>([]);
@@ -123,7 +123,7 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
   }, [selectedDeck, decks]);
 
   const refreshAll = useCallback(async () => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !isWakingServer) {
       try {
         const [fetchedCards, fetchedDecks, fetchedPublic] = await Promise.all([
           getCardsAction(),
@@ -157,16 +157,19 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
       } catch (err) {
         console.error("Error fetching flash cards/decks:", err);
       }
-    } else {
+    } else if (!isAuthenticated) {
       setCards([]);
       setDecks([]);
       setPublicDecks([]);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isWakingServer]);
 
   useEffect(() => {
-    refreshAll();
-  }, [refreshAll]);
+    if (!isWakingServer) {
+      refreshAll();
+    }
+  }, [refreshAll, isWakingServer]);
+
 
   const startPlayingDeck = (deck: Deck) => {
     setPlayingDeck(deck);

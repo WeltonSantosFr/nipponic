@@ -4,6 +4,7 @@ import {
   useContext,
   useState,
   useEffect,
+  useCallback,
   useRef,
   ReactNode,
 } from "react";
@@ -37,7 +38,7 @@ interface NotesContextData {
 const NotesContext = createContext<NotesContextData>({} as NotesContextData);
 
 export function NotesProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isWakingServer } = useAuth();
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
 
@@ -51,18 +52,21 @@ export function NotesProvider({ children }: { children: ReactNode }) {
 
   const selectedNote = notes.find((n) => n.id === selectedNoteId);
 
-  const refreshNotes = async () => {
-    if (isAuthenticated) {
+  const refreshNotes = useCallback(async () => {
+    if (isAuthenticated && !isWakingServer) {
       const data = await getNotesAction();
       setNotes(data);
-    } else {
+    } else if (!isAuthenticated) {
       setNotes([]);
     }
-  };
+  }, [isAuthenticated, isWakingServer]);
 
   useEffect(() => {
-    refreshNotes();
-  }, [isAuthenticated]);
+    if (!isWakingServer) {
+      refreshNotes();
+    }
+  }, [refreshNotes, isWakingServer]);
+
 
   const createNewNote = async (): Promise<Note> => {
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;

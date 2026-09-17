@@ -9,6 +9,7 @@ import { jwtDecode } from "jwt-decode";
 import { AuthProvider, UserPayload } from "@/contexts/AuthContext";
 import { NotesProvider } from "@/contexts/NotesContext";
 import { FlashCardsProvider } from "@/contexts/FlashCardsContext";
+import { ServerWakeupOverlay } from "@/components/server-wakeup-overlay";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -64,6 +65,7 @@ export default async function RootLayout({
                 enableSystem={false}
               >
                 {children}
+                <ServerWakeupOverlay />
               </ThemeProvider>
             </FlashCardsProvider>
           </NotesProvider>
