@@ -328,5 +328,27 @@ describe("decks actions", () => {
         body: JSON.stringify(input),
       });
     });
+
+    it("should return null when response is not ok", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "test-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.mocked(global.fetch).mockResolvedValue({
+        ok: false,
+        status: 500,
+      } as any);
+
+      // Act
+      const result = await createDeckAction({ name: "New Deck", isPublic: false } as any);
+
+      // Assert
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith("Failed to create deck, status:", 500);
+      consoleSpy.mockRestore();
+    });
   });
 });
