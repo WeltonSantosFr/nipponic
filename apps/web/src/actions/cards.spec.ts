@@ -77,5 +77,24 @@ describe("cards actions", () => {
       // Assert
       expect(result).toEqual([]);
     });
+
+    it("should return empty array and log error when upstream fetch throws an error", async () => {
+      // Arrange
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockRejectedValue(new Error("Network disconnect"));
+
+      // Act
+      const result = await getCardsAction();
+
+      // Assert
+      expect(result).toEqual([]);
+      expect(consoleSpy).toHaveBeenCalledWith("Error fetching cards:", expect.any(Error));
+      consoleSpy.mockRestore();
+    });
   });
 });
