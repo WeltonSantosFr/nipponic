@@ -513,5 +513,126 @@ export interface TokenizedTextProps {
   onFlashcardWordsCountChange?: (count: number) => void;
 }
 
+export interface TokenItemProps {
+  word: string;
+  reading?: string;
+  basicForm?: string;
+  nextWord?: string;
+  isMerged?: boolean;
+  showFurigana?: boolean;
+  hasFlashcard?: boolean;
+  fullText?: string;
+  enContext?: string;
+  onMergeWithNext?: () => void;
+  onUnmerge?: () => void;
+}
+
+export interface AppSidebarProps {
+  selectedNoteId: string | null;
+  onSelectNote: (id: string) => void;
+}
+
+export interface DeckWorkspaceProps {
+  deck?: Deck;
+}
+
+export interface FlashcardPlayerProps {
+  deck: Deck;
+  onClose: () => void;
+}
+
+export interface KanjiBreakdownProps {
+  word: string;
+}
+
+export interface TextEditorProps {
+  selectedNote: Note;
+  onChangeContent: (newContent: string) => void;
+  onBlurContent?: () => void;
+  onChangeJpContent?: (newContent: string) => void;
+  onBlurJpContent?: () => void;
+  onChangeSourceLang?: (newLang: NoteSourceLang) => void;
+  onTranslate: () => void;
+  isTranslating: boolean;
+}
+
+export interface WorkspaceProps {
+  initialNotes?: Note[];
+}
+
+export interface AuthContextData {
+  user: UserPayload | null;
+  isAuthenticated: boolean;
+  login: (token: string) => Promise<void>;
+  logout: () => Promise<void>;
+}
+
+export interface NotesContextData {
+  notes: Note[];
+  selectedNoteId: string | null;
+  selectedNote: Note | undefined;
+  setSelectedNoteId: (id: string | null) => void;
+  createNewNote: () => Promise<Note>;
+  updateNoteContent: (
+    id: string,
+    updates: UpdateNoteInput
+  ) => void;
+  saveNote: (
+    id: string,
+    extraUpdates?: UpdateNoteInput
+  ) => Promise<void>;
+  deleteNote: (id: string) => Promise<void>;
+  refreshNotes: () => Promise<void>;
+}
+
+export interface FlashCardsContextData {
+  cards: Card[];
+  decks: Deck[];
+  appDecks: Deck[];
+  publicDecks: Deck[];
+  activeDeckTab: DeckTabMode;
+  setActiveDeckTab: (tab: DeckTabMode) => void;
+  selectedDeckId: string | null;
+  selectedDeck: Deck | undefined;
+  isCurrentDeckOwner: boolean;
+  setSelectedDeckId: (id: string | null) => void;
+  activeSidebarView: SidebarViewMode;
+  setActiveSidebarView: (view: SidebarViewMode) => void;
+  playingDeck: Deck | null;
+  startPlayingDeck: (deck: Deck) => void;
+  stopPlayingDeck: () => void;
+  createCard: (
+    data: CreateCardInput,
+    deckId?: string
+  ) => Promise<Card | null>;
+  updateCard: (id: string, data: Partial<Card>) => Promise<Card | null>;
+  deleteCard: (id: string) => Promise<boolean>;
+  reviewCard: (cardId: string, rating: ReviewRating) => Promise<Card | null>;
+  getDueCards: (deckId?: string) => Card[];
+  createDeck: (
+    name?: string,
+    cardIds?: string[],
+    preloadedCards?: Card[]
+  ) => Promise<Deck | null>;
+  updateDeck: (
+    id: string,
+    data: UpdateDeckInput
+  ) => Promise<Deck | null>;
+  deleteDeck: (id: string) => Promise<boolean>;
+  addCardsToDeck: (deckId: string, cardIds: string[]) => Promise<void>;
+  removeCardFromDeck: (deckId: string, cardId: string) => Promise<void>;
+  reorderDeckCards: (deckId: string, cardIds: string[]) => Promise<void>;
+  addDeckToMyDecks: (deck: Deck) => Promise<Deck | null>;
+  refreshAll: () => Promise<void>;
+}
+
+export interface StarterUser {
+  id: string;
+  email: string;
+  username: string | null;
+  createdAt: Date;
+}
+
+
 
 

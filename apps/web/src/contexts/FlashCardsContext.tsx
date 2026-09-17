@@ -19,6 +19,7 @@ import {
   SidebarViewMode,
   DeckTabMode,
   DeckCardFilterMode,
+  FlashCardsContextData,
 } from "@nipponic/shared";
 import { calculateNextReview, isCardDue } from "@/lib/srs";
 import { APP_DECKS } from "@/data/app-decks";
@@ -41,48 +42,12 @@ import {
 } from "@/actions/decks";
 import { useAuth } from "./AuthContext";
 
-export type { SidebarViewMode, DeckTabMode, DeckCardFilterMode };
-
-interface FlashCardsContextData {
-  cards: Card[];
-  decks: Deck[];
-  appDecks: Deck[];
-  publicDecks: Deck[];
-  activeDeckTab: DeckTabMode;
-  setActiveDeckTab: (tab: DeckTabMode) => void;
-  selectedDeckId: string | null;
-  selectedDeck: Deck | undefined;
-  isCurrentDeckOwner: boolean;
-  setSelectedDeckId: (id: string | null) => void;
-  activeSidebarView: SidebarViewMode;
-  setActiveSidebarView: (view: SidebarViewMode) => void;
-  playingDeck: Deck | null;
-  startPlayingDeck: (deck: Deck) => void;
-  stopPlayingDeck: () => void;
-  createCard: (
-    data: CreateCardInput,
-    deckId?: string
-  ) => Promise<Card | null>;
-  updateCard: (id: string, data: Partial<Card>) => Promise<Card | null>;
-  deleteCard: (id: string) => Promise<boolean>;
-  reviewCard: (cardId: string, rating: ReviewRating) => Promise<Card | null>;
-  getDueCards: (deckId?: string) => Card[];
-  createDeck: (
-    name?: string,
-    cardIds?: string[],
-    preloadedCards?: Card[]
-  ) => Promise<Deck | null>;
-  updateDeck: (
-    id: string,
-    data: UpdateDeckInput
-  ) => Promise<Deck | null>;
-  deleteDeck: (id: string) => Promise<boolean>;
-  addCardsToDeck: (deckId: string, cardIds: string[]) => Promise<void>;
-  removeCardFromDeck: (deckId: string, cardId: string) => Promise<void>;
-  reorderDeckCards: (deckId: string, cardIds: string[]) => Promise<void>;
-  addDeckToMyDecks: (deck: Deck) => Promise<Deck | null>;
-  refreshAll: () => Promise<void>;
-}
+export type {
+  SidebarViewMode,
+  DeckTabMode,
+  DeckCardFilterMode,
+  FlashCardsContextData,
+};
 
 const FlashCardsContext = createContext<FlashCardsContextData>(
   {} as FlashCardsContextData

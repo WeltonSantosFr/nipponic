@@ -6,5 +6,6 @@ export type {
   ChangePasswordInput,
   JwtPayload,
   UserPayload,
+  StarterUser,
 } from "@nipponic/shared";
 

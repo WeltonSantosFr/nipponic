@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useSpeech } from "@/hooks/use-speech";
-import { Note, NoteSourceLang } from "@nipponic/shared";
+import { Note, NoteSourceLang, TextEditorProps } from "@nipponic/shared";
+
+export type { TextEditorProps };
 import {
   ArrowLeftRight,
   ArrowRight,
@@ -24,17 +26,6 @@ import {
 } from "lucide-react";
 import { GlossaryModal } from "@/components/glossary-modal";
 import { ShadowingModal } from "@/components/shadowing-modal";
-
-interface TextEditorProps {
-  selectedNote: Note;
-  onChangeContent: (newContent: string) => void;
-  onBlurContent?: () => void;
-  onChangeJpContent?: (newContent: string) => void;
-  onBlurJpContent?: () => void;
-  onChangeSourceLang?: (newLang: NoteSourceLang) => void;
-  onTranslate: () => void;
-  isTranslating: boolean;
-}
 
 export function TextEditor({
   selectedNote,

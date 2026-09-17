@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Card, Deck, ReviewRating, ReviewSessionStats } from "@nipponic/shared";
+import { Card, Deck, ReviewRating, ReviewSessionStats, FlashcardPlayerProps } from "@nipponic/shared";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useSpeech } from "@/hooks/use-speech";
@@ -21,10 +21,7 @@ import {
   Zap,
 } from "lucide-react";
 
-interface FlashcardPlayerProps {
-  deck: Deck;
-  onClose: () => void;
-}
+export type { FlashcardPlayerProps };
 
 export function FlashcardPlayer({ deck, onClose }: FlashcardPlayerProps) {
   const { reviewCard } = useFlashCards();
