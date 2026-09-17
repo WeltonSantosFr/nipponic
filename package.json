@@ -8,7 +8,9 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
     "test": "turbo run test",
-    "test:cov": "turbo run test:cov"
+    "test:cov": "turbo run test:cov",
+    "migrate": "pnpm --filter api run migrate",
+    "start": "pnpm --filter api run start"
   },
   "devDependencies": {
     "prettier": "^3.7.4",
