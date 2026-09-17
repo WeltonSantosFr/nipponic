@@ -168,5 +168,24 @@ describe("notes actions", () => {
       expect(consoleSpy).toHaveBeenCalledWith("Failed to create note, status:", 400);
       consoleSpy.mockRestore();
     });
+
+    it("should return null and log error when upstream fetch throws an error", async () => {
+      // Arrange
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockRejectedValue(new Error("Server timeout"));
+
+      // Act
+      const result = await createNoteAction({ title: "Timeout Note", content: "..." });
+
+      // Assert
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith("Error creating note:", expect.any(Error));
+      consoleSpy.mockRestore();
+    });
   });
 });
