@@ -372,5 +372,24 @@ describe("cards actions", () => {
       expect(consoleSpy).toHaveBeenCalledWith("Failed to review card, status:", 400);
       consoleSpy.mockRestore();
     });
+
+    it("should return null and log error when upstream fetch throws an error", async () => {
+      // Arrange
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockRejectedValue(new Error("Network disconnect"));
+
+      // Act
+      const result = await reviewCardAction("card-123", "EASY" as any);
+
+      // Assert
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith("Error reviewing card:", expect.any(Error));
+      consoleSpy.mockRestore();
+    });
   });
 });
