@@ -759,5 +759,24 @@ describe("decks actions", () => {
       expect(consoleSpy).toHaveBeenCalledWith("Failed to reorder deck cards, status:", 500);
       consoleSpy.mockRestore();
     });
+
+    it("should return null and log error when upstream fetch throws an error", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "test-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.mocked(global.fetch).mockRejectedValue(new Error("Reorder failed"));
+
+      // Act
+      const result = await reorderDeckCardsAction("deck-123", ["c2", "c1"]);
+
+      // Assert
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith("Error reordering deck cards:", expect.any(Error));
+      consoleSpy.mockRestore();
+    });
   });
 });
