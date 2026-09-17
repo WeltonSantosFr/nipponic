@@ -313,5 +313,42 @@ describe("cards actions", () => {
       expect(result).toBeNull();
       expect(mockCookieStore.get).toHaveBeenCalledWith("nipponic.token");
     });
+
+    it("should return reviewed card when token is present and fetch succeeds", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const mockReviewedCard = {
+        id: "card-123",
+        interval: 2,
+        repetition: 1,
+        easeFactor: 2.6,
+      };
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockReviewedCard),
+      });
+
+      // Act
+      const result = await reviewCardAction("card-123", "GOOD" as any);
+
+      // Assert
+      expect(result).toEqual(mockReviewedCard);
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/cards/card-123/review"),
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer valid-jwt-token",
+          },
+          body: JSON.stringify({ rating: "GOOD" }),
+        }
+      );
+    });
   });
 });
