@@ -624,5 +624,31 @@ describe("decks actions", () => {
       expect(result).toBeNull();
       expect(mockCookieStore.get).toHaveBeenCalledWith("nipponic.token");
     });
+
+    it("should successfully remove card from deck and return data when response is ok", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "test-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const mockDeck = { id: "deck-123", name: "Deck", cards: [] };
+      vi.mocked(global.fetch).mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockDeck),
+      } as any);
+
+      // Act
+      const result = await removeCardFromDeckAction("deck-123", "card-1");
+
+      // Assert
+      expect(result).toEqual(mockDeck);
+      expect(global.fetch).toHaveBeenCalledWith("http://localhost:3001/decks/deck-123/cards/card-1", {
+        method: "DELETE",
+        headers: {
+          Authorization: "Bearer test-token",
+        },
+      });
+    });
   });
 });
