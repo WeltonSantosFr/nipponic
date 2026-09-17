@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { cookies } from "next/headers";
-import { saveAuthCookie } from "./auth";
+import { saveAuthCookie, removeAuthCookie } from "./auth";
 
 vi.mock("next/headers", () => ({
   cookies: vi.fn(),
@@ -33,6 +33,22 @@ describe("auth actions", () => {
           path: "/",
         }
       );
+    });
+  });
+
+  describe("removeAuthCookie", () => {
+    it("should delete the nipponic.token cookie", async () => {
+      // Arrange
+      const mockCookieStore = {
+        delete: vi.fn(),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      // Act
+      await removeAuthCookie();
+
+      // Assert
+      expect(mockCookieStore.delete).toHaveBeenCalledWith("nipponic.token");
     });
   });
 });
