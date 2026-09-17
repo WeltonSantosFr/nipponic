@@ -277,5 +277,24 @@ describe("cards actions", () => {
       expect(consoleSpy).toHaveBeenCalledWith("Failed to update card, status:", 404);
       consoleSpy.mockRestore();
     });
+
+    it("should return null and log error when upstream fetch throws an error", async () => {
+      // Arrange
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockRejectedValue(new Error("Network disconnect"));
+
+      // Act
+      const result = await updateCardAction("card-123", { front: "更新" } as any);
+
+      // Assert
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith("Error updating card:", expect.any(Error));
+      consoleSpy.mockRestore();
+    });
   });
 });
