@@ -144,5 +144,34 @@ describe("user actions", () => {
       });
       expect(mockCookieStore.get).toHaveBeenCalledWith("nipponic.token");
     });
+
+    it("should return success true and delete token cookie when token is present and fetch succeeds", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+        delete: vi.fn(),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+      });
+
+      // Act
+      const result = await deleteAccountAction();
+
+      // Assert
+      expect(result).toEqual({ success: true });
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/users/me"),
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: "Bearer valid-jwt-token",
+          },
+        }
+      );
+      expect(mockCookieStore.delete).toHaveBeenCalledWith("nipponic.token");
+    });
   });
 });
