@@ -295,5 +295,33 @@ describe("notes actions", () => {
       expect(result).toBe(false);
       expect(mockCookieStore.get).toHaveBeenCalledWith("nipponic.token");
     });
+
+    it("should send DELETE request and return true on success", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+      });
+      global.fetch = fetchMock;
+
+      // Act
+      const result = await deleteNoteAction("note_123");
+
+      // Assert
+      expect(result).toBe(true);
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining("/notes/note_123"),
+        expect.objectContaining({
+          method: "DELETE",
+          headers: {
+            Authorization: "Bearer valid-jwt-token",
+          },
+        })
+      );
+    });
   });
 });
