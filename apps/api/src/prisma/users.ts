@@ -22,4 +22,6 @@ export async function listUsers(limit = 10) {
   }));
 }
 
-export type StarterUser = Awaited<ReturnType<typeof listUsers>>[number];
+import type { StarterUser } from "@nipponic/shared";
+
+export type { StarterUser };

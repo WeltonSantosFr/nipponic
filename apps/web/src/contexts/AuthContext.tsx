@@ -2,16 +2,9 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 import { saveAuthCookie, removeAuthCookie } from "../actions/auth";
 import { jwtDecode } from "jwt-decode";
-import type { UserPayload } from "@nipponic/shared";
+import type { UserPayload, AuthContextData } from "@nipponic/shared";
 
-export type { UserPayload };
-
-interface AuthContextData {
-  user: UserPayload | null;
-  isAuthenticated: boolean;
-  login: (token: string) => Promise<void>;
-  logout: () => Promise<void>;
-}
+export type { UserPayload, AuthContextData };
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 

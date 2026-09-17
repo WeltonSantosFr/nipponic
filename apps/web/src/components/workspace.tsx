@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Note } from "@nipponic/shared";
+import { Note, WorkspaceProps } from "@nipponic/shared";
+
+export type { WorkspaceProps };
 import {
   Card,
   CardContent,
@@ -24,10 +26,6 @@ import { useFlashCards } from "@/contexts/FlashCardsContext";
 import { getGlossaryRules } from "@/services/glossary";
 import { DeckWorkspace } from "@/components/deck-workspace";
 import { FlashcardPlayer } from "@/components/flashcard-player";
-
-interface WorkspaceProps {
-  initialNotes?: Note[];
-}
 
 export function Workspace({ initialNotes: _initialNotes }: WorkspaceProps = {}) {
   const {

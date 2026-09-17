@@ -5,13 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, BookOpen, Layers, Volume2 } from "lucide-react";
 import { useSpeech } from "@/hooks/use-speech";
 
-import type { KanjiInfo } from "@nipponic/shared";
+import type { KanjiInfo, KanjiBreakdownProps } from "@nipponic/shared";
 
-export type { KanjiInfo };
-
-interface KanjiBreakdownProps {
-  word: string;
-}
+export type { KanjiInfo, KanjiBreakdownProps };
 
 export function KanjiBreakdown({ word }: KanjiBreakdownProps) {
   const kanjiList: string[] = useMemo(() => word.match(/[\u4e00-\u9faf]/g) || [], [word]);

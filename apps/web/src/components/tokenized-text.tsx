@@ -28,7 +28,7 @@ import {
   X,
 } from "lucide-react";
 
-import type { TokenDetailTab, TokenizedTextProps } from "@nipponic/shared";
+import type { TokenDetailTab, TokenizedTextProps, TokenItemProps } from "@nipponic/shared";
 import {
   DictionaryData,
   getCachedDictionaryWord,
@@ -66,21 +66,7 @@ function extractSentence(fullText: string, targetWord: string): string {
   return matched || fullText.trim();
 }
 
-export type { TokenDetailTab, TokenizedTextProps };
-
-interface TokenItemProps {
-  word: string;
-  reading?: string;
-  basicForm?: string;
-  nextWord?: string;
-  isMerged?: boolean;
-  showFurigana?: boolean;
-  hasFlashcard?: boolean;
-  fullText?: string;
-  enContext?: string;
-  onMergeWithNext?: () => void;
-  onUnmerge?: () => void;
-}
+export type { TokenDetailTab, TokenizedTextProps, TokenItemProps };
 
 function TokenItem({
   word,
