@@ -173,5 +173,27 @@ describe("user actions", () => {
       );
       expect(mockCookieStore.delete).toHaveBeenCalledWith("nipponic.token");
     });
+
+    it("should return error message when upstream request fails", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        json: vi.fn().mockResolvedValue({ message: "Account deletion forbidden" }),
+      });
+
+      // Act
+      const result = await deleteAccountAction();
+
+      // Assert
+      expect(result).toEqual({
+        success: false,
+        message: "Account deletion forbidden",
+      });
+    });
   });
 });
