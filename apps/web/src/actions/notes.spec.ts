@@ -323,5 +323,24 @@ describe("notes actions", () => {
         })
       );
     });
+
+    it("should return false and log error when upstream fetch throws an error", async () => {
+      // Arrange
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockRejectedValue(new Error("Network drop"));
+
+      // Act
+      const result = await deleteNoteAction("note_123");
+
+      // Assert
+      expect(result).toBe(false);
+      expect(consoleSpy).toHaveBeenCalledWith("Error deleting note:", expect.any(Error));
+      consoleSpy.mockRestore();
+    });
   });
 });
