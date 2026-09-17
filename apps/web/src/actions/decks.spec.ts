@@ -238,5 +238,24 @@ describe("decks actions", () => {
         }
       );
     });
+
+    it("should return null when upstream fetch fails with non-ok status", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+      });
+
+      // Act
+      const result = await getDeckAction("deck-123");
+
+      // Assert
+      expect(result).toBeNull();
+    });
   });
 });
