@@ -563,9 +563,14 @@ export interface WorkspaceProps {
 export interface AuthContextData {
   user: UserPayload | null;
   isAuthenticated: boolean;
+  isWakingServer: boolean;
+  setIsWakingServer: (waking: boolean) => void;
+  hasInitialToken: boolean;
   login: (token: string) => Promise<void>;
   logout: () => Promise<void>;
+  setUser: (user: UserPayload | null) => void;
 }
+
 
 export interface NotesContextData {
   notes: Note[];
