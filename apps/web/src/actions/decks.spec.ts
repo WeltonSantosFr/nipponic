@@ -257,5 +257,24 @@ describe("decks actions", () => {
       // Assert
       expect(result).toBeNull();
     });
+
+    it("should return null and log error when upstream fetch throws an error", async () => {
+      // Arrange
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockRejectedValue(new Error("Network failure"));
+
+      // Act
+      const result = await getDeckAction("deck-123");
+
+      // Assert
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith("Error fetching deck:", expect.any(Error));
+      consoleSpy.mockRestore();
+    });
   });
 });
