@@ -80,5 +80,27 @@ describe("user actions", () => {
         message: "Password is too weak",
       });
     });
+
+    it("should return default error message when upstream error response json fails to parse", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        json: vi.fn().mockRejectedValue(new Error("Invalid JSON")),
+      });
+
+      // Act
+      const result = await changePasswordAction("123");
+
+      // Assert
+      expect(result).toEqual({
+        success: false,
+        message: "Failed to update password",
+      });
+    });
   });
 });
