@@ -1,4 +1,7 @@
+import dns from "node:dns";
 import postgres from "@prisma/orm-postgres/runtime";
+
+dns.setDefaultResultOrder("ipv4first");
 
 import service from "../../service.ts";
 import type { Contract } from "./contract.d.ts";
