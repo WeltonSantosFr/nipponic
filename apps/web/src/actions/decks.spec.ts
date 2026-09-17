@@ -565,5 +565,27 @@ describe("decks actions", () => {
         body: JSON.stringify({ cardIds: ["c1", "c2"] }),
       });
     });
+
+    it("should return null when response is not ok", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "test-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.mocked(global.fetch).mockResolvedValue({
+        ok: false,
+        status: 400,
+      } as any);
+
+      // Act
+      const result = await addCardsToDeckAction("deck-123", ["c1"]);
+
+      // Assert
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith("Failed to add cards to deck, status:", 400);
+      consoleSpy.mockRestore();
+    });
   });
 });
