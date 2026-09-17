@@ -29,5 +29,34 @@ describe("user actions", () => {
       });
       expect(mockCookieStore.get).toHaveBeenCalledWith("nipponic.token");
     });
+
+    it("should return success true when token is present and fetch succeeds", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+      });
+
+      // Act
+      const result = await changePasswordAction("new-password-123");
+
+      // Assert
+      expect(result).toEqual({ success: true });
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/users/me"),
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer valid-jwt-token",
+          },
+          body: JSON.stringify({ password: "new-password-123" }),
+        }
+      );
+    });
   });
 });
