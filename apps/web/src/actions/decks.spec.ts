@@ -650,5 +650,27 @@ describe("decks actions", () => {
         },
       });
     });
+
+    it("should return null when response is not ok", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "test-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.mocked(global.fetch).mockResolvedValue({
+        ok: false,
+        status: 404,
+      } as any);
+
+      // Act
+      const result = await removeCardFromDeckAction("deck-123", "card-1");
+
+      // Assert
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith("Failed to remove card from deck, status:", 404);
+      consoleSpy.mockRestore();
+    });
   });
 });
