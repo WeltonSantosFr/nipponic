@@ -11,8 +11,16 @@ const MAX_WAIT_SECONDS = 75;
 const PING_INTERVAL_MS = 4000;
 
 export function ServerWakeupOverlay() {
-  const { isWakingServer, setIsWakingServer, hasInitialToken, logout, setUser } =
-    useAuth();
+  const {
+    isWakingServer,
+    setIsWakingServer,
+    hasInitialToken,
+    logout,
+    setUser,
+    isAuthenticated,
+    user,
+  } = useAuth();
+
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isTimedOut, setIsTimedOut] = useState(false);
@@ -109,12 +117,19 @@ export function ServerWakeupOverlay() {
   }
 
   const handleRetry = () => {
+    isCheckingRef.current = false;
+    setIsTimedOut(false);
+    setElapsedSeconds(0);
     setRetryCount((prev) => prev + 1);
   };
 
-  const handleContinueAsGuest = () => {
+  const handleContinueAsGuest = async () => {
+    if (isAuthenticated || user) {
+      await logout();
+    }
     setIsWakingServer(false);
   };
+
 
   return (
     <div

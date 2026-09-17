@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { ServerWakeupOverlay } from "./server-wakeup-overlay";
 
 const mockSetIsWakingServer = vi.fn();
@@ -32,6 +32,10 @@ describe("ServerWakeupOverlay", () => {
       logout: mockLogout,
       setUser: mockSetUser,
     };
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("renders null if hasInitialToken is false", () => {
@@ -99,4 +103,49 @@ describe("ServerWakeupOverlay", () => {
       expect(mockSetIsWakingServer).toHaveBeenCalledWith(false);
     });
   });
+
+  it("logs out and closes overlay when clicking continue anyway while logged in", async () => {
+    vi.useFakeTimers();
+    global.fetch = vi.fn().mockImplementation(() => new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1000)));
+
+    (mockAuthState as any).isAuthenticated = true;
+    (mockAuthState as any).user = { sub: "123", username: "sakura" };
+
+    const { unmount } = render(<ServerWakeupOverlay />);
+
+    await vi.advanceTimersByTimeAsync(80000);
+    vi.useRealTimers();
+
+    expect(screen.getByText(/Server is taking longer to respond/i)).toBeInTheDocument();
+
+    const continueBtn = screen.getByRole("button", { name: /continue anyway/i });
+    fireEvent.click(continueBtn);
+
+    await waitFor(() => {
+      expect(mockLogout).toHaveBeenCalled();
+      expect(mockSetIsWakingServer).toHaveBeenCalledWith(false);
+    });
+    unmount();
+  });
+
+  it("retries wake up when clicking try again", async () => {
+    vi.useFakeTimers();
+    global.fetch = vi.fn().mockImplementation(() => new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1000)));
+
+    const { unmount } = render(<ServerWakeupOverlay />);
+
+    await vi.advanceTimersByTimeAsync(80000);
+
+    expect(screen.getByText(/Server is taking longer to respond/i)).toBeInTheDocument();
+
+    const tryAgainBtn = screen.getByRole("button", { name: /try again/i });
+    fireEvent.click(tryAgainBtn);
+
+    expect(screen.getByText("Connecting to server...")).toBeInTheDocument();
+
+    unmount();
+    vi.useRealTimers();
+  });
 });
+
+
