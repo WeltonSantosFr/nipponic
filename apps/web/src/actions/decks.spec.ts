@@ -587,5 +587,24 @@ describe("decks actions", () => {
       expect(consoleSpy).toHaveBeenCalledWith("Failed to add cards to deck, status:", 400);
       consoleSpy.mockRestore();
     });
+
+    it("should return null and log error when upstream fetch throws an error", async () => {
+      // Arrange
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "test-token" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.mocked(global.fetch).mockRejectedValue(new Error("Add cards failed"));
+
+      // Act
+      const result = await addCardsToDeckAction("deck-123", ["c1"]);
+
+      // Assert
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith("Error adding cards to deck:", expect.any(Error));
+      consoleSpy.mockRestore();
+    });
   });
 });
