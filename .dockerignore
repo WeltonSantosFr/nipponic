@@ -1,0 +1,47 @@
+# Dependencies
+node_modules
+apps/*/node_modules
+packages/*/node_modules
+.pnpm-store
+
+# Build outputs
+dist
+apps/*/dist
+packages/*/dist
+.next
+apps/*/.next
+out
+apps/*/out
+coverage
+apps/*/coverage
+
+# Cache
+.turbo
+**/.turbo
+
+# Git & Version Control
+.git
+.gitignore
+.gitattributes
+
+# Environment files (sensitive credentials)
+.env*
+!.env.example
+apps/*/.env*
+!apps/*/.env.example
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDE & Editor configs
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

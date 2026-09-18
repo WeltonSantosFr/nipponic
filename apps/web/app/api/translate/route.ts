@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import * as deepl from "deepl-node";
 import { TranslateRequestSchema } from "@nipponic/shared";
 
-const translator = new deepl.Translator(process.env.DEEPL_AUTH_KEY || "");
+function getTranslator(): deepl.Translator | null {
+  const authKey = process.env.DEEPL_AUTH_KEY;
+  if (!authKey) return null;
+  return new deepl.Translator(authKey);
+}
 
 function escapeRegExp(string: string): string {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -10,6 +14,13 @@ function escapeRegExp(string: string): string {
 
 export async function POST(request: Request) {
   try {
+    const translator = getTranslator();
+    if (!translator) {
+      return NextResponse.json(
+        { error: "Serviço de tradução não configurado (DEEPL_AUTH_KEY ausente)." },
+        { status: 503 }
+      );
+    }
     const body = await request.json();
 
     const parsedData = TranslateRequestSchema.parse(body);
