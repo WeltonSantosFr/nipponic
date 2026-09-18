@@ -115,17 +115,23 @@ pnpm dev
 
 ## 🐳 Running with Docker
 
-Nipponic supports containerization to facilitate deployment and testing in isolated environments.
+Nipponic supports full containerization for both API and Web using Docker and Docker Compose.
 
 ```bash
-# Build and start project containers
+# Build and start only the Backend API (recommended when hosting API on VM and Web on Vercel)
+docker compose up --build -d api
+
+# Build and start all containers (API + Web)
 docker compose up --build -d
-```
 
-To stop services:
-```bash
+# Check logs in real time
+docker compose logs -f api
+
+# Stop all services
 docker compose down
 ```
+
+For complete instructions on deploying the API to a Virtual Machine on **Oracle Cloud (OCI)**, see the [Oracle Cloud Deployment Guide](DEPLOY_ORACLE_CLOUD.md).
 
 ---
 
@@ -278,18 +284,24 @@ pnpm dev
 ---
 
 ## 🐳 Executando com Docker
-
-O Nipponic suporta containerização para facilitar o deploy e homologação em ambientes isolados.
-
+ 
+O Nipponic suporta containerização completa para a API e Web utilizando Docker e Docker Compose.
+ 
 ```bash
-# Construir e subir os containers do projeto
+# Construir e subir apenas a API (recomendado quando a API roda na VM e a Web na Vercel)
+docker compose up --build -d api
+
+# Construir e subir todos os containers (API + Web)
 docker compose up --build -d
-```
 
-Para encerrar os serviços:
-```bash
+# Visualizar logs em tempo real
+docker compose logs -f api
+
+# Para encerrar os serviços
 docker compose down
 ```
+
+Para o passo a passo completo de implantação em Máquina Virtual na **Oracle Cloud (OCI)**, consulte o [Guia de Deploy na Oracle Cloud](DEPLOY_ORACLE_CLOUD.md).
 
 ---
 
