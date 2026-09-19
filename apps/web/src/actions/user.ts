@@ -76,3 +76,71 @@ export async function deleteAccountAction(): Promise<ActionResponse> {
     };
   }
 }
+
+export async function getUserProfileAction() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("nipponic.token")?.value;
+
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/users/me`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      return null;
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    return null;
+  }
+}
+
+export async function updateGithubUsernameAction(
+  githubUsername: string
+): Promise<ActionResponse & { user?: any }> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("nipponic.token")?.value;
+
+  if (!token) {
+    return { success: false, message: "User not authenticated" };
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/users/me`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ githubUsername }),
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      return {
+        success: false,
+        message: data?.message || "Failed to update GitHub username",
+      };
+    }
+
+    return { success: true, user: data };
+  } catch (error) {
+    console.error("Error updating GitHub username:", error);
+    return {
+      success: false,
+      message: "Network error while updating GitHub username",
+    };
+  }
+}
+

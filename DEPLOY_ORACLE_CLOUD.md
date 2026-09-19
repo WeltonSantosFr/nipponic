@@ -154,16 +154,18 @@ DEEPL_AUTH_KEY=sua-chave-deepl-opcional
 
 ---
 
-## 6. Subindo os Containers
+## 6. Subindo os Containers em Produção
 
 ### Opção A: Subir apenas a API (Recomendado se o Web estiver na Vercel)
 ```bash
-docker compose up --build -d api
+docker compose -f docker-compose.prod.yml up --build -d api
 ```
 
 ### Opção B: Subir API e Web juntos
 ```bash
-docker compose up --build -d
+docker compose -f docker-compose.prod.yml up --build -d
+# ou usando o atalho configurado no package.json:
+pnpm run docker:prod
 ```
 
 ### 6.1. Testando o Funcionamento
@@ -182,12 +184,12 @@ A resposta esperada é um JSON `200 OK`:
 
 | Ação | Comando |
 | :--- | :--- |
-| **Ver logs da API em tempo real** | `docker compose logs -f api` |
-| **Ver status e integridade (Health)** | `docker compose ps` |
-| **Reiniciar a API** | `docker compose restart api` |
-| **Parar os containers** | `docker compose down` |
-| **Atualizar a aplicação com novas alterações** | `git pull && docker compose up --build -d api` |
-| **Rodar migrações do banco (Prisma)** | `docker compose exec api pnpm run migrate` |
+| **Ver logs da API em tempo real** | `docker compose -f docker-compose.prod.yml logs -f api` |
+| **Ver status e integridade (Health)** | `docker compose -f docker-compose.prod.yml ps` |
+| **Reiniciar a API** | `docker compose -f docker-compose.prod.yml restart api` |
+| **Parar os containers** | `docker compose -f docker-compose.prod.yml down` (ou `pnpm run docker:down`) |
+| **Atualizar a aplicação com novas alterações** | `git pull && docker compose -f docker-compose.prod.yml up --build -d api` |
+| **Rodar migrações do banco (Prisma)** | `docker compose -f docker-compose.prod.yml exec api pnpm run migrate` |
 
 ---
 

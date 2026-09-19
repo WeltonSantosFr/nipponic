@@ -10,7 +10,10 @@
     "test": "turbo run test",
     "test:cov": "turbo run test:cov",
     "migrate": "pnpm --filter api run migrate",
-    "start": "pnpm --filter api run start"
+    "start": "pnpm --filter api run start",
+    "docker:dev": "docker compose up --build",
+    "docker:prod": "docker compose -f docker-compose.prod.yml up --build -d",
+    "docker:down": "docker compose down"
   },
   "devDependencies": {
     "prettier": "^3.7.4",

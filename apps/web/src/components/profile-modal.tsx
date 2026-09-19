@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
-import { changePasswordAction, deleteAccountAction } from "@/actions/user";
+import { changePasswordAction, deleteAccountAction, getUserProfileAction, updateGithubUsernameAction } from "@/actions/user";
+import { SupporterBadge } from "@/components/supporter-badge";
 import {
   UserRound,
   Mail,
@@ -23,8 +25,29 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  Heart,
+  ExternalLink,
 } from "lucide-react";
 import type { ProfileModalProps } from "@nipponic/shared";
+
+function GithubIcon({ size = 15, className }: { size?: number; className?: string }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+      <path d="M9 18c-4.51 2-5-2-7-2" />
+    </svg>
+  );
+}
 
 export type { ProfileModalProps };
 
@@ -43,6 +66,53 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // GitHub & Supporter state
+  const [githubUsername, setGithubUsername] = useState("");
+  const [isSupporter, setIsSupporter] = useState(false);
+  const [isActiveSupporter, setIsActiveSupporter] = useState(false);
+  const [tierName, setTierName] = useState<string | null>(null);
+  const [githubLoading, setGithubLoading] = useState(false);
+  const [githubError, setGithubError] = useState<string | null>(null);
+  const [githubSuccess, setGithubSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      getUserProfileAction().then((profile) => {
+        if (profile) {
+          setGithubUsername(profile.githubUsername || "");
+          setIsSupporter(!!profile.isSupporter);
+          setIsActiveSupporter(!!profile.isActiveSupporter);
+          setTierName(profile.tierName || null);
+        }
+      });
+    }
+  }, [isOpen]);
+
+  const handleGithubSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setGithubError(null);
+    setGithubSuccess(null);
+    setGithubLoading(true);
+
+    try {
+      const res = await updateGithubUsernameAction(githubUsername);
+      if (res.success) {
+        setGithubSuccess("GitHub account linked successfully!");
+        if (res.user) {
+          setIsSupporter(!!res.user.isSupporter);
+          setIsActiveSupporter(!!res.user.isActiveSupporter);
+          setTierName(res.user.tierName || null);
+        }
+      } else {
+        setGithubError(res.message || "Failed to link GitHub account.");
+      }
+    } catch {
+      setGithubError("Network error while saving.");
+    } finally {
+      setGithubLoading(false);
+    }
+  };
 
   const resetPasswordState = () => {
     setIsChangingPassword(false);
@@ -121,8 +191,16 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <UserRound className="h-5 w-5" />
               </div>
-              <div>
-                <DialogTitle>Account Profile</DialogTitle>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <DialogTitle>Account Profile</DialogTitle>
+                  <SupporterBadge
+                    isSupporter={isSupporter}
+                    isActiveSupporter={isActiveSupporter}
+                    tierName={tierName}
+                    size="sm"
+                  />
+                </div>
                 <DialogDescription>
                   Manage your personal information and account settings.
                 </DialogDescription>
@@ -152,6 +230,79 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   {user.email}
                 </span>
               </div>
+            </div>
+
+            {/* GitHub & Project Sponsorship */}
+            <div className="space-y-3 rounded-lg border border-border/80 bg-muted/20 p-3.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 font-medium text-foreground">
+                  <GithubIcon size={15} />
+                  GitHub Link (Sponsors)
+                </span>
+                {isSupporter && (
+                  <SupporterBadge
+                    isSupporter={isSupporter}
+                    isActiveSupporter={isActiveSupporter}
+                    tierName={tierName}
+                    size="sm"
+                  />
+                )}
+              </div>
+
+              <form onSubmit={handleGithubSubmit} className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-mono">
+                      @
+                    </span>
+                    <Input
+                      id="github-username"
+                      placeholder="your-github-username"
+                      value={githubUsername}
+                      onChange={(e) => setGithubUsername(e.target.value)}
+                      className="h-8 pl-6 text-xs"
+                      disabled={githubLoading}
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={githubLoading}
+                    className="h-8 px-3 text-xs"
+                  >
+                    {githubLoading ? <Loader2 size={12} className="animate-spin" /> : "Save"}
+                  </Button>
+                </div>
+
+                {githubSuccess && (
+                  <div className="flex items-center gap-1.5 text-[11px] text-green-600 dark:text-green-400">
+                    <CheckCircle2 size={13} />
+                    <span>{githubSuccess}</span>
+                  </div>
+                )}
+
+                {githubError && (
+                  <div className="flex items-center gap-1.5 text-[11px] text-red-500">
+                    <AlertCircle size={13} />
+                    <span>{githubError}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-1 text-[11px] text-muted-foreground flex-wrap gap-1">
+                  <span>
+                    {isSupporter
+                      ? "Your sponsorship is active in Nipponic! 💖"
+                      : "Link your account to activate your badge and appear on the wall."}
+                  </span>
+                  <Link
+                    href="/sponsors"
+                    onClick={() => onClose()}
+                    className="inline-flex items-center gap-1 text-primary hover:underline font-medium shrink-0 ml-auto"
+                  >
+                    View Plans & Wall <ExternalLink size={11} />
+                  </Link>
+                </div>
+              </form>
             </div>
 
             {/* Password Success Feedback */}

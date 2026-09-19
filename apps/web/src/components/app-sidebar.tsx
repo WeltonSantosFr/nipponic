@@ -24,11 +24,13 @@ import { useNotes } from "@/contexts/NotesContext";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
 import { Note, Deck, AuthMode, AppSidebarProps } from "@nipponic/shared";
 import { isCardDue } from "@/lib/srs";
+import Link from "next/link";
 import {
   BookOpen,
   Check,
   DoorOpen,
   Globe,
+  Heart,
   Layers,
   Loader2,
   Play,
@@ -685,6 +687,14 @@ export function AppSidebar({
             />
           </>
         )}
+
+        <SidebarMenuButton
+          render={<Link href="/sponsors" />}
+          className="cursor-pointer text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-500/10 transition-colors"
+        >
+          <Heart size={16} className="fill-rose-500/20 text-rose-500" />
+          <span>Support Nipponic 💖</span>
+        </SidebarMenuButton>
 
         <SidebarMenuButton
           onClick={() => setIsSettingsModalOpen(true)}

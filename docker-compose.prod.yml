@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
-      target: dev
+      target: runner
     container_name: nipponic-api
     restart: unless-stopped
     ports:
@@ -13,13 +13,7 @@ services:
         required: false
     environment:
       - PORT=3001
-      - NODE_ENV=development
-      - CHOKIDAR_USEPOLLING=true
-      - CI=true
-    volumes:
-      - ./apps/api/src:/app/apps/api/src
-      - ./apps/api/prisma:/app/apps/api/prisma
-      - ./packages/shared/src:/app/packages/shared/src
+      - NODE_ENV=production
     healthcheck:
       test:
         [
@@ -28,9 +22,9 @@ services:
           "-e",
           "require('http').get('http://localhost:3001/', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); })"
         ]
-      interval: 10s
+      interval: 30s
       timeout: 5s
-      retries: 5
+      retries: 3
       start_period: 10s
     networks:
       - nipponic-network
@@ -41,7 +35,7 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
-      target: dev
+      target: runner
     container_name: nipponic-web
     restart: unless-stopped
     ports:
@@ -51,18 +45,9 @@ services:
         required: false
     environment:
       - PORT=3000
-      - NODE_ENV=development
+      - NODE_ENV=production
       - HOSTNAME=0.0.0.0
       - API_URL=http://api:3001
-      - NEXT_PUBLIC_API_URL=http://localhost:3001
-      - WATCHPACK_POLLING=true
-      - CI=true
-    volumes:
-      - ./apps/web/app:/app/apps/web/app
-      - ./apps/web/src:/app/apps/web/src
-      - ./apps/web/public:/app/apps/web/public
-      - ./packages/shared/src:/app/packages/shared/src
-      - ./packages/ui/src:/app/packages/ui/src
     depends_on:
       api:
         condition: service_healthy
@@ -75,10 +60,10 @@ services:
           "-e",
           "require('http').get('http://localhost:3000/', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); })"
         ]
-      interval: 10s
+      interval: 30s
       timeout: 5s
-      retries: 5
-      start_period: 20s
+      retries: 3
+      start_period: 15s
     networks:
       - nipponic-network
     extra_hosts:

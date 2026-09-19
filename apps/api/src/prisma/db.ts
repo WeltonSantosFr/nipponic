@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import dns from "node:dns";
 import postgres from "@prisma/orm-postgres/runtime";
 
@@ -15,10 +16,30 @@ function loadComposerDatabase() {
   }
 }
 
+function resolveDatabaseUrl(): string | undefined {
+  const rawUrl = process.env.DATABASE_URL;
+  if (!rawUrl) return undefined;
+
+  const isInsideDocker =
+    process.env.IS_DOCKER === "true" ||
+    process.env.DOCKER === "true" ||
+    fs.existsSync("/.dockerenv");
+
+  if (isInsideDocker) {
+    return rawUrl
+      .replace("@127.0.0.1:", "@host.docker.internal:")
+      .replace("@localhost:", "@host.docker.internal:");
+  }
+
+  return rawUrl;
+}
+
+const resolvedDbUrl = resolveDatabaseUrl();
+
 export const db =
   loadComposerDatabase() ??
-  (process.env.DATABASE_URL
-    ? postgres<Contract>({ contractJson, url: process.env.DATABASE_URL })
+  (resolvedDbUrl
+    ? postgres<Contract>({ contractJson, url: resolvedDbUrl })
     : postgres<Contract>({ contractJson }));
 
 let connection: Promise<void> | undefined;

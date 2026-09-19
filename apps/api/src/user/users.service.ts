@@ -28,7 +28,24 @@ export class UsersService {
   }
 
   async findOne(id: string) {
-    return this.prisma.db.orm.public.User.first({ id });
+    const user = await this.prisma.db.orm.public.User.first({ id });
+    if (!user) return null;
+
+    if (user.githubUsername) {
+      const sponsor = await this.prisma.db.orm.public.Sponsor.first({
+        githubUsername: user.githubUsername,
+      });
+      if (sponsor) {
+        return {
+          ...user,
+          isSupporter: true,
+          isActiveSupporter: sponsor.isActive,
+          tierName: sponsor.tierName,
+        };
+      }
+    }
+
+    return user;
   }
 
   async update(id: string, body: Partial<UpdateUserDto>) {
@@ -36,7 +53,34 @@ export class UsersService {
     if (dataToUpdate.password) {
       dataToUpdate.password = hashSync(dataToUpdate.password, 10);
     }
-    return this.prisma.db.orm.public.User.where({ id: id }).update(dataToUpdate);
+    if (dataToUpdate.githubUsername !== undefined) {
+      if (dataToUpdate.githubUsername) {
+        dataToUpdate.githubUsername = dataToUpdate.githubUsername.toLowerCase().trim().replace(/^@/, "");
+        const existing = await this.prisma.db.orm.public.User.first({
+          githubUsername: dataToUpdate.githubUsername,
+        });
+        if (existing && existing.id !== id) {
+          throw new ConflictException("This GitHub username is already linked to another account");
+        }
+      } else {
+        dataToUpdate.githubUsername = null;
+      }
+    }
+
+    const updated = await this.prisma.db.orm.public.User.where({ id: id }).update(dataToUpdate);
+
+    if (dataToUpdate.githubUsername) {
+      const sponsor = await this.prisma.db.orm.public.Sponsor.first({
+        githubUsername: dataToUpdate.githubUsername,
+      });
+      if (sponsor) {
+        await this.prisma.db.orm.public.Sponsor.where({ id: sponsor.id }).update({
+          userId: id,
+        });
+      }
+    }
+
+    return updated;
   }
 
   async delete(id: string) {

@@ -16,8 +16,17 @@ WORKDIR /app
 COPY --from=builder /app/out/json/ .
 RUN pnpm install --frozen-lockfile
 
-# Copy pruned workspace source and compile
+# Copy pruned workspace source
 COPY --from=builder /app/out/full/ .
+
+FROM installer AS dev
+WORKDIR /app
+ENV NODE_ENV=development
+ENV PORT=3001
+EXPOSE 3001
+CMD ["pnpm", "--filter", "api", "dev"]
+
+FROM installer AS builder-prod
 RUN pnpm turbo run build --filter=api
 
 FROM node:22-bookworm-slim AS runner
@@ -36,7 +45,7 @@ RUN echo '{"type":"module"}' > package.json && \
     chown -R nestjs:nodejs /app
 
 # Copy compiled bundle
-COPY --chown=nestjs:nodejs --from=installer /app/apps/api/dist ./dist
+COPY --chown=nestjs:nodejs --from=builder-prod /app/apps/api/dist ./dist
 
 USER nestjs
 
