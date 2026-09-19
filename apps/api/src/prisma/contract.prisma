@@ -1,17 +1,19 @@
 // use prisma-next
 
 model User {
-  id           String   @id @default(uuid())
-  username     String   @unique
-  email        String   @unique
-  password     String
+  id             String   @id @default(uuid())
+  username       String   @unique
+  email          String   @unique
+  password       String
+  githubUsername String?  @unique
   
-  notes        Note[]
-  cards        Card[]
-  decks        Deck[]
+  notes          Note[]
+  cards          Card[]
+  decks          Deck[]
+  sponsorships   Sponsor[]
   
-  createdAt    DateTime @default(now())
-  updatedAt    temporal.updatedAt()
+  createdAt      DateTime @default(now())
+  updatedAt      temporal.updatedAt()
 }
 
 model Note {
@@ -73,4 +75,22 @@ model DeckCard {
   card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
   
   createdAt DateTime @default(now())
+}
+
+model Sponsor {
+  id                  String   @id @default(uuid())
+  githubUsername      String   @unique
+  githubUserId        String?
+  avatarUrl           String?
+  name                String?
+  tierName            String
+  monthlyPriceInCents Int      @default(0)
+  isOneTime           Boolean  @default(false)
+  isActive            Boolean  @default(true)
+  
+  userId              String?
+  user                User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  createdAt           DateTime @default(now())
+  updatedAt           temporal.updatedAt()
 }

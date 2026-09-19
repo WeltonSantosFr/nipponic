@@ -117,18 +117,28 @@ pnpm dev
 
 Nipponic supports full containerization for both API and Web using Docker and Docker Compose.
 
+### Local Development (Live Reload)
+
 ```bash
-# Build and start only the Backend API (recommended when hosting API on VM and Web on Vercel)
-docker compose up --build -d api
+# Start all services with live reload (code changes on host reflect immediately)
+docker compose up --build
+# or using pnpm:
+pnpm run docker:dev
 
-# Build and start all containers (API + Web)
-docker compose up --build -d
+# Start only the API with live reload
+docker compose up --build api
 
-# Check logs in real time
-docker compose logs -f api
-
-# Stop all services
+# Stop containers
 docker compose down
+```
+
+### Production Build
+
+```bash
+# Build and run production containers (standalone runner)
+docker compose -f docker-compose.prod.yml up --build -d
+# or using pnpm:
+pnpm run docker:prod
 ```
 
 For complete instructions on deploying the API to a Virtual Machine on **Oracle Cloud (OCI)**, see the [Oracle Cloud Deployment Guide](DEPLOY_ORACLE_CLOUD.md).
@@ -287,18 +297,28 @@ pnpm dev
  
 O Nipponic suporta containerização completa para a API e Web utilizando Docker e Docker Compose.
  
+### Desenvolvimento Local (Live Reload)
+
 ```bash
-# Construir e subir apenas a API (recomendado quando a API roda na VM e a Web na Vercel)
-docker compose up --build -d api
+# Iniciar todos os serviços com live reload (alterações de código no host refletem instantaneamente)
+docker compose up --build
+# ou via pnpm:
+pnpm run docker:dev
 
-# Construir e subir todos os containers (API + Web)
-docker compose up --build -d
+# Iniciar apenas a API com live reload
+docker compose up --build api
 
-# Visualizar logs em tempo real
-docker compose logs -f api
-
-# Para encerrar os serviços
+# Encerrar os serviços
 docker compose down
+```
+
+### Build de Produção
+
+```bash
+# Construir e rodar containers de produção (standalone runner)
+docker compose -f docker-compose.prod.yml up --build -d
+# ou via pnpm:
+pnpm run docker:prod
 ```
 
 Para o passo a passo completo de implantação em Máquina Virtual na **Oracle Cloud (OCI)**, consulte o [Guia de Deploy na Oracle Cloud](DEPLOY_ORACLE_CLOUD.md).

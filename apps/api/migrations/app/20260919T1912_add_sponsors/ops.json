@@ -1,0 +1,248 @@
+[
+  {
+    "id": "table.sponsor",
+    "label": "Create table \"sponsor\"",
+    "summary": "Creates table \"sponsor\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "sponsor"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"sponsor\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"sponsor\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"sponsor\"",
+        "sql": "CREATE TABLE \"public\".\"sponsor\" (\n  \"avatarUrl\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"githubUserId\" text,\n  \"githubUsername\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"isActive\" bool DEFAULT true NOT NULL,\n  \"isOneTime\" bool DEFAULT false NOT NULL,\n  \"monthlyPriceInCents\" int4 DEFAULT 0 NOT NULL,\n  \"name\" text,\n  \"tierName\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userId\" text,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"sponsor\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"sponsor\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.user.githubUsername",
+    "label": "Add column \"githubUsername\" to \"user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "githubUsername",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"githubUsername\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "githubUsername"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"githubUsername\"",
+        "sql": "ALTER TABLE \"public\".\"user\" ADD COLUMN \"githubUsername\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"githubUsername\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "githubUsername"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.sponsor.sponsor_githubUsername_key",
+    "label": "Add unique constraint on \"sponsor\" (githubUsername)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "sponsor_githubUsername_key",
+        "table": "sponsor"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"sponsor_githubUsername_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "sponsor_githubUsername_key",
+          "public",
+          "\"public\".\"sponsor\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"sponsor_githubUsername_key\"",
+        "sql": "ALTER TABLE \"public\".\"sponsor\" ADD CONSTRAINT \"sponsor_githubUsername_key\" UNIQUE (\"githubUsername\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"sponsor_githubUsername_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "sponsor_githubUsername_key",
+          "public",
+          "\"public\".\"sponsor\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.user.user_githubUsername_key",
+    "label": "Add unique constraint on \"user\" (githubUsername)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "user_githubUsername_key",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"user_githubUsername_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_githubUsername_key",
+          "public",
+          "\"public\".\"user\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"user_githubUsername_key\"",
+        "sql": "ALTER TABLE \"public\".\"user\" ADD CONSTRAINT \"user_githubUsername_key\" UNIQUE (\"githubUsername\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"user_githubUsername_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_githubUsername_key",
+          "public",
+          "\"public\".\"user\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.sponsor.sponsor_userId_idx_a489d58a",
+    "label": "Create index \"sponsor_userId_idx_a489d58a\" on \"sponsor\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "sponsor_userId_idx_a489d58a",
+        "table": "sponsor"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"sponsor_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"sponsor_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"sponsor_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"sponsor_userId_idx_a489d58a\" ON \"public\".\"sponsor\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"sponsor_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"sponsor_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.sponsor.sponsor_userId_fkey",
+    "label": "Add foreign key \"sponsor_userId_fkey\" on \"sponsor\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "sponsor_userId_fkey",
+        "table": "sponsor"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"sponsor_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "sponsor_userId_fkey",
+          "public",
+          "\"public\".\"sponsor\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"sponsor_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"sponsor\"\nADD CONSTRAINT \"sponsor_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"sponsor_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "sponsor_userId_fkey",
+          "public",
+          "\"public\".\"sponsor\""
+        ]
+      }
+    ]
+  }
+]

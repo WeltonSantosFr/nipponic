@@ -10,9 +10,10 @@ import { AuthModule } from "./auth/auth.module";
 import { NotesModule } from "./notes/notes.module";
 import { CardsModule } from "./cards/cards.module";
 import { DecksModule } from "./decks/decks.module";
+import { SponsorsModule } from "./sponsors/sponsors.module";
 
 @Module({
-  imports: [AuthModule, NotesModule, CardsModule, DecksModule],
+  imports: [AuthModule, NotesModule, CardsModule, DecksModule, SponsorsModule],
   controllers: [AppController, UsersController],
   providers: [PrismaService, UsersService],
 })

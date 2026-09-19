@@ -31,6 +31,10 @@ export const UserSchema = z.object({
   id: z.string(),
   username: z.string(),
   email: z.string(),
+  githubUsername: z.string().nullable().optional(),
+  isSupporter: z.boolean().optional(),
+  isActiveSupporter: z.boolean().optional(),
+  tierName: z.string().nullable().optional(),
 });
 export type User = z.infer<typeof UserSchema>;
 
@@ -46,6 +50,7 @@ export const UpdateUserSchema = z.object({
   username: z.string().min(1).optional(),
   email: z.string().email().optional(),
   password: z.string().min(6).optional(),
+  githubUsername: z.string().nullable().optional(),
 });
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
 export type UpdateUserDto = UpdateUserInput;
@@ -638,6 +643,59 @@ export interface StarterUser {
   createdAt: Date;
 }
 
+// ==========================================
+// Sponsors & Supporter Contracts
+// ==========================================
 
+export type SponsorTierId = "tea" | "bento" | "ramen" | "custom";
 
+export const SponsorTierSchema = z.object({
+  id: z.enum(["tea", "bento", "ramen", "custom"]),
+  name: z.string(),
+  japaneseName: z.string(),
+  icon: z.string(),
+  priceUsd: z.number(),
+  period: z.enum(["monthly", "one-time"]),
+  description: z.string(),
+  helpImpact: z.string(),
+  sponsorUrl: z.string(),
+});
+export type SponsorTier = z.infer<typeof SponsorTierSchema>;
 
+export const SponsorSchema = z.object({
+  id: z.string(),
+  githubUsername: z.string(),
+  githubUserId: z.string().nullable().optional(),
+  avatarUrl: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  tierName: z.string(),
+  monthlyPriceInCents: z.number().default(0),
+  isOneTime: z.boolean().default(false),
+  isActive: z.boolean().default(true),
+  createdAt: z.union([z.string(), z.date()]),
+});
+export type Sponsor = z.infer<typeof SponsorSchema>;
+
+export const UserSupporterStatusSchema = z.object({
+  isSupporter: z.boolean(),
+  isActiveSupporter: z.boolean(),
+  tierName: z.string().nullable().optional(),
+  githubUsername: z.string().nullable().optional(),
+});
+export type UserSupporterStatus = z.infer<typeof UserSupporterStatusSchema>;
+
+export const LinkGithubInputSchema = z.object({
+  githubUsername: z.string().min(1, "GitHub username is required"),
+});
+export type LinkGithubInput = z.infer<typeof LinkGithubInputSchema>;
+
+export const MockSponsorshipInputSchema = z.object({
+  githubUsername: z.string().min(1),
+  name: z.string().optional(),
+  avatarUrl: z.string().optional(),
+  tierName: z.string().default("🌱 Green Tea"),
+  monthlyPriceInCents: z.number().default(100),
+  isOneTime: z.boolean().default(false),
+  isActive: z.boolean().default(true),
+});
+export type MockSponsorshipInput = z.infer<typeof MockSponsorshipInputSchema>;
