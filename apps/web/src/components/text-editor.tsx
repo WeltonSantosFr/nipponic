@@ -87,8 +87,8 @@ export function TextEditor({
   return (
     <div className="flex flex-col gap-5 sm:gap-6 p-4 sm:p-6 rounded-lg border bg-card text-card-foreground shadow-xs w-full min-w-0">
       {/* Top Header / Direction Toggle Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 pb-3 border-b border-border/60">
-        <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-2.5 sm:gap-3 pb-3 border-b border-border/60">
+        <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto shrink-0">
           {/* Translation Direction Toggle Switch */}
           <div className="flex-1 sm:flex-none flex items-center bg-muted/70 p-1 rounded-lg border border-border/60 text-xs font-semibold min-w-0">
             <button
@@ -135,7 +135,7 @@ export function TextEditor({
           </Button>
         </div>
 
-        <div className="flex items-center justify-end gap-2 w-full sm:w-auto">
+        <div className="flex items-center justify-end gap-2 w-full sm:w-auto shrink-0">
           <Button
             onClick={() => setIsGlossaryOpen(true)}
             size="sm"
