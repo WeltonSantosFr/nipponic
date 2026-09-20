@@ -48,11 +48,9 @@ export function SentenceMinerModal({
         ? `${word}${reading && reading !== word ? ` (${reading})` : ""}\n\n「${sentenceJp}」`
         : `${word}${reading && reading !== word ? ` (${reading})` : ""}`;
 
-      // Build back text: Dictionary meanings + English sentence translation
+      // Build back text: Dictionary meanings (definition only)
       const meaningText = (meanings || []).slice(0, 3).join(", ");
-      const back = sentenceEn
-        ? `${meaningText}\n\n"${sentenceEn}"`
-        : meaningText || "Meaning";
+      const back = meaningText || "Meaning";
 
       setJpCardText(front);
       setEnCardText(back);
@@ -62,7 +60,7 @@ export function SentenceMinerModal({
       setSuccessMessage(null);
     }
     prevIsOpenRef.current = isOpen;
-  }, [isOpen, word, reading, meanings, sentenceJp, sentenceEn, selectedDeckId, decks]);
+  }, [isOpen, word, reading, meanings, sentenceJp, selectedDeckId, decks]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,11 +149,11 @@ export function SentenceMinerModal({
               />
             </div>
 
-            {/* Back of card (English + Translation) */}
+            {/* Back of card (Definition) */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-semibold text-foreground">
-                  Back (Definition & Translation)
+                  Back (Definition)
                 </Label>
                 <Badge variant="outline" className="text-[10px]">
                   English
@@ -165,7 +163,7 @@ export function SentenceMinerModal({
                 value={enCardText}
                 onChange={(e) => setEnCardText(e.target.value)}
                 className="text-sm min-h-24 resize-none leading-relaxed"
-                placeholder="Meaning and translation..."
+                placeholder="Meaning..."
                 required
               />
             </div>
