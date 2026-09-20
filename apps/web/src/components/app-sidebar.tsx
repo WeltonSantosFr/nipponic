@@ -657,7 +657,7 @@ export function AppSidebar({
         ) : (
           <>
             <p className="text-xs px-3 text-muted-foreground">Sign in to keep your notes and decks</p>
-            <div className="flex flex-col gap-1.5 px-2 pt-1">
+            <div className="flex flex-col gap-1.5">
               <Button
                 size="sm"
                 onClick={() => {
