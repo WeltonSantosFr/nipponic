@@ -357,7 +357,6 @@ export function TextEditor({
               <TokenizedText
                 text={selectedNote.jpText}
                 showFurigana={showFurigana}
-                enContext={selectedNote.enText}
                 onFlashcardWordsCountChange={setFlashcardWordsCount}
               />
             </div>
@@ -520,7 +519,6 @@ export function TextEditor({
                 <TokenizedText
                   text={selectedNote.jpText}
                   showFurigana={showFurigana}
-                  enContext={selectedNote.enText}
                   onFlashcardWordsCountChange={setFlashcardWordsCount}
                 />
               </div>
