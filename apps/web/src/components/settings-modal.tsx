@@ -42,6 +42,7 @@ import {
   requestNotificationPermission,
   sendTestNotification,
   syncCardNotifications,
+  isNotificationsSupported,
   type NotificationSettings,
 } from "@/services/notifications";
 
@@ -231,6 +232,12 @@ function NotificationsTabButton({
     >
       <Bell size={14} className="shrink-0" />
       <span className="whitespace-nowrap">Notifications</span>
+      <Badge
+        variant={isActive ? "secondary" : "outline"}
+        className="text-[10px] px-1.5 py-0 h-4 ml-0.5 shrink-0"
+      >
+        Android
+      </Badge>
     </button>
   );
 }
@@ -868,6 +875,7 @@ function NotificationsSettingsSection() {
   const { cards } = useFlashCards();
   const [settings, setSettings] = useState<NotificationSettings>(getNotificationSettings);
   const [testState, setTestState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const isSupported = isNotificationsSupported();
 
   const updateSetting = async <K extends keyof NotificationSettings>(
     key: K,
@@ -901,14 +909,34 @@ function NotificationsSettingsSection() {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       <div className="border-b pb-4">
-        <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-          <Bell size={18} className="text-primary" />
-          <span>Study &amp; Review Notifications</span>
-        </h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+            <Bell size={18} className="text-primary" />
+            <span>Study &amp; Review Notifications</span>
+          </h2>
+          <Badge
+            variant="outline"
+            className="text-[10px] font-semibold border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5"
+          >
+            Android Only
+          </Badge>
+        </div>
         <p className="text-xs text-muted-foreground mt-1">
-          Receive intelligent, battery-friendly local reminders on your device to keep your Japanese studies on track.
+          Receive intelligent, battery-friendly local reminders directly on your Android device to keep your Japanese studies on track.
         </p>
       </div>
+
+      {!isSupported && (
+        <div className="flex items-start gap-2.5 p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200 text-xs">
+          <AlertCircle size={15} className="shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+          <div className="space-y-0.5">
+            <span className="font-semibold block">Android App Feature</span>
+            <p className="text-amber-800 dark:text-amber-300 text-[11px] leading-relaxed">
+              These local notifications are scheduled and sent specifically within the Nipponic Android app. You can configure your preferences here, and they will take effect when using the mobile application.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Master Enable/Disable Switch */}
       <div className="flex items-center justify-between p-4 rounded-xl border bg-card text-card-foreground shadow-xs">
