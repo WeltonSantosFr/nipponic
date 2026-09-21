@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { JetBrains_Mono } from "next/font/google";
@@ -10,6 +10,7 @@ import { AuthProvider, UserPayload } from "@/contexts/AuthContext";
 import { NotesProvider } from "@/contexts/NotesContext";
 import { FlashCardsProvider } from "@/contexts/FlashCardsContext";
 import { ServerWakeupOverlay } from "@/components/server-wakeup-overlay";
+import { CapacitorProvider } from "@/components/capacitor-provider";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -31,6 +32,15 @@ export const metadata: Metadata = {
   ),
   title: "Nipponic",
   description: "Learn Japanese with ease",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#09090b",
 };
 
 export default async function RootLayout({
@@ -64,8 +74,10 @@ export default async function RootLayout({
                 defaultTheme="dark"
                 enableSystem={false}
               >
-                {children}
-                <ServerWakeupOverlay />
+                <CapacitorProvider>
+                  {children}
+                  <ServerWakeupOverlay />
+                </CapacitorProvider>
               </ThemeProvider>
             </FlashCardsProvider>
           </NotesProvider>

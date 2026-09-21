@@ -11,10 +11,19 @@
     "check-types": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:cov": "vitest run --coverage"
+    "test:cov": "vitest run --coverage",
+    "cap:sync": "cap sync android",
+    "cap:sync:dev": "CAPACITOR_SERVER_URL=http://10.0.2.2:3000 cap sync android",
+    "cap:open": "cap open android",
+    "cap:run": "cap run android",
+    "cap:build:android": "cd android && ./gradlew assembleDebug"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/status-bar": "^8.0.3",
     "@nipponic/shared": "workspace:^",
     "@repo/ui": "workspace:*",
     "canvas-confetti": "^1.9.4",
@@ -34,6 +43,8 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "^4.3.3",

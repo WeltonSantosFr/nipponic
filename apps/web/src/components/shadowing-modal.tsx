@@ -346,57 +346,64 @@ export function ShadowingModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-xl p-6 max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="gap-1 border-b pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                <Headphones size={20} />
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-xl sm:w-full p-4 sm:p-6 max-h-[90dvh] overflow-y-auto overflow-x-hidden min-w-0">
+        <DialogHeader className="gap-1 border-b pb-3 pr-8 min-w-0">
+          <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <Headphones className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
-              <div>
-                <DialogTitle className="text-lg">Shadowing Studio</DialogTitle>
-                <DialogDescription className="text-xs">
-                  Train your ears and vocal cords by listening and speaking along with native audio.
+              <div className="min-w-0 flex-1">
+                <DialogTitle className="text-base sm:text-lg truncate">Shadowing Studio</DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground line-clamp-2 sm:line-clamp-none">
+                  Train your ears and vocal cords with native audio.
                 </DialogDescription>
               </div>
             </div>
 
             {sentencesJp.length > 1 && (
-              <Badge variant="outline" className="text-xs font-mono">
-                Sentence {currentIndex + 1} of {sentencesJp.length}
+              <Badge variant="outline" className="text-xs font-mono shrink-0">
+                {currentIndex + 1} / {sentencesJp.length}
               </Badge>
             )}
           </div>
         </DialogHeader>
 
-        <div className="flex flex-col gap-5 pt-2">
+        <div className="flex flex-col gap-4 sm:gap-5 pt-2 w-full min-w-0">
           {/* Sentence Switcher bar if multiple sentences exist */}
           {sentencesJp.length > 1 && (
-            <div className="flex items-center justify-between bg-muted/40 p-1.5 rounded-lg border text-xs">
+            <div className="flex items-center justify-between bg-muted/40 p-1.5 rounded-lg border text-xs w-full min-w-0 gap-1">
               <Button
                 variant="ghost"
                 size="sm"
                 disabled={currentIndex === 0}
                 onClick={() => setCurrentIndex((prev) => prev - 1)}
-                className="h-7 text-xs gap-1 cursor-pointer"
+                className="h-7 px-2 text-xs gap-1 cursor-pointer shrink-0"
               >
                 <ChevronLeft size={14} />
-                Previous Sentence
+                <span className="hidden sm:inline">Previous</span>
+                <span className="sm:hidden">Prev</span>
               </Button>
 
-              <div className="flex items-center gap-1">
-                {sentencesJp.map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => setCurrentIndex(i)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      currentIndex === i
-                        ? "w-5 bg-primary rounded-full"
-                        : "bg-muted-foreground/30 hover:bg-muted-foreground/60"
-                    }`}
-                  />
-                ))}
+              <div className="flex items-center gap-1 overflow-x-auto max-w-[140px] sm:max-w-[240px] py-1 px-1 justify-center scrollbar-none">
+                {sentencesJp.length <= 8 ? (
+                  sentencesJp.map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setCurrentIndex(i)}
+                      className={`h-2 rounded-full transition-all shrink-0 cursor-pointer ${
+                        currentIndex === i
+                          ? "w-4 sm:w-5 bg-primary"
+                          : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/60"
+                      }`}
+                    />
+                  ))
+                ) : (
+                  <span className="font-mono text-xs font-semibold text-muted-foreground">
+                    Sentence {currentIndex + 1} of {sentencesJp.length}
+                  </span>
+                )}
               </div>
 
               <Button
@@ -404,24 +411,25 @@ export function ShadowingModal({
                 size="sm"
                 disabled={currentIndex === sentencesJp.length - 1}
                 onClick={() => setCurrentIndex((prev) => prev + 1)}
-                className="h-7 text-xs gap-1 cursor-pointer"
+                className="h-7 px-2 text-xs gap-1 cursor-pointer shrink-0"
               >
-                Next Sentence
+                <span className="hidden sm:inline">Next</span>
+                <span className="sm:hidden">Next</span>
                 <ChevronRight size={14} />
               </Button>
             </div>
           )}
 
           {/* Prompt / Sentence Display Box */}
-          <div className="bg-card border rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-4 shadow-xs relative">
-            <div className="w-full flex items-center justify-between text-xs text-muted-foreground">
-              <span className="font-semibold uppercase tracking-wider text-[10px] text-primary">
+          <div className="bg-card border rounded-2xl p-3.5 sm:p-5 flex flex-col items-center justify-center text-center gap-3 sm:gap-4 shadow-xs relative w-full min-w-0 overflow-hidden">
+            <div className="w-full flex items-center justify-between text-xs text-muted-foreground gap-2">
+              <span className="font-semibold uppercase tracking-wider text-[10px] text-primary shrink-0">
                 Target Sentence
               </span>
               <button
                 type="button"
                 onClick={() => setShowFurigana((prev) => !prev)}
-                className={`text-[11px] px-2 py-0.5 rounded-full border transition-colors cursor-pointer ${
+                className={`text-[11px] px-2.5 py-0.5 rounded-full border transition-colors cursor-pointer shrink-0 ${
                   showFurigana
                     ? "bg-primary/10 border-primary/30 text-primary font-medium"
                     : "bg-muted text-muted-foreground"
@@ -431,7 +439,7 @@ export function ShadowingModal({
               </button>
             </div>
 
-            <div className="py-2 w-full text-center">
+            <div className="py-2 w-full text-center min-w-0 overflow-x-hidden break-words">
               <TokenizedText
                 text={currentSentenceJp}
                 showFurigana={showFurigana}
@@ -440,22 +448,22 @@ export function ShadowingModal({
             </div>
 
             {currentSentenceEn && (
-              <p className="text-xs text-muted-foreground italic border-t border-border/40 pt-2 w-full">
+              <p className="text-xs text-muted-foreground italic border-t border-border/40 pt-2 w-full break-words">
                 &ldquo;{currentSentenceEn}&rdquo;
               </p>
             )}
           </div>
 
           {/* Listening & Audio Controls */}
-          <div className="flex flex-col gap-3 bg-muted/30 p-4 rounded-xl border border-border/60">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold flex items-center gap-1.5">
+          <div className="flex flex-col gap-2.5 sm:gap-3 bg-muted/30 p-3 sm:p-4 rounded-xl border border-border/60 w-full min-w-0">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <span className="text-xs font-semibold flex items-center gap-1.5 shrink-0">
                 <Volume2 size={14} className="text-primary" />
                 <span>1. Listen to Native Audio</span>
               </span>
 
               {/* Speed Controls */}
-              <div className="flex items-center gap-1 bg-background p-0.5 rounded-md border text-[10px] font-mono">
+              <div className="flex items-center gap-0.5 sm:gap-1 bg-background p-0.5 rounded-md border text-[10px] font-mono shrink-0">
                 {[0.75, 0.9, 1.0, 1.25].map((rate) => (
                   <button
                     key={rate}
@@ -481,71 +489,71 @@ export function ShadowingModal({
                   ? stopNativeSpeech()
                   : speak(currentSentenceJp, "ja-JP", speed)
               }
-              className="h-11 w-full gap-2 font-semibold cursor-pointer shadow-xs"
+              className="h-10 sm:h-11 w-full gap-2 font-semibold cursor-pointer shadow-xs text-xs sm:text-sm"
             >
               {isPlayingNative ? (
                 <>
-                  <VolumeX size={18} className="text-primary animate-pulse" />
-                  <span>Stop Playback</span>
+                  <VolumeX size={18} className="text-primary animate-pulse shrink-0" />
+                  <span className="truncate">Stop Playback</span>
                 </>
               ) : (
                 <>
-                  <Play size={18} className="fill-current text-primary" />
-                  <span>Play Native Model ({speed}x)</span>
+                  <Play size={18} className="fill-current text-primary shrink-0" />
+                  <span className="truncate">Play Native Model ({speed}x)</span>
                 </>
               )}
             </Button>
           </div>
 
           {/* Voice Shadowing Recording Section */}
-          <div className="flex flex-col gap-3 bg-muted/30 p-4 rounded-xl border border-border/60">
+          <div className="flex flex-col gap-2.5 sm:gap-3 bg-muted/30 p-3 sm:p-4 rounded-xl border border-border/60 w-full min-w-0">
             <span className="text-xs font-semibold flex items-center gap-1.5">
               <Mic size={14} className="text-primary" />
               <span>2. Record Your Voice</span>
             </span>
 
             {micError && (
-              <div className="p-2.5 rounded-lg bg-destructive/10 text-destructive text-xs flex items-center gap-2">
-                <AlertCircle size={15} />
+              <div className="p-2.5 rounded-lg bg-destructive/10 text-destructive text-xs flex items-center gap-2 break-words">
+                <AlertCircle size={15} className="shrink-0" />
                 <span>{micError}</span>
               </div>
             )}
 
             {!recordedAudioUrl ? (
               /* Recording in progress or idle */
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 w-full min-w-0">
                 {isRecording ? (
                   <Button
                     variant="destructive"
                     size="lg"
                     onClick={handleStopRecording}
-                    className="flex-1 h-11 gap-2.5 cursor-pointer font-semibold shadow-xs bg-red-600 hover:bg-red-700 text-white"
+                    className="w-full h-10 sm:h-11 gap-2 cursor-pointer font-semibold shadow-xs bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm px-3"
                   >
                     <DynamicAudioWave level={audioLevel} />
-                    <span>Stop Recording ({formatTimer(recordDuration)})</span>
-                    <Square size={14} className="fill-current ml-auto opacity-80" />
+                    <span className="truncate">Stop Recording ({formatTimer(recordDuration)})</span>
+                    <Square size={14} className="fill-current ml-auto opacity-80 shrink-0" />
                   </Button>
                 ) : (
                   <Button
                     size="lg"
                     onClick={handleStartRecording}
-                    className="flex-1 h-11 gap-2 cursor-pointer font-semibold shadow-xs"
+                    className="w-full h-10 sm:h-11 gap-2 cursor-pointer font-semibold shadow-xs text-xs sm:text-sm"
                   >
-                    <Mic size={18} />
+                    <Mic size={18} className="shrink-0" />
                     <span>Start Recording</span>
                   </Button>
                 )}
               </div>
             ) : (
               /* Recorded state: User audio playback & Delete */
-              <div className="flex flex-col gap-3 animate-in fade-in duration-200">
-                <div className="flex items-center justify-between bg-card border rounded-xl p-3 shadow-xs">
-                  <div className="flex items-center gap-2.5">
+              <div className="flex flex-col gap-2.5 sm:gap-3 animate-in fade-in duration-200 w-full min-w-0">
+                <div className="flex items-center justify-between gap-2 bg-card border rounded-xl p-2.5 sm:p-3 shadow-xs flex-wrap sm:flex-nowrap min-w-0">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={isPlayingUserAudio ? handlePauseUserRecording : handlePlayUserRecording}
-                      className="h-9 gap-2 text-xs font-semibold cursor-pointer border-primary/30 hover:bg-primary/10"
+                      className="h-8 sm:h-9 gap-1.5 text-xs font-semibold cursor-pointer border-primary/30 hover:bg-primary/10 shrink-0"
                     >
                       {isPlayingUserAudio ? (
                         <>
@@ -555,12 +563,13 @@ export function ShadowingModal({
                       ) : (
                         <>
                           <Play size={13} className="fill-current text-primary" />
-                          <span>Play Your Recording</span>
+                          <span className="hidden sm:inline">Play Recording</span>
+                          <span className="sm:hidden">Play</span>
                         </>
                       )}
                     </Button>
 
-                    <span className="text-xs font-mono text-muted-foreground">
+                    <span className="text-xs font-mono text-muted-foreground shrink-0">
                       {formatTimer(recordDuration)}
                     </span>
                   </div>
@@ -569,7 +578,7 @@ export function ShadowingModal({
                     variant="ghost"
                     size="sm"
                     onClick={discardRecording}
-                    className="h-9 px-2.5 text-xs text-red-500 hover:text-red-600 hover:bg-red-500/10 gap-1.5 cursor-pointer"
+                    className="h-8 sm:h-9 px-2 text-xs text-red-500 hover:text-red-600 hover:bg-red-500/10 gap-1 cursor-pointer shrink-0 ml-auto"
                     title="Delete recording to record again"
                   >
                     <Trash2 size={14} />
@@ -581,13 +590,18 @@ export function ShadowingModal({
                 <Button
                   onClick={isComparing ? handleStopCompare : handleSequentialCompare}
                   disabled={(isPlayingNative && !isComparing) || (isPlayingUserAudio && !isComparing)}
-                  className="w-full h-11 gap-2 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white font-semibold cursor-pointer shadow-md"
+                  className="w-full h-10 sm:h-11 gap-2 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white font-semibold cursor-pointer shadow-md text-xs sm:text-sm px-3"
                 >
-                  <Radio size={16} className={isComparing ? "animate-pulse text-amber-300" : ""} />
-                  <span>
-                    {isComparing
-                      ? "Stop Comparison"
-                      : "Compare: Native vs Your Voice"}
+                  <Radio size={16} className={`shrink-0 ${isComparing ? "animate-pulse text-amber-300" : ""}`} />
+                  <span className="truncate">
+                    {isComparing ? (
+                      "Stop Comparison"
+                    ) : (
+                      <>
+                        <span className="hidden sm:inline">Compare: Native vs Your Voice</span>
+                        <span className="sm:hidden">Compare Audio</span>
+                      </>
+                    )}
                   </span>
                 </Button>
               </div>

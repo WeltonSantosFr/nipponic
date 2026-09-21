@@ -28,6 +28,14 @@ describe("useSpeech hook", () => {
         }
       }
     );
+
+    vi.stubGlobal(
+      "URL",
+      class MockURL {
+        static createObjectURL = vi.fn(() => "blob:http://localhost/mock-audio-blob");
+        static revokeObjectURL = vi.fn();
+      }
+    );
   });
 
   afterEach(() => {
@@ -95,28 +103,72 @@ describe("useSpeech hook", () => {
   });
 
   it("should resolve immediately and call onEnd when text is empty or whitespace", async () => {
-    // Arrange
     const { result } = renderHook(() => useSpeech());
     const onEnd = vi.fn();
 
-    // Act
     await act(async () => {
       await result.current.speak("   ", "ja-JP", 1.0, onEnd);
     });
 
-    // Assert
     expect(onEnd).toHaveBeenCalledTimes(1);
     expect(result.current.isPlaying).toBe(false);
     expect(mockAudioInstances.length).toBe(0);
   });
 
+  it("should sanitize markdown syntax before speaking", async () => {
+    const { result } = renderHook(() => useSpeech());
+
+    act(() => {
+      result.current.speak("# 見出し\n**太字**と*斜体*", "ja-JP");
+    });
+
+    expect(mockAudioInstances.length).toBe(1);
+    expect(mockAudioInstances[0].src).toContain(encodeURIComponent("見出し\n太字と斜体"));
+  });
+
+  it("should handle long text via POST /api/tts and play blob URL", async () => {
+    const mockBlob = new Blob([new Uint8Array([1, 2, 3])], { type: "audio/mpeg" });
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      blob: () => Promise.resolve(mockBlob),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    const { result } = renderHook(() => useSpeech());
+    const longText = "これはとても長い日本語のノートのテキストです。".repeat(10); // > 140 chars
+
+    let promise: Promise<void>;
+    act(() => {
+      promise = result.current.speak(longText, "ja-JP");
+    });
+
+    // Wait for fetch to resolve
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockFetch).toHaveBeenCalledWith("/api/tts", expect.objectContaining({
+      method: "POST",
+    }));
+    expect(mockAudioInstances.length).toBe(1);
+    expect(mockAudioInstances[0].src).toBe("blob:http://localhost/mock-audio-blob");
+
+    // Complete audio
+    await act(async () => {
+      mockAudioInstances[0].onended?.();
+      await promise;
+    });
+
+    expect(result.current.isPlaying).toBe(false);
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:http://localhost/mock-audio-blob");
+  });
+
   it("should handle audio playback error gracefully and complete", async () => {
-    // Arrange
     const { result } = renderHook(() => useSpeech());
     const onEnd = vi.fn();
     let promise: Promise<void>;
 
-    // Act
     act(() => {
       promise = result.current.speak("エラー", "ja-JP", 1.0, onEnd);
     });
@@ -128,11 +180,46 @@ describe("useSpeech hook", () => {
       await promise;
     });
 
-    // Assert
     expect(onEnd).toHaveBeenCalledTimes(1);
     expect(result.current.isPlaying).toBe(false);
     expect(result.current.activeLang).toBeNull();
   });
+
+  it("should fallback to window.speechSynthesis when available and audio fails", async () => {
+    const mockSpeak = vi.fn((utterance: any) => {
+      utterance.onend?.();
+    });
+    const mockCancel = vi.fn();
+
+    vi.stubGlobal("speechSynthesis", {
+      speak: mockSpeak,
+      cancel: mockCancel,
+    });
+
+    vi.stubGlobal("SpeechSynthesisUtterance", class {
+      text: string;
+      lang = "";
+      rate = 1.0;
+      onend: (() => void) | null = null;
+      onerror: ((e: any) => void) | null = null;
+      constructor(text: string) {
+        this.text = text;
+      }
+    });
+
+    const { result } = renderHook(() => useSpeech());
+    let promise: Promise<void>;
+
+    act(() => {
+      promise = result.current.speak("フォールバックテスト", "ja-JP");
+    });
+
+    await act(async () => {
+      mockAudioInstances[0].onerror?.(new Error("Audio play failed"));
+      await promise;
+    });
+
+    expect(mockSpeak).toHaveBeenCalled();
+    expect(result.current.isPlaying).toBe(false);
+  });
 });
-
-

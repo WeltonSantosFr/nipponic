@@ -320,7 +320,7 @@ export const DeckCardFilterModeSchema = z.enum(["all", "due"]);
 export type DeckCardFilterMode = z.infer<typeof DeckCardFilterModeSchema>;
 export type CardFilterMode = DeckCardFilterMode;
 
-export const SettingsTabSchema = z.enum(["glossary", "flashcards", "appearance"]);
+export const SettingsTabSchema = z.enum(["glossary", "flashcards", "appearance", "notifications"]);
 export type SettingsTab = z.infer<typeof SettingsTabSchema>;
 export type SettingsTabMode = SettingsTab;
 

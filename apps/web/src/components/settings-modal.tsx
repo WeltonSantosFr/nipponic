@@ -31,7 +31,20 @@ import {
   Sun,
   Moon,
   Palette,
+  Bell,
+  Clock,
+  Sparkles,
+  AlertCircle,
 } from "lucide-react";
+import {
+  getNotificationSettings,
+  saveNotificationSettings,
+  requestNotificationPermission,
+  sendTestNotification,
+  syncCardNotifications,
+  isNotificationsSupported,
+  type NotificationSettings,
+} from "@/services/notifications";
 
 export type { SettingsTab, SettingsModalProps };
 
@@ -41,50 +54,65 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-3xl md:max-w-4xl h-[620px] max-h-[90vh] p-0 overflow-hidden flex flex-col gap-0 border-border/80">
-        <DialogHeader className="sr-only">
-          <DialogTitle>Configurations</DialogTitle>
-          <DialogDescription>
-            Application settings and preferences.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="flex flex-col sm:flex-row flex-1 h-full min-h-0 overflow-hidden">
-          {/* Internal Sidebar */}
-          <aside className="w-full sm:w-56 bg-muted/25 border-b sm:border-b-0 sm:border-r border-border/70 flex flex-row sm:flex-col p-2.5 sm:p-3.5 gap-2 sm:gap-1 shrink-0 items-center sm:items-stretch">
-            <div className="flex items-center gap-2 px-2 py-1 sm:py-2 sm:mb-2 text-foreground font-semibold text-sm shrink-0">
-              <Settings size={17} className="text-primary" />
-              <span>Configurations</span>
+        {/* Modal Header */}
+        <div className="w-full min-w-0 border-b border-border/70 bg-muted/20 shrink-0">
+          {/* Top Line: Icon & Title */}
+          <div className="flex items-center justify-between px-4 sm:px-6 pt-4 pb-2 pr-12 w-full">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary shrink-0">
+                <Settings size={18} />
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-base sm:text-lg font-bold tracking-tight text-foreground leading-tight truncate">
+                  Configurations
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground hidden sm:block truncate">
+                  Application preferences, glossary, flashcards, and notifications
+                </DialogDescription>
+              </div>
             </div>
+          </div>
 
-            <nav className="flex flex-row sm:flex-col gap-1 w-full flex-1">
-              <GlossarySidebarTab
+          {/* Bottom Line: Category tabs with horizontal scroll */}
+          <div className="w-full min-w-0 overflow-x-auto scrollbar-none px-4 sm:px-6 pb-2.5 pt-0.5">
+            <nav
+              className="flex items-center gap-2 min-w-max"
+              role="tablist"
+              aria-label="Configuration categories"
+            >
+              <GlossaryTabButton
                 isActive={activeTab === "glossary"}
                 onClick={() => setActiveTab("glossary")}
               />
-              <FlashCardsSidebarTab
+              <FlashCardsTabButton
                 isActive={activeTab === "flashcards"}
                 onClick={() => setActiveTab("flashcards")}
               />
-              <AppearanceSidebarTab
+              <AppearanceTabButton
                 isActive={activeTab === "appearance"}
                 onClick={() => setActiveTab("appearance")}
               />
+              <NotificationsTabButton
+                isActive={activeTab === "notifications"}
+                onClick={() => setActiveTab("notifications")}
+              />
             </nav>
-          </aside>
-
-          {/* Settings Main Content Area */}
-          <main className="flex-1 flex flex-col h-full min-h-0 overflow-y-auto p-4 sm:p-6">
-            {activeTab === "glossary" && <GlossarySettingsSection />}
-            {activeTab === "flashcards" && <FlashCardsSettingsSection />}
-            {activeTab === "appearance" && <AppearanceSettingsSection />}
-          </main>
+          </div>
         </div>
+
+        {/* Settings Main Content Area */}
+        <main className="flex-1 flex flex-col min-h-0 overflow-y-auto p-4 sm:p-6 w-full">
+          {activeTab === "glossary" && <GlossarySettingsSection />}
+          {activeTab === "flashcards" && <FlashCardsSettingsSection />}
+          {activeTab === "appearance" && <AppearanceSettingsSection />}
+          {activeTab === "notifications" && <NotificationsSettingsSection />}
+        </main>
       </DialogContent>
     </Dialog>
   );
 }
 
-function GlossarySidebarTab({
+function GlossaryTabButton({
   isActive,
   onClick,
 }: {
@@ -96,20 +124,20 @@ function GlossarySidebarTab({
   return (
     <button
       type="button"
+      role="tab"
+      aria-selected={isActive}
       onClick={onClick}
-      className={`flex-1 sm:w-full flex items-center justify-between px-2.5 py-1.5 sm:py-2 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+      className={`shrink-0 flex items-center gap-2 px-3 py-1.5 sm:py-2 rounded-lg text-xs font-medium transition-all cursor-pointer border ${
         isActive
-          ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          ? "bg-primary text-primary-foreground border-primary shadow-xs font-semibold"
+          : "bg-background/80 text-muted-foreground border-border/60 hover:bg-muted hover:text-foreground hover:border-border"
       }`}
     >
-      <div className="flex items-center gap-1.5 sm:gap-2">
-        <BookMarked size={14} />
-        <span>Glossary</span>
-      </div>
+      <BookMarked size={14} className="shrink-0" />
+      <span className="whitespace-nowrap">Glossary</span>
       <Badge
         variant={isActive ? "secondary" : "outline"}
-        className="text-[10px] px-1.5 py-0 h-4 ml-1"
+        className="text-[10px] px-1.5 py-0 h-4 ml-0.5 shrink-0"
       >
         {rules.length}
       </Badge>
@@ -117,7 +145,7 @@ function GlossarySidebarTab({
   );
 }
 
-function FlashCardsSidebarTab({
+function FlashCardsTabButton({
   isActive,
   onClick,
 }: {
@@ -129,20 +157,20 @@ function FlashCardsSidebarTab({
   return (
     <button
       type="button"
+      role="tab"
+      aria-selected={isActive}
       onClick={onClick}
-      className={`flex-1 sm:w-full flex items-center justify-between px-2.5 py-1.5 sm:py-2 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+      className={`shrink-0 flex items-center gap-2 px-3 py-1.5 sm:py-2 rounded-lg text-xs font-medium transition-all cursor-pointer border ${
         isActive
-          ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          ? "bg-primary text-primary-foreground border-primary shadow-xs font-semibold"
+          : "bg-background/80 text-muted-foreground border-border/60 hover:bg-muted hover:text-foreground hover:border-border"
       }`}
     >
-      <div className="flex items-center gap-1.5 sm:gap-2">
-        <Layers size={14} />
-        <span>Flash Cards</span>
-      </div>
+      <Layers size={14} className="shrink-0" />
+      <span className="whitespace-nowrap">Flashcards</span>
       <Badge
         variant={isActive ? "secondary" : "outline"}
-        className="text-[10px] px-1.5 py-0 h-4 ml-1"
+        className="text-[10px] px-1.5 py-0 h-4 ml-0.5 shrink-0"
       >
         {cards.length}
       </Badge>
@@ -150,7 +178,7 @@ function FlashCardsSidebarTab({
   );
 }
 
-function AppearanceSidebarTab({
+function AppearanceTabButton({
   isActive,
   onClick,
 }: {
@@ -162,22 +190,53 @@ function AppearanceSidebarTab({
   return (
     <button
       type="button"
+      role="tab"
+      aria-selected={isActive}
       onClick={onClick}
-      className={`flex-1 sm:w-full flex items-center justify-between px-2.5 py-1.5 sm:py-2 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+      className={`shrink-0 flex items-center gap-2 px-3 py-1.5 sm:py-2 rounded-lg text-xs font-medium transition-all cursor-pointer border ${
         isActive
-          ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          ? "bg-primary text-primary-foreground border-primary shadow-xs font-semibold"
+          : "bg-background/80 text-muted-foreground border-border/60 hover:bg-muted hover:text-foreground hover:border-border"
       }`}
     >
-      <div className="flex items-center gap-1.5 sm:gap-2">
-        <Palette size={14} />
-        <span>Appearance</span>
-      </div>
+      <Palette size={14} className="shrink-0" />
+      <span className="whitespace-nowrap">Appearance</span>
       <Badge
         variant={isActive ? "secondary" : "outline"}
-        className="text-[10px] px-1.5 py-0 h-4 ml-1 capitalize"
+        className="text-[10px] px-1.5 py-0 h-4 ml-0.5 shrink-0 capitalize"
       >
         {theme || "Dark"}
+      </Badge>
+    </button>
+  );
+}
+
+function NotificationsTabButton({
+  isActive,
+  onClick,
+}: {
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={isActive}
+      onClick={onClick}
+      className={`shrink-0 flex items-center gap-2 px-3 py-1.5 sm:py-2 rounded-lg text-xs font-medium transition-all cursor-pointer border ${
+        isActive
+          ? "bg-primary text-primary-foreground border-primary shadow-xs font-semibold"
+          : "bg-background/80 text-muted-foreground border-border/60 hover:bg-muted hover:text-foreground hover:border-border"
+      }`}
+    >
+      <Bell size={14} className="shrink-0" />
+      <span className="whitespace-nowrap">Notifications</span>
+      <Badge
+        variant={isActive ? "secondary" : "outline"}
+        className="text-[10px] px-1.5 py-0 h-4 ml-0.5 shrink-0"
+      >
+        Android
       </Badge>
     </button>
   );
@@ -811,3 +870,235 @@ function AppearanceSettingsSection() {
     </div>
   );
 }
+
+function NotificationsSettingsSection() {
+  const { cards } = useFlashCards();
+  const [settings, setSettings] = useState<NotificationSettings>(getNotificationSettings);
+  const [testState, setTestState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const isSupported = isNotificationsSupported();
+
+  const updateSetting = async <K extends keyof NotificationSettings>(
+    key: K,
+    value: NotificationSettings[K]
+  ) => {
+    if (key === "enabled" && value === true) {
+      const granted = await requestNotificationPermission();
+      if (!granted) {
+        console.warn("Notification permission was not granted by the user/OS.");
+      }
+    }
+
+    const next = { ...settings, [key]: value };
+    setSettings(next);
+    saveNotificationSettings(next);
+    syncCardNotifications(cards).catch(() => {});
+  };
+
+  const handleTestNotification = async () => {
+    setTestState("sending");
+    const success = await sendTestNotification();
+    if (success) {
+      setTestState("sent");
+      setTimeout(() => setTestState("idle"), 4000);
+    } else {
+      setTestState("error");
+      setTimeout(() => setTestState("idle"), 4000);
+    }
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-200">
+      <div className="border-b pb-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+            <Bell size={18} className="text-primary" />
+            <span>Study &amp; Review Notifications</span>
+          </h2>
+          <Badge
+            variant="outline"
+            className="text-[10px] font-semibold border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5"
+          >
+            Android Only
+          </Badge>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          Receive intelligent, battery-friendly local reminders directly on your Android device to keep your Japanese studies on track.
+        </p>
+      </div>
+
+      {!isSupported && (
+        <div className="flex items-start gap-2.5 p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200 text-xs">
+          <AlertCircle size={15} className="shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+          <div className="space-y-0.5">
+            <span className="font-semibold block">Android App Feature</span>
+            <p className="text-amber-800 dark:text-amber-300 text-[11px] leading-relaxed">
+              These local notifications are scheduled and sent specifically within the Nipponic Android app. You can configure your preferences here, and they will take effect when using the mobile application.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Master Enable/Disable Switch */}
+      <div className="flex items-center justify-between p-4 rounded-xl border bg-card text-card-foreground shadow-xs">
+        <div className="space-y-0.5">
+          <Label className="text-sm font-semibold text-foreground">
+            Allow Notifications
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Enable or disable all notifications from Nipponic.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          role="switch"
+          aria-checked={settings.enabled}
+          onClick={() => updateSetting("enabled", !settings.enabled)}
+          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+            settings.enabled ? "bg-primary" : "bg-muted-foreground/30"
+          }`}
+        >
+          <span
+            aria-hidden="true"
+            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+              settings.enabled ? "translate-x-5" : "translate-x-0"
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* Detailed Notification Options */}
+      <div className={`space-y-4 transition-opacity ${settings.enabled ? "opacity-100" : "opacity-40 pointer-events-none"}`}>
+        {/* Daily Study Reminder */}
+        <div className="p-4 rounded-xl border bg-card/60 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <Clock size={16} />
+              </div>
+              <div>
+                <h3 className="text-xs sm:text-sm font-semibold text-foreground">Daily Study Reminder</h3>
+                <p className="text-[11px] text-muted-foreground">
+                  A daily reminder to build a steady Japanese habit.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              role="switch"
+              disabled={!settings.enabled}
+              aria-checked={settings.dailyReminder}
+              onClick={() => updateSetting("dailyReminder", !settings.dailyReminder)}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                settings.dailyReminder ? "bg-primary" : "bg-muted-foreground/30"
+              }`}
+            >
+              <span
+                aria-hidden="true"
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                  settings.dailyReminder ? "translate-x-4" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+
+          {settings.dailyReminder && (
+            <div className="flex items-center justify-between pt-2 border-t border-border/40 text-xs">
+              <span className="text-muted-foreground">Reminder Time</span>
+              <Input
+                type="time"
+                value={settings.dailyTime}
+                onChange={(e) => updateSetting("dailyTime", e.target.value)}
+                className="w-28 h-8 text-xs font-mono text-center bg-background"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* 15-Cards Overdue Alert */}
+        <div className="p-4 rounded-xl border bg-card/60 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+                <Layers size={16} />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <h3 className="text-xs sm:text-sm font-semibold text-foreground">15 Overdue Cards Alert</h3>
+                  <Badge variant="outline" className="text-[10px] font-mono py-0 h-4 border-amber-500/30 text-amber-600 dark:text-amber-400">
+                    Smart Batch
+                  </Badge>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Alerts you when 15 or more cards accumulate for review (max 1x per day, quiet at night).
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              role="switch"
+              disabled={!settings.enabled}
+              aria-checked={settings.overdueAlert}
+              onClick={() => updateSetting("overdueAlert", !settings.overdueAlert)}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                settings.overdueAlert ? "bg-primary" : "bg-muted-foreground/30"
+              }`}
+            >
+              <span
+                aria-hidden="true"
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                  settings.overdueAlert ? "translate-x-4" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+
+        {/* Test Notification Button */}
+        <div className="p-4 rounded-xl border bg-muted/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h4 className="text-xs font-semibold text-foreground">Test Notifications on Device</h4>
+            <p className="text-[11px] text-muted-foreground">
+              Sends a test notification 2 seconds after clicking to verify sound and banner.
+            </p>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleTestNotification}
+            disabled={!settings.enabled || testState === "sending"}
+            className="h-8 gap-1.5 text-xs font-semibold cursor-pointer shrink-0"
+          >
+            <Sparkles size={13} className="text-primary" />
+            <span>
+              {testState === "sending"
+                ? "Scheduling..."
+                : testState === "sent"
+                ? "Notification sent!"
+                : "Test Notification"}
+            </span>
+          </Button>
+        </div>
+
+        {testState === "sent" && (
+          <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2 animate-in fade-in">
+            <Check size={14} />
+            <span>Test notification scheduled! Check your device notifications in a few seconds.</span>
+          </div>
+        )}
+
+        {testState === "error" && (
+          <div className="p-2.5 rounded-lg bg-destructive/10 text-destructive text-xs flex items-center gap-2 animate-in fade-in">
+            <AlertCircle size={14} />
+            <span>Could not send notification. Ensure notification permissions are allowed for Nipponic.</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
