@@ -182,7 +182,7 @@ export function FlashcardPlayer({ deck, onClose }: FlashcardPlayerProps) {
   // If the deck is completely empty
   if (deck.cards.length === 0) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto overflow-x-hidden">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto overflow-x-hidden p-safe">
         <div
           className="relative w-full max-w-md p-6 sm:p-8 bg-card border border-border shadow-2xl rounded-2xl flex flex-col items-center text-center gap-4 my-auto min-w-0"
           onClick={(e) => e.stopPropagation()}
@@ -213,7 +213,7 @@ export function FlashcardPlayer({ deck, onClose }: FlashcardPlayerProps) {
   const srsStage = currentCard ? getCardSRSStage(currentCard) : "new";
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-start sm:justify-center p-3 sm:p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-200 select-none overflow-y-auto overflow-x-hidden">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-start sm:justify-center p-3 sm:p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-200 select-none overflow-y-auto overflow-x-hidden p-safe">
       {/* Victory / Completion Screen */}
       {isFinished ? (
         <div

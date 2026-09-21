@@ -39,6 +39,46 @@
     ]
   },
   {
+    "id": "rowLevelSecurity.public.sponsor.disable",
+    "label": "Disable row-level security on \"sponsor\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "sponsor"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is currently enabled on \"sponsor\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "sponsor"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "disable row-level security on \"sponsor\"",
+        "sql": "ALTER TABLE \"public\".\"sponsor\" DISABLE ROW LEVEL SECURITY",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is disabled on \"sponsor\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "sponsor"
+        ]
+      }
+    ]
+  },
+  {
     "id": "column.public.user.githubUsername",
     "label": "Add column \"githubUsername\" to \"user\"",
     "operationClass": "additive",

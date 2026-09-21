@@ -148,7 +148,7 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
   }
 
   return (
-    <div className="w-full max-w-5xl flex-1 flex flex-col gap-5 sm:gap-6 justify-start p-3.5 sm:p-6 md:p-8 min-w-0 max-w-full overflow-x-hidden">
+    <div className="w-full max-w-5xl flex-1 flex flex-col gap-5 sm:gap-6 justify-start p-3.5 sm:p-6 md:p-8 min-w-0 max-w-full overflow-x-hidden pb-safe">
       {/* Deck Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div className="space-y-1 flex-1 min-w-0">

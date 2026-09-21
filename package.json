@@ -13,7 +13,10 @@
     "start": "pnpm --filter api run start",
     "docker:dev": "docker compose up --build",
     "docker:prod": "docker compose -f docker-compose.prod.yml up --build -d",
-    "docker:down": "docker compose down"
+    "docker:down": "docker compose down",
+    "android:sync": "pnpm --filter web run cap:sync",
+    "android:build": "pnpm --filter web run cap:build:android",
+    "android:open": "pnpm --filter web run cap:open"
   },
   "devDependencies": {
     "prettier": "^3.7.4",

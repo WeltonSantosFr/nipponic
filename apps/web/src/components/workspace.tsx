@@ -99,7 +99,7 @@ export function Workspace({ initialNotes: _initialNotes }: WorkspaceProps = {}) 
       />
 
       <SidebarInset className="flex flex-col min-h-screen min-w-0 max-w-full overflow-x-hidden">
-        <header className="flex h-14 items-center justify-between border-b px-4 sm:px-6 shrink-0">
+        <header className="flex min-h-14 items-center justify-between border-b px-4 sm:px-6 shrink-0 pt-safe">
           <div className="flex items-center gap-3 min-w-0">
             <SidebarTrigger />
             {activeSidebarView === "notes" ? (
@@ -120,7 +120,7 @@ export function Workspace({ initialNotes: _initialNotes }: WorkspaceProps = {}) 
         </header>
 
         {activeSidebarView === "notes" ? (
-          <div className="flex-1 p-3 sm:p-6 md:p-8 flex flex-col items-center justify-start w-full min-w-0 max-w-full">
+          <div className="flex-1 p-3 sm:p-6 md:p-8 flex flex-col items-center justify-start w-full min-w-0 max-w-full pb-safe">
             {!selectedNote ? (
               <Card className="w-full max-w-md text-center shadow-sm my-auto">
                 <CardHeader className="flex flex-col items-center">

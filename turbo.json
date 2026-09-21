@@ -13,7 +13,8 @@
         "API_URL",
         "NEXT_PUBLIC_API_URL",
         "NEXT_PUBLIC_APP_URL",
-        "FRONTEND_URL"
+        "FRONTEND_URL",
+        "CAPACITOR_SERVER_URL"
       ]
     },
     "lint": {

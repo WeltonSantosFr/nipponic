@@ -49,6 +49,10 @@ export default class M extends Migration<Start, End> {
         ],
         constraints: [primaryKey(['id'])],
       }),
+      this.disableRowLevelSecurity({
+        schema: 'public',
+        table: 'sponsor',
+      }),
       this.addColumn({
         schema: 'public',
         table: 'user',

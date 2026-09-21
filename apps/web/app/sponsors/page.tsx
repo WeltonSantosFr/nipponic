@@ -158,7 +158,7 @@ export default function SponsorsPage() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-primary/20">
       {/* Top Navigation */}
-      <header className="border-b border-border/60 sticky top-0 z-30 bg-background/80 backdrop-blur-md">
+      <header className="border-b border-border/60 sticky top-0 z-30 bg-background/80 backdrop-blur-md pt-safe">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link
             href="/"
@@ -177,7 +177,7 @@ export default function SponsorsPage() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-6xl mx-auto px-4 py-10 w-full space-y-16">
+      <main className="flex-1 max-w-6xl mx-auto px-4 py-10 w-full space-y-16 pb-safe">
         {/* Hero Section */}
         <section className="text-center space-y-4 max-w-3xl mx-auto pt-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs font-semibold uppercase tracking-wider">
