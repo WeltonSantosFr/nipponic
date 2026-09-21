@@ -4,6 +4,10 @@ import { useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
 import { App } from "@capacitor/app";
 import { StatusBar, Style } from "@capacitor/status-bar";
+import {
+  initNotificationChannel,
+  scheduleDailyReminder,
+} from "@/services/notifications";
 
 export function CapacitorProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -15,6 +19,10 @@ export function CapacitorProvider({ children }: { children: React.ReactNode }) {
     StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
     StatusBar.setBackgroundColor({ color: "#09090b" }).catch(() => {});
     StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});
+
+    // Initialize Notification Channel and ensure daily reminder is scheduled
+    initNotificationChannel().catch(() => {});
+    scheduleDailyReminder().catch(() => {});
 
     // Handle Android hardware back button
     const backButtonListenerPromise = App.addListener(
@@ -45,8 +53,21 @@ export function CapacitorProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
+    // Refresh notifications when app is minimized / sent to background
+    const appStateListenerPromise = App.addListener(
+      "appStateChange",
+      ({ isActive }) => {
+        if (!isActive) {
+          scheduleDailyReminder().catch(() => {});
+        }
+      }
+    );
+
     return () => {
       backButtonListenerPromise
+        .then((handler) => handler.remove())
+        .catch(() => {});
+      appStateListenerPromise
         .then((handler) => handler.remove())
         .catch(() => {});
     };

@@ -41,6 +41,7 @@ import {
   reorderDeckCardsAction,
 } from "@/actions/decks";
 import { useAuth } from "./AuthContext";
+import { syncCardNotifications } from "@/services/notifications";
 
 export type {
   SidebarViewMode,
@@ -134,6 +135,13 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
       refreshAll();
     }
   }, [refreshAll, isWakingServer]);
+
+  // Sync notifications whenever cards update
+  useEffect(() => {
+    if (cards.length > 0) {
+      syncCardNotifications(cards).catch(() => {});
+    }
+  }, [cards]);
 
 
   const startPlayingDeck = (deck: Deck) => {
