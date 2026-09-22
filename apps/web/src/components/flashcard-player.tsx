@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Card, Deck, ReviewRating, ReviewSessionStats, FlashcardPlayerProps } from "@nipponic/shared";
+import { Card, ReviewRating, ReviewSessionStats, FlashcardPlayerProps } from "@nipponic/shared";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useSpeech } from "@/hooks/use-speech";
@@ -18,7 +18,6 @@ import {
   Trophy,
   Layers,
   Flame,
-  Zap,
 } from "lucide-react";
 
 export type { FlashcardPlayerProps };
@@ -182,7 +181,7 @@ export function FlashcardPlayer({ deck, onClose }: FlashcardPlayerProps) {
   // If the deck is completely empty
   if (deck.cards.length === 0) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto overflow-x-hidden p-safe">
+      <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 sm:px-6 sm:py-8 bg-background/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto overflow-x-hidden pt-[max(1.5rem,env(safe-area-inset-top,0px))] pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))]">
         <div
           className="relative w-full max-w-md p-6 sm:p-8 bg-card border border-border shadow-2xl rounded-2xl flex flex-col items-center text-center gap-4 my-auto min-w-0"
           onClick={(e) => e.stopPropagation()}
@@ -213,7 +212,7 @@ export function FlashcardPlayer({ deck, onClose }: FlashcardPlayerProps) {
   const srsStage = currentCard ? getCardSRSStage(currentCard) : "new";
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-start sm:justify-center p-3 sm:p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-200 select-none overflow-y-auto overflow-x-hidden p-safe">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-start sm:justify-center px-4 py-5 sm:px-6 sm:py-8 bg-background/80 backdrop-blur-md animate-in fade-in duration-200 select-none overflow-y-auto overflow-x-hidden pt-[max(1.25rem,env(safe-area-inset-top,0px))] pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))]">
       {/* Victory / Completion Screen */}
       {isFinished ? (
         <div
