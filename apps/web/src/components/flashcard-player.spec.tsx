@@ -13,6 +13,7 @@ const mockReviewCard = vi.fn().mockImplementation((cardId: string, rating: numbe
     repetitions: rating === 1 ? 0 : 1,
     interval: rating === 1 ? 1 : 3,
     easeFactor: 2.5,
+    lapses: 0,
   });
 });
 
@@ -44,6 +45,7 @@ describe("FlashcardPlayer", () => {
     const emptyDeck: Deck = {
       id: "deck-empty",
       name: "Empty Deck",
+      isPublic: false,
       cards: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -70,13 +72,13 @@ describe("FlashcardPlayer", () => {
     const cards: Card[] = [
       {
         id: "c-1",
-        deckId: "deck-1",
         jpText: "猫 (ねこ)",
         enText: "Cat",
         repetitions: 2,
         interval: 3,
         easeFactor: 2.5,
-        nextReview: new Date().toISOString(),
+        lapses: 0,
+        nextReviewAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
@@ -85,6 +87,7 @@ describe("FlashcardPlayer", () => {
     const deck: Deck = {
       id: "deck-1",
       name: "Animals",
+      isPublic: false,
       cards,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -111,13 +114,13 @@ describe("FlashcardPlayer", () => {
     const cards: Card[] = [
       {
         id: "c-1",
-        deckId: "deck-1",
         jpText: "桜 (さくら)",
         enText: "Cherry blossom",
         repetitions: 0,
         interval: 1,
         easeFactor: 2.5,
-        nextReview: new Date().toISOString(),
+        lapses: 0,
+        nextReviewAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
@@ -126,6 +129,7 @@ describe("FlashcardPlayer", () => {
     const deck: Deck = {
       id: "deck-1",
       name: "Nature",
+      isPublic: false,
       cards,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -152,13 +156,13 @@ describe("FlashcardPlayer", () => {
     const cards: Card[] = [
       {
         id: "c-1",
-        deckId: "deck-1",
         jpText: "犬 (いぬ)",
         enText: "Dog",
         repetitions: 0,
         interval: 1,
         easeFactor: 2.5,
-        nextReview: new Date().toISOString(),
+        lapses: 0,
+        nextReviewAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
@@ -167,6 +171,7 @@ describe("FlashcardPlayer", () => {
     const deck: Deck = {
       id: "deck-1",
       name: "Animals",
+      isPublic: false,
       cards,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -199,13 +204,13 @@ describe("FlashcardPlayer", () => {
     const cards: Card[] = [
       {
         id: "c-1",
-        deckId: "deck-1",
         jpText: "本 (ほん)",
         enText: "Book",
         repetitions: 0,
         interval: 1,
         easeFactor: 2.5,
-        nextReview: new Date().toISOString(),
+        lapses: 0,
+        nextReviewAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
@@ -214,6 +219,7 @@ describe("FlashcardPlayer", () => {
     const deck: Deck = {
       id: "deck-1",
       name: "Objects",
+      isPublic: false,
       cards,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
