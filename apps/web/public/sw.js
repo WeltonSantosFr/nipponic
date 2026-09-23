@@ -8,14 +8,16 @@ const PRECACHE_ASSETS = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => {
-        return cache.addAll(PRECACHE_ASSETS).catch((err) => {
-          console.warn("[SW] Pre-caching warning:", err);
-        });
-      })
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(async (cache) => {
+      await Promise.allSettled(
+        PRECACHE_ASSETS.map((asset) =>
+          cache.add(asset).catch((err) => {
+            console.warn(`[SW] Pre-cache failed for ${asset}:`, err);
+          })
+        )
+      );
+      return self.skipWaiting();
+    })
   );
 });
 
@@ -56,11 +58,12 @@ self.addEventListener("fetch", (event) => {
       fetch(request)
         .then((response) => {
           if (response && response.status === 200) {
-            const clone = response.clone();
+            const cloneForReq = response.clone();
+            const cloneForRoot = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, clone);
-              cache.put("/", response.clone());
-            });
+              cache.put(request, cloneForReq).catch(() => {});
+              cache.put("/", cloneForRoot).catch(() => {});
+            }).catch(() => {});
           }
           return response;
         })

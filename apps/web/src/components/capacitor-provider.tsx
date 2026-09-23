@@ -84,7 +84,7 @@ export function CapacitorProvider({ children }: { children: React.ReactNode }) {
 
     const registerSW = () => {
       navigator.serviceWorker
-        .register("/sw.js")
+        .register("/sw.js", { scope: "/" })
         .then((reg) => {
           reg.update().catch(() => {});
         })
