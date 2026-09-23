@@ -8,6 +8,7 @@ import {
   initNotificationChannel,
   scheduleDailyReminder,
 } from "@/services/notifications";
+import { syncPendingReviews } from "@/services/offline-sync";
 
 export function CapacitorProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -59,6 +60,8 @@ export function CapacitorProvider({ children }: { children: React.ReactNode }) {
       ({ isActive }) => {
         if (!isActive) {
           scheduleDailyReminder().catch(() => {});
+        } else {
+          syncPendingReviews().catch(() => {});
         }
       }
     );

@@ -42,6 +42,14 @@ import {
 } from "@/actions/decks";
 import { useAuth } from "./AuthContext";
 import { syncCardNotifications } from "@/services/notifications";
+import {
+  getCachedCards,
+  saveCachedCards,
+  getCachedDecks,
+  saveCachedDecks,
+  enqueueReview,
+} from "@/lib/offline-db";
+import { initOfflineSync, refreshPendingCount } from "@/services/offline-sync";
 
 export type {
   SidebarViewMode,
@@ -120,6 +128,13 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
         setCards(fetchedCards || []);
         setDecks(sanitizedDecks);
         setPublicDecks(fetchedPublic || []);
+
+        if (fetchedCards) {
+          saveCachedCards(fetchedCards).catch(() => {});
+        }
+        if (sanitizedDecks) {
+          saveCachedDecks(sanitizedDecks).catch(() => {});
+        }
       } catch (err) {
         console.error("Error fetching flash cards/decks:", err);
       }
@@ -129,6 +144,30 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
       setPublicDecks([]);
     }
   }, [isAuthenticated, isWakingServer]);
+
+  // Hydrate from local IndexedDB cache on startup for instant rendering
+  useEffect(() => {
+    Promise.all([getCachedCards(), getCachedDecks()])
+      .then(([cachedCards, cachedDecks]) => {
+        if (cachedCards.length > 0 && cardsRef.current.length === 0) {
+          setCards(cachedCards);
+        }
+        if (cachedDecks.length > 0 && decksRef.current.length === 0) {
+          setDecks(cachedDecks);
+        }
+      })
+      .catch((err) => {
+        console.warn("[FlashCardsContext] Error hydrating offline cache:", err);
+      });
+  }, []);
+
+  // Listen for online events and automatically sync queued reviews
+  useEffect(() => {
+    const cleanup = initOfflineSync(() => {
+      refreshAll();
+    });
+    return cleanup;
+  }, [refreshAll]);
 
   useEffect(() => {
     if (!isWakingServer) {
@@ -319,18 +358,29 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
       return updatedCard;
     }
 
+    const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
+    if (!isOnline) {
+      await enqueueReview(cardId, rating);
+      await refreshPendingCount();
+      return updatedCard;
+    }
+
     try {
       const persisted = await reviewCardAction(cardId, rating);
       if (persisted) {
-        setCards((prev) =>
-          prev.map((c) => (c.id === cardId ? persisted : c))
-        );
-        setDecks((prevDecks) =>
-          prevDecks.map((d) => ({
+        setCards((prev) => {
+          const next = prev.map((c) => (c.id === cardId ? persisted : c));
+          saveCachedCards(next).catch(() => {});
+          return next;
+        });
+        setDecks((prevDecks) => {
+          const next = prevDecks.map((d) => ({
             ...d,
             cards: d.cards.map((c) => (c.id === cardId ? persisted : c)),
-          }))
-        );
+          }));
+          saveCachedDecks(next).catch(() => {});
+          return next;
+        });
         setPlayingDeck((prevPlaying) => {
           if (!prevPlaying) return null;
           return {
@@ -340,9 +390,14 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
         });
         return persisted;
       }
+      // If server returned null, enqueue review to sync later
+      await enqueueReview(cardId, rating);
+      await refreshPendingCount();
       return updatedCard;
     } catch (err) {
-      console.error("Error reviewing card:", err);
+      console.error("Error reviewing card, queueing for offline sync:", err);
+      await enqueueReview(cardId, rating);
+      await refreshPendingCount();
       return updatedCard;
     }
   };

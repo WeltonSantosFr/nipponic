@@ -134,6 +134,12 @@ export function useSpeech() {
           });
         };
 
+        // If device is offline, bypass /api/tts network attempts and speak via local SpeechSynthesis immediately
+        if (typeof navigator !== "undefined" && !navigator.onLine) {
+          fallbackToSpeechSynthesis();
+          return;
+        }
+
         // For short text, use standard GET request directly
         if (cleanText.length <= 140) {
           const audioUrl = `/api/tts?text=${encodeURIComponent(cleanText)}&lang=${langCode}`;

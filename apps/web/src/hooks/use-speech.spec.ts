@@ -222,4 +222,42 @@ describe("useSpeech hook", () => {
     expect(mockSpeak).toHaveBeenCalled();
     expect(result.current.isPlaying).toBe(false);
   });
+
+  it("should immediately fallback to speechSynthesis when offline without creating Audio", async () => {
+    Object.defineProperty(navigator, "onLine", {
+      value: false,
+      configurable: true,
+    });
+
+    const mockSpeak = vi.fn((utterance: any) => {
+      utterance.onend?.();
+    });
+    vi.stubGlobal("speechSynthesis", {
+      speak: mockSpeak,
+      cancel: vi.fn(),
+    });
+    vi.stubGlobal("SpeechSynthesisUtterance", class {
+      text: string;
+      lang = "";
+      rate = 1.0;
+      onend: (() => void) | null = null;
+      constructor(text: string) {
+        this.text = text;
+      }
+    });
+
+    const { result } = renderHook(() => useSpeech());
+    await act(async () => {
+      await result.current.speak("オフライン", "ja-JP");
+    });
+
+    expect(mockSpeak).toHaveBeenCalled();
+    expect(mockAudioInstances.length).toBe(0);
+    expect(result.current.isPlaying).toBe(false);
+
+    Object.defineProperty(navigator, "onLine", {
+      value: true,
+      configurable: true,
+    });
+  });
 });
