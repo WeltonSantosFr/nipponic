@@ -76,5 +76,30 @@ export function CapacitorProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Register Service Worker for offline PWA shell and asset caching
+  useEffect(() => {
+    if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+      return;
+    }
+
+    const registerSW = () => {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((reg) => {
+          reg.update().catch(() => {});
+        })
+        .catch((err) => {
+          console.warn("[SW] Registration failed:", err);
+        });
+    };
+
+    if (document.readyState === "complete") {
+      registerSW();
+    } else {
+      window.addEventListener("load", registerSW);
+      return () => window.removeEventListener("load", registerSW);
+    }
+  }, []);
+
   return <>{children}</>;
 }

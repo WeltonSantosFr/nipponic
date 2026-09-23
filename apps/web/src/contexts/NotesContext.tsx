@@ -23,7 +23,17 @@ const NotesContext = createContext<NotesContextData>({} as NotesContextData);
 
 export function NotesProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, isWakingServer } = useAuth();
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [notes, setNotes] = useState<Note[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("nipponic.cached_notes");
+        if (stored) return JSON.parse(stored);
+      } catch {
+        // Ignore localStorage read errors
+      }
+    }
+    return [];
+  });
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
 
   const notesRef = useRef<Note[]>(notes);
@@ -38,8 +48,19 @@ export function NotesProvider({ children }: { children: ReactNode }) {
 
   const refreshNotes = useCallback(async () => {
     if (isAuthenticated && !isWakingServer) {
-      const data = await getNotesAction();
-      setNotes(data);
+      try {
+        const data = await getNotesAction();
+        setNotes(data);
+        if (typeof window !== "undefined" && Array.isArray(data)) {
+          try {
+            localStorage.setItem("nipponic.cached_notes", JSON.stringify(data));
+          } catch {
+            // Ignore localStorage write errors
+          }
+        }
+      } catch (err) {
+        console.warn("[NotesContext] Error fetching notes:", err);
+      }
     } else if (!isAuthenticated) {
       setNotes([]);
     }

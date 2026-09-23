@@ -50,6 +50,13 @@ export function ServerWakeupOverlay() {
   }, []);
 
   const wakeUpAndValidate = useCallback(async () => {
+    // If device is offline, do not block the UI waiting for cloud server to wake up
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setIsWakingServer(false);
+      isCheckingRef.current = false;
+      return;
+    }
+
     if (isCheckingRef.current) return;
     isCheckingRef.current = true;
     setIsTimedOut(false);
