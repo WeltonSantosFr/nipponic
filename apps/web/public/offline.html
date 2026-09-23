@@ -95,14 +95,14 @@
     <script>
       function retryConnection() {
         if (navigator.onLine) {
-          window.location.href = "https://nipponic-web.vercel.app/";
+          window.location.href = "/";
         } else {
           window.location.reload();
         }
       }
 
       window.addEventListener("online", () => {
-        window.location.href = "https://nipponic-web.vercel.app/";
+        window.location.href = "/";
       });
     </script>
   </body>

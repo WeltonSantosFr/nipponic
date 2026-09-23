@@ -80,7 +80,17 @@ export function resetDBPromise(): void {
 
 export async function getCachedCards(): Promise<Card[]> {
   const db = await openOfflineDB();
-  if (!db) return [];
+  if (!db) {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("nipponic.cached_cards");
+        if (stored) return JSON.parse(stored);
+      } catch {
+        // Ignore localStorage read errors
+      }
+    }
+    return [];
+  }
 
   return new Promise((resolve) => {
     try {
@@ -88,17 +98,54 @@ export async function getCachedCards(): Promise<Card[]> {
       const store = tx.objectStore(STORES.CARDS);
       const request = store.getAll();
 
-      request.onsuccess = () => resolve((request.result as Card[]) || []);
-      request.onerror = () => resolve([]);
+      request.onsuccess = () => {
+        const result = (request.result as Card[]) || [];
+        if (result.length === 0 && typeof window !== "undefined") {
+          try {
+            const stored = localStorage.getItem("nipponic.cached_cards");
+            if (stored) return resolve(JSON.parse(stored));
+          } catch {
+            // Ignore localStorage read errors
+          }
+        }
+        resolve(result);
+      };
+      request.onerror = () => {
+        if (typeof window !== "undefined") {
+          try {
+            const stored = localStorage.getItem("nipponic.cached_cards");
+            if (stored) return resolve(JSON.parse(stored));
+          } catch {
+            // Ignore localStorage read errors
+          }
+        }
+        resolve([]);
+      };
     } catch {
+      if (typeof window !== "undefined") {
+        try {
+          const stored = localStorage.getItem("nipponic.cached_cards");
+          if (stored) return resolve(JSON.parse(stored));
+        } catch {
+          // Ignore localStorage read errors
+        }
+      }
       resolve([]);
     }
   });
 }
 
 export async function saveCachedCards(cards: Card[]): Promise<void> {
+  if (typeof window !== "undefined" && Array.isArray(cards) && cards.length > 0) {
+    try {
+      localStorage.setItem("nipponic.cached_cards", JSON.stringify(cards));
+    } catch {
+      // Ignore localStorage write errors
+    }
+  }
+
   const db = await openOfflineDB();
-  if (!db || !Array.isArray(cards)) return;
+  if (!db || !Array.isArray(cards) || cards.length === 0) return;
 
   return new Promise((resolve) => {
     try {
@@ -120,7 +167,17 @@ export async function saveCachedCards(cards: Card[]): Promise<void> {
 
 export async function getCachedDecks(): Promise<Deck[]> {
   const db = await openOfflineDB();
-  if (!db) return [];
+  if (!db) {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("nipponic.cached_decks");
+        if (stored) return JSON.parse(stored);
+      } catch {
+        // Ignore localStorage read errors
+      }
+    }
+    return [];
+  }
 
   return new Promise((resolve) => {
     try {
@@ -128,17 +185,54 @@ export async function getCachedDecks(): Promise<Deck[]> {
       const store = tx.objectStore(STORES.DECKS);
       const request = store.getAll();
 
-      request.onsuccess = () => resolve((request.result as Deck[]) || []);
-      request.onerror = () => resolve([]);
+      request.onsuccess = () => {
+        const result = (request.result as Deck[]) || [];
+        if (result.length === 0 && typeof window !== "undefined") {
+          try {
+            const stored = localStorage.getItem("nipponic.cached_decks");
+            if (stored) return resolve(JSON.parse(stored));
+          } catch {
+            // Ignore localStorage read errors
+          }
+        }
+        resolve(result);
+      };
+      request.onerror = () => {
+        if (typeof window !== "undefined") {
+          try {
+            const stored = localStorage.getItem("nipponic.cached_decks");
+            if (stored) return resolve(JSON.parse(stored));
+          } catch {
+            // Ignore localStorage read errors
+          }
+        }
+        resolve([]);
+      };
     } catch {
+      if (typeof window !== "undefined") {
+        try {
+          const stored = localStorage.getItem("nipponic.cached_decks");
+          if (stored) return resolve(JSON.parse(stored));
+        } catch {
+          // Ignore localStorage read errors
+        }
+      }
       resolve([]);
     }
   });
 }
 
 export async function saveCachedDecks(decks: Deck[]): Promise<void> {
+  if (typeof window !== "undefined" && Array.isArray(decks) && decks.length > 0) {
+    try {
+      localStorage.setItem("nipponic.cached_decks", JSON.stringify(decks));
+    } catch {
+      // Ignore localStorage write errors
+    }
+  }
+
   const db = await openOfflineDB();
-  if (!db || !Array.isArray(decks)) return;
+  if (!db || !Array.isArray(decks) || decks.length === 0) return;
 
   return new Promise((resolve) => {
     try {

@@ -126,4 +126,18 @@ describe("offline-db", () => {
     const updated = await getPendingReviews();
     expect(updated[0]?.attempts).toBe(1);
   });
+
+  it("should not clear cached cards if empty array is passed", async () => {
+    await saveCachedCards(mockCards);
+    await saveCachedCards([]);
+    const cached = await getCachedCards();
+    expect(cached).toHaveLength(2);
+  });
+
+  it("should not clear cached decks if empty array is passed", async () => {
+    await saveCachedDecks(mockDecks);
+    await saveCachedDecks([]);
+    const cached = await getCachedDecks();
+    expect(cached).toHaveLength(1);
+  });
 });
