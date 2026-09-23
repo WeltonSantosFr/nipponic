@@ -19,6 +19,7 @@ import {
   Layers,
   Flame,
 } from "lucide-react";
+import { OfflineIndicator } from "@/components/offline-indicator";
 
 export type { FlashcardPlayerProps };
 
@@ -313,6 +314,7 @@ export function FlashcardPlayer({ deck, onClose }: FlashcardPlayerProps) {
               ) : (
                 <Badge variant="outline" className="text-muted-foreground text-[10px] h-4 shrink-0">New</Badge>
               )}
+              <OfflineIndicator className="text-[10px] px-1 py-0" />
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3 shrink-0">

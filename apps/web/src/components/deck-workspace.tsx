@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useSpeech } from "@/hooks/use-speech";
+import { OfflineIndicator } from "@/components/offline-indicator";
 import {
   Layers,
   Play,
@@ -208,6 +209,7 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
                 {dueCards.length} due
               </Badge>
             )}
+            <OfflineIndicator />
           </div>
           <p className="text-xs text-muted-foreground">
             {isCurrentDeckOwner

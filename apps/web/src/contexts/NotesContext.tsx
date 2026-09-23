@@ -23,7 +23,17 @@ const NotesContext = createContext<NotesContextData>({} as NotesContextData);
 
 export function NotesProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, isWakingServer } = useAuth();
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [notes, setNotes] = useState<Note[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("nipponic.cached_notes");
+        if (stored) return JSON.parse(stored);
+      } catch {
+        // Ignore localStorage read errors
+      }
+    }
+    return [];
+  });
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
 
   const notesRef = useRef<Note[]>(notes);
@@ -37,9 +47,31 @@ export function NotesProvider({ children }: { children: ReactNode }) {
   const selectedNote = notes.find((n) => n.id === selectedNoteId);
 
   const refreshNotes = useCallback(async () => {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      return;
+    }
     if (isAuthenticated && !isWakingServer) {
-      const data = await getNotesAction();
-      setNotes(data);
+      try {
+        const data = await getNotesAction();
+        if (Array.isArray(data)) {
+          if (data.length === 0 && notesRef.current.length > 0) {
+            console.warn(
+              "[NotesContext] Received empty notes from server while having cached notes, preserving cache."
+            );
+            return;
+          }
+          setNotes(data);
+          if (typeof window !== "undefined" && data.length > 0) {
+            try {
+              localStorage.setItem("nipponic.cached_notes", JSON.stringify(data));
+            } catch {
+              // Ignore localStorage write errors
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("[NotesContext] Error fetching notes:", err);
+      }
     } else if (!isAuthenticated) {
       setNotes([]);
     }
@@ -50,6 +82,17 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       refreshNotes();
     }
   }, [refreshNotes, isWakingServer]);
+
+  // Synchronize any note changes (created, edited, deleted) with local storage
+  useEffect(() => {
+    if (typeof window !== "undefined" && notes.length > 0) {
+      try {
+        localStorage.setItem("nipponic.cached_notes", JSON.stringify(notes));
+      } catch {
+        // Ignore localStorage write errors
+      }
+    }
+  }, [notes]);
 
 
   const createNewNote = async (): Promise<Note> => {

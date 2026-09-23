@@ -18,6 +18,7 @@ import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotes } from "@/contexts/NotesContext";
@@ -37,7 +38,6 @@ import {
   Plus,
   Search,
   Settings,
-  Sparkles,
   Trash2,
   UserPlus,
   UserRound,
@@ -53,6 +53,7 @@ export function AppSidebar({
   onSelectNote,
 }: AppSidebarProps) {
   const { user, isAuthenticated, logout } = useAuth();
+  const { isMobile, setOpenMobile } = useSidebar();
   const { notes, createNewNote, deleteNote } = useNotes();
   const {
     decks,
@@ -144,7 +145,12 @@ export function AppSidebar({
     <SidebarMenuItem key={note.id}>
       <SidebarMenuButton
         isActive={selectedNoteId === note.id}
-        onClick={() => onSelectNote(note.id)}
+        onClick={() => {
+          onSelectNote(note.id);
+          if (isMobile) {
+            setOpenMobile(false);
+          }
+        }}
         className="cursor-pointer"
       >
         <BookOpen size={16} />
@@ -168,6 +174,24 @@ export function AppSidebar({
   return (
     <Sidebar>
       <SidebarHeader className="gap-2.5">
+        {isMobile && (
+          <div className="flex items-center justify-between pb-2 border-b border-border/60">
+            <div className="flex items-center gap-2 px-1">
+              <span className="text-lg">🇯🇵</span>
+              <span className="font-bold text-sm tracking-tight">Nipponic</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setOpenMobile(false)}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground cursor-pointer"
+              title="Close sidebar"
+            >
+              <X size={16} />
+              <span className="sr-only">Close sidebar</span>
+            </Button>
+          </div>
+        )}
         {user && isAuthenticated && (
           <p className="text-xs text-center pt-2 text-muted-foreground">
             Welcome back <span className="font-semibold text-foreground">{user.username}</span>!
@@ -204,7 +228,15 @@ export function AppSidebar({
 
         {activeSidebarView === "notes" ? (
           <>
-            <Button onClick={() => createNewNote()} className="w-full gap-1.5 cursor-pointer">
+            <Button
+              onClick={async () => {
+                await createNewNote();
+                if (isMobile) {
+                  setOpenMobile(false);
+                }
+              }}
+              className="w-full gap-1.5 cursor-pointer"
+            >
               <Plus size={16} />
               New Note
             </Button>
@@ -409,7 +441,12 @@ export function AppSidebar({
                       <SidebarMenuItem key={deck.id} className="relative group/deck">
                         <SidebarMenuButton
                           isActive={isSelected}
-                          onClick={() => setSelectedDeckId(deck.id)}
+                          onClick={() => {
+                            setSelectedDeckId(deck.id);
+                            if (isMobile) {
+                              setOpenMobile(false);
+                            }
+                          }}
                           className={`cursor-pointer pr-16 transition-all ${
                             hasDueCards
                               ? isSelected
@@ -511,7 +548,12 @@ export function AppSidebar({
                       <SidebarMenuItem key={deck.id} className="relative group/deck">
                         <SidebarMenuButton
                           isActive={selectedDeckId === deck.id}
-                          onClick={() => setSelectedDeckId(deck.id)}
+                          onClick={() => {
+                            setSelectedDeckId(deck.id);
+                            if (isMobile) {
+                              setOpenMobile(false);
+                            }
+                          }}
                           className={`cursor-pointer ${isAlreadyAdded ? "pr-3" : "pr-10"}`}
                         >
                           <Layers size={16} className="text-primary shrink-0" />
@@ -585,7 +627,12 @@ export function AppSidebar({
                       <SidebarMenuItem key={deck.id} className="relative group/deck">
                         <SidebarMenuButton
                           isActive={selectedDeckId === deck.id}
-                          onClick={() => setSelectedDeckId(deck.id)}
+                          onClick={() => {
+                            setSelectedDeckId(deck.id);
+                            if (isMobile) {
+                              setOpenMobile(false);
+                            }
+                          }}
                           className={`cursor-pointer ${isAlreadyAdded ? "pr-3" : "pr-10"}`}
                         >
                           <Globe size={16} className="text-blue-500 shrink-0" />

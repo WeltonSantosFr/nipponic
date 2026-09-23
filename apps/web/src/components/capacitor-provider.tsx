@@ -8,6 +8,7 @@ import {
   initNotificationChannel,
   scheduleDailyReminder,
 } from "@/services/notifications";
+import { syncPendingReviews } from "@/services/offline-sync";
 
 export function CapacitorProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -59,6 +60,8 @@ export function CapacitorProvider({ children }: { children: React.ReactNode }) {
       ({ isActive }) => {
         if (!isActive) {
           scheduleDailyReminder().catch(() => {});
+        } else {
+          syncPendingReviews().catch(() => {});
         }
       }
     );
@@ -71,6 +74,31 @@ export function CapacitorProvider({ children }: { children: React.ReactNode }) {
         .then((handler) => handler.remove())
         .catch(() => {});
     };
+  }, []);
+
+  // Register Service Worker for offline PWA shell and asset caching
+  useEffect(() => {
+    if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+      return;
+    }
+
+    const registerSW = () => {
+      navigator.serviceWorker
+        .register("/sw.js", { scope: "/" })
+        .then((reg) => {
+          reg.update().catch(() => {});
+        })
+        .catch((err) => {
+          console.warn("[SW] Registration failed:", err);
+        });
+    };
+
+    if (document.readyState === "complete") {
+      registerSW();
+    } else {
+      window.addEventListener("load", registerSW);
+      return () => window.removeEventListener("load", registerSW);
+    }
   }, []);
 
   return <>{children}</>;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Note, WorkspaceProps } from "@nipponic/shared";
+import type { WorkspaceProps } from "@nipponic/shared";
 
 export type { WorkspaceProps };
 import {
@@ -27,7 +27,8 @@ import { getGlossaryRules } from "@/services/glossary";
 import { DeckWorkspace } from "@/components/deck-workspace";
 import { FlashcardPlayer } from "@/components/flashcard-player";
 
-export function Workspace({ initialNotes: _initialNotes }: WorkspaceProps = {}) {
+export function Workspace(props: WorkspaceProps = {}) {
+  void props;
   const {
     selectedNote,
     selectedNoteId,
@@ -101,7 +102,7 @@ export function Workspace({ initialNotes: _initialNotes }: WorkspaceProps = {}) 
       <SidebarInset className="flex flex-col min-h-screen min-w-0 max-w-full overflow-x-hidden">
         <header className="flex min-h-14 items-center justify-between border-b px-4 sm:px-6 shrink-0 pt-safe">
           <div className="flex items-center gap-3 min-w-0">
-            <SidebarTrigger />
+            <SidebarTrigger className="h-9 w-9 shrink-0 cursor-pointer" />
             {activeSidebarView === "notes" ? (
               selectedNote && (
                 <span className="text-sm font-medium text-muted-foreground truncate max-w-[180px] sm:max-w-sm">

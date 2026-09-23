@@ -42,6 +42,14 @@ import {
 } from "@/actions/decks";
 import { useAuth } from "./AuthContext";
 import { syncCardNotifications } from "@/services/notifications";
+import {
+  getCachedCards,
+  saveCachedCards,
+  getCachedDecks,
+  saveCachedDecks,
+  enqueueReview,
+} from "@/lib/offline-db";
+import { initOfflineSync, refreshPendingCount } from "@/services/offline-sync";
 
 export type {
   SidebarViewMode,
@@ -56,9 +64,39 @@ const FlashCardsContext = createContext<FlashCardsContextData>(
 
 export function FlashCardsProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, isWakingServer } = useAuth();
-  const [cards, setCards] = useState<Card[]>([]);
-  const [decks, setDecks] = useState<Deck[]>([]);
-  const [publicDecks, setPublicDecks] = useState<Deck[]>([]);
+  const [cards, setCards] = useState<Card[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("nipponic.cached_cards");
+        if (stored) return JSON.parse(stored);
+      } catch {
+        // Ignore localStorage read errors
+      }
+    }
+    return [];
+  });
+  const [decks, setDecks] = useState<Deck[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("nipponic.cached_decks");
+        if (stored) return JSON.parse(stored);
+      } catch {
+        // Ignore localStorage read errors
+      }
+    }
+    return [];
+  });
+  const [publicDecks, setPublicDecks] = useState<Deck[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("nipponic.cached_public_decks");
+        if (stored) return JSON.parse(stored);
+      } catch {
+        // Ignore localStorage read errors
+      }
+    }
+    return [];
+  });
   const [activeDeckTab, setActiveDeckTab] = useState<DeckTabMode>("my");
   const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
   const [activeSidebarView, setActiveSidebarView] =
@@ -89,6 +127,9 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
   }, [selectedDeck, decks]);
 
   const refreshAll = useCallback(async () => {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      return;
+    }
     if (isAuthenticated && !isWakingServer) {
       try {
         const [fetchedCards, fetchedDecks, fetchedPublic] = await Promise.all([
@@ -117,9 +158,50 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
           return deck;
         });
 
+        // Guard against network failure returning empty arrays when local cache exists
+        if (
+          (!fetchedCards || fetchedCards.length === 0) &&
+          cardsRef.current.length > 0
+        ) {
+          console.warn(
+            "[FlashCardsContext] Received empty cards from network while having cached cards, preserving cache."
+          );
+          return;
+        }
+
+        if (
+          (!sanitizedDecks || sanitizedDecks.length === 0) &&
+          decksRef.current.length > 0
+        ) {
+          console.warn(
+            "[FlashCardsContext] Received empty decks from network while having cached decks, preserving cache."
+          );
+          return;
+        }
+
         setCards(fetchedCards || []);
         setDecks(sanitizedDecks);
-        setPublicDecks(fetchedPublic || []);
+
+        if (fetchedPublic && fetchedPublic.length > 0) {
+          setPublicDecks(fetchedPublic);
+          if (typeof window !== "undefined") {
+            try {
+              localStorage.setItem(
+                "nipponic.cached_public_decks",
+                JSON.stringify(fetchedPublic)
+              );
+            } catch {
+              // Ignore localStorage write errors
+            }
+          }
+        }
+
+        if (fetchedCards && fetchedCards.length > 0) {
+          saveCachedCards(fetchedCards).catch(() => {});
+        }
+        if (sanitizedDecks && sanitizedDecks.length > 0) {
+          saveCachedDecks(sanitizedDecks).catch(() => {});
+        }
       } catch (err) {
         console.error("Error fetching flash cards/decks:", err);
       }
@@ -129,6 +211,30 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
       setPublicDecks([]);
     }
   }, [isAuthenticated, isWakingServer]);
+
+  // Hydrate from local IndexedDB cache on startup for instant rendering
+  useEffect(() => {
+    Promise.all([getCachedCards(), getCachedDecks()])
+      .then(([cachedCards, cachedDecks]) => {
+        if (cachedCards.length > 0 && cardsRef.current.length === 0) {
+          setCards(cachedCards);
+        }
+        if (cachedDecks.length > 0 && decksRef.current.length === 0) {
+          setDecks(cachedDecks);
+        }
+      })
+      .catch((err) => {
+        console.warn("[FlashCardsContext] Error hydrating offline cache:", err);
+      });
+  }, []);
+
+  // Listen for online events and automatically sync queued reviews
+  useEffect(() => {
+    const cleanup = initOfflineSync(() => {
+      refreshAll();
+    });
+    return cleanup;
+  }, [refreshAll]);
 
   useEffect(() => {
     if (!isWakingServer) {
@@ -319,18 +425,37 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
       return updatedCard;
     }
 
+    const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
+    if (!isOnline) {
+      const nextCards = cardsRef.current.map((c) => (c.id === cardId ? updatedCard : c));
+      saveCachedCards(nextCards).catch(() => {});
+      const nextDecks = decksRef.current.map((d) => ({
+        ...d,
+        cards: d.cards.map((c) => (c.id === cardId ? updatedCard : c)),
+      }));
+      saveCachedDecks(nextDecks).catch(() => {});
+
+      await enqueueReview(cardId, rating);
+      await refreshPendingCount();
+      return updatedCard;
+    }
+
     try {
       const persisted = await reviewCardAction(cardId, rating);
       if (persisted) {
-        setCards((prev) =>
-          prev.map((c) => (c.id === cardId ? persisted : c))
-        );
-        setDecks((prevDecks) =>
-          prevDecks.map((d) => ({
+        setCards((prev) => {
+          const next = prev.map((c) => (c.id === cardId ? persisted : c));
+          saveCachedCards(next).catch(() => {});
+          return next;
+        });
+        setDecks((prevDecks) => {
+          const next = prevDecks.map((d) => ({
             ...d,
             cards: d.cards.map((c) => (c.id === cardId ? persisted : c)),
-          }))
-        );
+          }));
+          saveCachedDecks(next).catch(() => {});
+          return next;
+        });
         setPlayingDeck((prevPlaying) => {
           if (!prevPlaying) return null;
           return {
@@ -340,9 +465,14 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
         });
         return persisted;
       }
+      // If server returned null, enqueue review to sync later
+      await enqueueReview(cardId, rating);
+      await refreshPendingCount();
       return updatedCard;
     } catch (err) {
-      console.error("Error reviewing card:", err);
+      console.error("Error reviewing card, queueing for offline sync:", err);
+      await enqueueReview(cardId, rating);
+      await refreshPendingCount();
       return updatedCard;
     }
   };

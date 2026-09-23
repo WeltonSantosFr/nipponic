@@ -11,6 +11,7 @@ const config: CapacitorConfig = {
     url: serverUrl,
     cleartext: true,
     androidScheme: "https",
+    errorPath: "offline.html",
   },
   android: {
     allowMixedContent: true,
