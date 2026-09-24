@@ -36,6 +36,31 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+self.addEventListener("message", (event) => {
+  if (
+    event.data &&
+    event.data.type === "CACHE_URLS" &&
+    Array.isArray(event.data.urls)
+  ) {
+    event.waitUntil(
+      caches.open(CACHE_NAME).then((cache) => {
+        return Promise.allSettled(
+          event.data.urls.map(async (url) => {
+            try {
+              const res = await fetch(url, { cache: "force-cache" });
+              if (res.ok) {
+                await cache.put(url, res);
+              }
+            } catch {
+              // Ignore failure for individual asset
+            }
+          })
+        );
+      })
+    );
+  }
+});
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
 
@@ -70,7 +95,9 @@ self.addEventListener("fetch", (event) => {
         .catch(async () => {
           const cache = await caches.open(CACHE_NAME);
           const cachedMatch =
-            (await cache.match(request)) || (await cache.match("/"));
+            (await cache.match(request)) ||
+            (await cache.match("/")) ||
+            (await cache.match(new Request("/")));
           if (cachedMatch) {
             return cachedMatch;
           }
