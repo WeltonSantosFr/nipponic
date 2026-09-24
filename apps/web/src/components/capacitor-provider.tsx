@@ -76,17 +76,71 @@ export function CapacitorProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Register Service Worker for offline PWA shell and asset caching
+  // Register Service Worker and preload page assets for offline resilience
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
       return;
     }
+
+    const cacheActivePageAssets = async () => {
+      try {
+        if (!("caches" in window)) return;
+        const cache = await caches.open("nipponic-pwa-v1");
+
+        // 1. Cache the current HTML document and root /
+        const currentUrl = window.location.href;
+        try {
+          const pageRes = await fetch(currentUrl, { cache: "no-cache" });
+          if (pageRes.ok) {
+            await cache.put(currentUrl, pageRes.clone());
+            await cache.put("/", pageRes.clone());
+          }
+        } catch {
+          // Ignore fetch error if offline
+        }
+
+        // 2. Discover all loaded scripts and stylesheets on the current page
+        const elements = Array.from(
+          document.querySelectorAll<HTMLLinkElement | HTMLScriptElement>(
+            "link[rel='stylesheet'], script[src]"
+          )
+        );
+
+        const assetUrls = elements
+          .map((el) => (el instanceof HTMLLinkElement ? el.href : el.src))
+          .filter(
+            (url) =>
+              Boolean(url) &&
+              (url.startsWith(window.location.origin) ||
+                url.includes("/_next/static/"))
+          );
+
+        const uniqueUrls = Array.from(new Set(assetUrls));
+
+        // 3. Cache all assets in parallel using force-cache
+        await Promise.allSettled(
+          uniqueUrls.map(async (url) => {
+            try {
+              const res = await fetch(url, { cache: "force-cache" });
+              if (res.ok) {
+                await cache.put(url, res);
+              }
+            } catch {
+              // Ignore individual asset caching failures
+            }
+          })
+        );
+      } catch (err) {
+        console.warn("[PWA Cache] Error pre-caching page assets:", err);
+      }
+    };
 
     const registerSW = () => {
       navigator.serviceWorker
         .register("/sw.js", { scope: "/" })
         .then((reg) => {
           reg.update().catch(() => {});
+          cacheActivePageAssets();
         })
         .catch((err) => {
           console.warn("[SW] Registration failed:", err);
