@@ -85,8 +85,8 @@ export async function initNotificationChannel(): Promise<void> {
   try {
     await LocalNotifications.createChannel({
       id: NOTIFICATION_CHANNEL_ID,
-      name: "Lembretes de Estudo e Revisões",
-      description: "Notificações para lembretes diários e cards pendentes para revisão",
+      name: "Study and Review Reminders",
+      description: "Notifications for daily study reminders and pending card reviews",
       importance: 4, // High importance (sound, banner, heads-up)
       visibility: 1, // Public on lock screen
       vibration: true,
@@ -208,8 +208,8 @@ export async function scheduleDailyReminder(settings?: NotificationSettings): Pr
       notifications: [
         {
           id: NOTIFICATION_ID_DAILY,
-          title: "Hora de estudar japonês! 🎌",
-          body: "Pratique alguns cards hoje para manter seu ritmo e fixar o vocabulário.",
+          title: "Time to study Japanese! 🎌",
+          body: "Practice a few cards today to keep your streak and build vocabulary.",
           schedule: {
             at: nextDate,
             every: "day",
@@ -276,8 +276,8 @@ export async function scheduleOverdueCardsReminder(
       notifications: [
         {
           id: NOTIFICATION_ID_OVERDUE,
-          title: "Cards acumulados para revisão! 📚",
-          body: `Você tem ${currentSettings.overdueThreshold} ou mais cards prontos para revisão no Nipponic.`,
+          title: "Cards ready for review! 📚",
+          body: `You have ${currentSettings.overdueThreshold} or more cards ready for review in Nipponic.`,
           schedule: {
             at: targetDate,
             allowWhileIdle: true,
@@ -328,8 +328,8 @@ export async function sendTestNotification(): Promise<boolean> {
       notifications: [
         {
           id: NOTIFICATION_ID_TEST,
-          title: "Notificações do Nipponic ativas! 🎉",
-          body: "Tudo pronto! Você receberá lembretes inteligentes para manter seus estudos em dia.",
+          title: "Nipponic notifications active! 🎉",
+          body: "All set! You will receive smart reminders to keep your studies on track.",
           schedule: {
             at: new Date(Date.now() + 2000), // 2 seconds from now
             allowWhileIdle: true,
