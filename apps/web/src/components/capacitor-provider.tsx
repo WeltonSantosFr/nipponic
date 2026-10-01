@@ -76,9 +76,35 @@ export function CapacitorProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Register Service Worker and preload page assets for offline resilience
+  // Register Service Worker and preload page assets for offline resilience in production only
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+      return;
+    }
+
+    const isLocalhost = Boolean(
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "[::1]" ||
+      window.location.hostname === "127.0.0.1" ||
+      window.location.hostname === "10.0.2.2"
+    );
+
+    // In development or localhost, unregister existing service workers and purge caches
+    // to avoid Turbopack HMR and stale chunk module factory errors
+    if (process.env.NODE_ENV === "development" || isLocalhost) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const reg of registrations) {
+          reg.unregister().catch(() => {});
+        }
+      }).catch(() => {});
+
+      if ("caches" in window) {
+        caches.keys().then((keys) => {
+          for (const key of keys) {
+            caches.delete(key).catch(() => {});
+          }
+        }).catch(() => {});
+      }
       return;
     }
 

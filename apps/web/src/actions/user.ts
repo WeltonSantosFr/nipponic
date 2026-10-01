@@ -1,7 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import type { ActionResponse } from "@nipponic/shared";
+import type { ActionResponse, User } from "@nipponic/shared";
 import { API_URL } from "@/lib/api-config";
 
 export async function changePasswordAction(
@@ -77,7 +77,7 @@ export async function deleteAccountAction(): Promise<ActionResponse> {
   }
 }
 
-export async function getUserProfileAction() {
+export async function getUserProfileAction(): Promise<User | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("nipponic.token")?.value;
 
@@ -98,7 +98,7 @@ export async function getUserProfileAction() {
       return null;
     }
 
-    return await res.json();
+    return (await res.json()) as User;
   } catch (error) {
     console.error("Error fetching user profile:", error);
     return null;
@@ -107,7 +107,7 @@ export async function getUserProfileAction() {
 
 export async function updateGithubUsernameAction(
   githubUsername: string
-): Promise<ActionResponse & { user?: any }> {
+): Promise<ActionResponse & { user?: User }> {
   const cookieStore = await cookies();
   const token = cookieStore.get("nipponic.token")?.value;
 

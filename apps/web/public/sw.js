@@ -1,80 +1,111 @@
 const CACHE_NAME = "nipponic-pwa-v1";
 
-const PRECACHE_ASSETS = [
-  "/",
-  "/offline.html",
-  "/favicon.ico",
-];
+const isLocalhost = Boolean(
+  self.location.hostname === "localhost" ||
+  self.location.hostname === "[::1]" ||
+  self.location.hostname === "127.0.0.1" ||
+  self.location.hostname === "10.0.2.2"
+);
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(async (cache) => {
-      await Promise.allSettled(
-        PRECACHE_ASSETS.map((asset) =>
-          cache.add(asset).catch((err) => {
-            console.warn(`[SW] Pre-cache failed for ${asset}:`, err);
-          })
-        )
-      );
-      return self.skipWaiting();
-    })
-  );
-});
+if (isLocalhost) {
+  // Self-unregister immediately and clear all caches if running in development
+  self.addEventListener("install", () => {
+    self.skipWaiting();
+  });
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(
-          keys
-            .filter((key) => key !== CACHE_NAME)
-            .map((key) => caches.delete(key))
-        )
-      )
-      .then(() => self.clients.claim())
-  );
-});
-
-self.addEventListener("message", (event) => {
-  if (
-    event.data &&
-    event.data.type === "CACHE_URLS" &&
-    Array.isArray(event.data.urls)
-  ) {
+  self.addEventListener("activate", (event) => {
     event.waitUntil(
-      caches.open(CACHE_NAME).then((cache) => {
-        return Promise.allSettled(
-          event.data.urls.map(async (url) => {
-            try {
-              const res = await fetch(url, { cache: "force-cache" });
-              if (res.ok) {
-                await cache.put(url, res);
-              }
-            } catch {
-              // Ignore failure for individual asset
-            }
-          })
+      caches
+        .keys()
+        .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+        .then(() => self.registration.unregister())
+    );
+  });
+} else {
+  const PRECACHE_ASSETS = [
+    "/",
+    "/offline.html",
+    "/favicon.ico",
+  ];
+
+  self.addEventListener("install", (event) => {
+    event.waitUntil(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        await Promise.allSettled(
+          PRECACHE_ASSETS.map((asset) =>
+            cache.add(asset).catch((err) => {
+              console.warn(`[SW] Pre-cache failed for ${asset}:`, err);
+            })
+          )
         );
+        return self.skipWaiting();
       })
     );
-  }
-});
+  });
 
-self.addEventListener("fetch", (event) => {
-  const { request } = event;
+  self.addEventListener("activate", (event) => {
+    event.waitUntil(
+      caches
+        .keys()
+        .then((keys) =>
+          Promise.all(
+            keys
+              .filter((key) => key !== CACHE_NAME)
+              .map((key) => caches.delete(key))
+          )
+        )
+        .then(() => self.clients.claim())
+    );
+  });
 
-  // Only handle GET requests
-  if (request.method !== "GET") {
-    return;
-  }
+  self.addEventListener("message", (event) => {
+    if (
+      event.data &&
+      event.data.type === "CACHE_URLS" &&
+      Array.isArray(event.data.urls)
+    ) {
+      event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+          return Promise.allSettled(
+            event.data.urls.map(async (url) => {
+              try {
+                const res = await fetch(url, { cache: "force-cache" });
+                if (res.ok) {
+                  await cache.put(url, res);
+                }
+              } catch {
+                // Ignore failure for individual asset
+              }
+            })
+          );
+        })
+      );
+    }
+  });
 
-  const url = new URL(request.url);
+  self.addEventListener("fetch", (event) => {
+    const { request } = event;
 
-  // Bypass API requests to allow application-level sync and offline handling
-  if (url.pathname.startsWith("/api/")) {
-    return;
-  }
+    // Only handle GET requests
+    if (request.method !== "GET") {
+      return;
+    }
+
+    const url = new URL(request.url);
+
+    // Bypass API requests to allow application-level sync and offline handling
+    if (url.pathname.startsWith("/api/")) {
+      return;
+    }
+
+    // Bypass Next.js development and HMR endpoints
+    if (
+      url.pathname.includes("/_next/webpack-hmr") ||
+      url.pathname.includes("__turbopack__") ||
+      url.pathname.includes("/__nextjs")
+    ) {
+      return;
+    }
 
   // 1. Navigation requests (HTML pages like '/', '/sponsors', etc.)
   // Strategy: Network-First with Cache fallback and root shell fallback
@@ -158,3 +189,4 @@ self.addEventListener("fetch", (event) => {
       })
   );
 });
+}
