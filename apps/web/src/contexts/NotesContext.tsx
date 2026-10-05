@@ -23,18 +23,27 @@ const NotesContext = createContext<NotesContextData>({} as NotesContextData);
 
 export function NotesProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, isWakingServer } = useAuth();
-  const [notes, setNotes] = useState<Note[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem("nipponic.cached_notes");
-        if (stored) return JSON.parse(stored);
-      } catch {
-        // Ignore localStorage read errors
-      }
-    }
-    return [];
-  });
+  const [notes, setNotes] = useState<Note[]>([]);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+
+  const isHydratedRef = useRef(false);
+
+  // Restore cached notes from localStorage after client hydration to prevent SSR mismatch
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("nipponic.cached_notes");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setNotes(parsed);
+        }
+      }
+    } catch {
+      // Ignore localStorage read errors
+    } finally {
+      isHydratedRef.current = true;
+    }
+  }, []);
 
   const notesRef = useRef<Note[]>(notes);
   notesRef.current = notes;
@@ -83,8 +92,9 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     }
   }, [refreshNotes, isWakingServer]);
 
-  // Synchronize any note changes (created, edited, deleted) with local storage
+  // Synchronize any note changes (created, edited, deleted) with local storage after initial hydration
   useEffect(() => {
+    if (!isHydratedRef.current) return;
     if (typeof window !== "undefined" && notes.length > 0) {
       try {
         localStorage.setItem("nipponic.cached_notes", JSON.stringify(notes));
