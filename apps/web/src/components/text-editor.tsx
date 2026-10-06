@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { TokenizedText } from "@/components/tokenized-text";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,12 +39,14 @@ export function TextEditor({
 }: TextEditorProps) {
   const { speak, stop, isPlaying, activeLang } = useSpeech();
   const [isEditingTarget, setIsEditingTarget] = useState(false);
-  const [isEditingOriginalJp, setIsEditingOriginalJp] = useState(false);
+  const [isEditingOriginalJp, setIsEditingOriginalJp] = useState(true);
   const [flashcardWordsCount, setFlashcardWordsCount] = useState<number>(0);
   const [isGlossaryOpen, setIsGlossaryOpen] = useState(false);
   const [isShadowingOpen, setIsShadowingOpen] = useState(false);
   const [jpAudioSpeed, setJpAudioSpeed] = useState<number>(0.9);
   const [showFurigana, setShowFurigana] = useState<boolean>(true);
+  const focusOnEditRef = useRef(false);
+  const jpTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const sourceLang = selectedNote.sourceLang || "EN";
   const isEnToJp = sourceLang === "EN";
@@ -52,9 +54,17 @@ export function TextEditor({
   // Reset edit modes and word count when switching note or direction
   useEffect(() => {
     setIsEditingTarget(false);
-    setIsEditingOriginalJp(false);
+    setIsEditingOriginalJp(true);
     setFlashcardWordsCount(0);
+    focusOnEditRef.current = false;
   }, [selectedNote.id, sourceLang]);
+
+  useEffect(() => {
+    if (focusOnEditRef.current && isEditingOriginalJp) {
+      jpTextareaRef.current?.focus();
+      focusOnEditRef.current = false;
+    }
+  }, [isEditingOriginalJp]);
 
   // Load and persist Furigana toggle preference
   useEffect(() => {
@@ -317,7 +327,12 @@ export function TextEditor({
                   variant="ghost"
                   size="sm"
                   className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-foreground cursor-pointer"
-                  onClick={() => setIsEditingOriginalJp((prev) => !prev)}
+                  onClick={() => {
+                    if (!isEditingOriginalJp) {
+                      focusOnEditRef.current = true;
+                    }
+                    setIsEditingOriginalJp((prev) => !prev);
+                  }}
                   title={isEditingOriginalJp ? "Done editing" : "Edit Japanese text"}
                 >
                   {isEditingOriginalJp ? (
@@ -339,12 +354,12 @@ export function TextEditor({
           {isEditingOriginalJp || !selectedNote.jpText.trim() ? (
             <div className="space-y-1">
               <Textarea
+                ref={jpTextareaRef}
                 value={selectedNote.jpText}
                 onChange={(e) => onChangeJpContent?.(e.target.value)}
                 onBlur={onBlurJpContent}
                 placeholder="Start typing in Japanese (日本語で入力)..."
                 className="min-h-28 sm:min-h-32 text-base font-sans resize-none border-none rounded-none shadow-none focus-visible:ring-0 p-0 bg-transparent text-foreground leading-relaxed font-japanese break-words w-full"
-                autoFocus={isEditingOriginalJp}
               />
               {isEditingOriginalJp && (
                 <p className="text-[11px] text-muted-foreground italic">
