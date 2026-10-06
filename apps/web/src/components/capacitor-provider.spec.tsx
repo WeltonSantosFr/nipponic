@@ -126,4 +126,47 @@ describe("CapacitorProvider", () => {
     );
     expect(App.minimizeApp).not.toHaveBeenCalled();
   });
+
+  it("unregisters service worker and clears caches in development or localhost", async () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false);
+
+    const mockUnregister = vi.fn().mockResolvedValue(true);
+    const mockGetRegistrations = vi.fn().mockResolvedValue([{ unregister: mockUnregister }]);
+    const mockRegister = vi.fn();
+    const mockDeleteCache = vi.fn().mockResolvedValue(true);
+    const mockCacheKeys = vi.fn().mockResolvedValue(["nipponic-pwa-v1"]);
+
+    Object.defineProperty(navigator, "serviceWorker", {
+      value: {
+        getRegistrations: mockGetRegistrations,
+        register: mockRegister,
+      },
+      configurable: true,
+      writable: true,
+    });
+
+    Object.defineProperty(window, "caches", {
+      value: {
+        keys: mockCacheKeys,
+        delete: mockDeleteCache,
+      },
+      configurable: true,
+      writable: true,
+    });
+
+    render(
+      <CapacitorProvider>
+        <div>Dev Content</div>
+      </CapacitorProvider>
+    );
+
+    expect(mockGetRegistrations).toHaveBeenCalled();
+    await Promise.resolve();
+    expect(mockUnregister).toHaveBeenCalled();
+    expect(mockCacheKeys).toHaveBeenCalled();
+    await Promise.resolve();
+    expect(mockDeleteCache).toHaveBeenCalledWith("nipponic-pwa-v1");
+    expect(mockRegister).not.toHaveBeenCalled();
+  });
 });
+

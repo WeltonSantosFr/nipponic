@@ -64,39 +64,9 @@ const FlashCardsContext = createContext<FlashCardsContextData>(
 
 export function FlashCardsProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, isWakingServer } = useAuth();
-  const [cards, setCards] = useState<Card[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem("nipponic.cached_cards");
-        if (stored) return JSON.parse(stored);
-      } catch {
-        // Ignore localStorage read errors
-      }
-    }
-    return [];
-  });
-  const [decks, setDecks] = useState<Deck[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem("nipponic.cached_decks");
-        if (stored) return JSON.parse(stored);
-      } catch {
-        // Ignore localStorage read errors
-      }
-    }
-    return [];
-  });
-  const [publicDecks, setPublicDecks] = useState<Deck[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem("nipponic.cached_public_decks");
-        if (stored) return JSON.parse(stored);
-      } catch {
-        // Ignore localStorage read errors
-      }
-    }
-    return [];
-  });
+  const [cards, setCards] = useState<Card[]>([]);
+  const [decks, setDecks] = useState<Deck[]>([]);
+  const [publicDecks, setPublicDecks] = useState<Deck[]>([]);
   const [activeDeckTab, setActiveDeckTab] = useState<DeckTabMode>("my");
   const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
   const [activeSidebarView, setActiveSidebarView] =
@@ -212,7 +182,7 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated, isWakingServer]);
 
-  // Hydrate from local IndexedDB cache on startup for instant rendering
+  // Hydrate from local IndexedDB cache and localStorage on startup for instant rendering
   useEffect(() => {
     Promise.all([getCachedCards(), getCachedDecks()])
       .then(([cachedCards, cachedDecks]) => {
@@ -226,6 +196,18 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
       .catch((err) => {
         console.warn("[FlashCardsContext] Error hydrating offline cache:", err);
       });
+
+    try {
+      const storedPub = localStorage.getItem("nipponic.cached_public_decks");
+      if (storedPub) {
+        const parsed = JSON.parse(storedPub);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setPublicDecks(parsed);
+        }
+      }
+    } catch {
+      // Ignore localStorage read errors
+    }
   }, []);
 
   // Listen for online events and automatically sync queued reviews
