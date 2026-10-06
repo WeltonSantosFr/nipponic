@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { TokenizedText } from "@/components/tokenized-text";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,32 +39,20 @@ export function TextEditor({
 }: TextEditorProps) {
   const { speak, stop, isPlaying, activeLang } = useSpeech();
   const [isEditingTarget, setIsEditingTarget] = useState(false);
-  const [isEditingOriginalJp, setIsEditingOriginalJp] = useState(true);
   const [flashcardWordsCount, setFlashcardWordsCount] = useState<number>(0);
   const [isGlossaryOpen, setIsGlossaryOpen] = useState(false);
   const [isShadowingOpen, setIsShadowingOpen] = useState(false);
   const [jpAudioSpeed, setJpAudioSpeed] = useState<number>(0.9);
   const [showFurigana, setShowFurigana] = useState<boolean>(true);
-  const focusOnEditRef = useRef(false);
-  const jpTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const sourceLang = selectedNote.sourceLang || "EN";
   const isEnToJp = sourceLang === "EN";
 
-  // Reset edit modes and word count when switching note or direction
+  // Reset target edit mode and word count when switching note or direction
   useEffect(() => {
     setIsEditingTarget(false);
-    setIsEditingOriginalJp(true);
     setFlashcardWordsCount(0);
-    focusOnEditRef.current = false;
   }, [selectedNote.id, sourceLang]);
-
-  useEffect(() => {
-    if (focusOnEditRef.current && isEditingOriginalJp) {
-      jpTextareaRef.current?.focus();
-      focusOnEditRef.current = false;
-    }
-  }, [isEditingOriginalJp]);
 
   // Load and persist Furigana toggle preference
   useEffect(() => {
@@ -260,54 +248,6 @@ export function TextEditor({
             </div>
 
             <div className="flex items-center gap-1.5 flex-wrap">
-              {/* Flashcard Words Counter Badge */}
-              {selectedNote.jpText.trim() && !isEditingOriginalJp && (
-                <Badge
-                  variant="outline"
-                  className={`h-7 text-xs gap-1.5 px-2.5 font-medium shrink-0 shadow-2xs ${
-                    flashcardWordsCount > 0
-                      ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
-                      : "bg-muted/60 text-muted-foreground border-border/50"
-                  }`}
-                  title="Words in this note that you already have flashcards for"
-                >
-                  <Sparkles
-                    size={12}
-                    className={
-                      flashcardWordsCount > 0
-                        ? "text-amber-500"
-                        : "text-muted-foreground"
-                    }
-                  />
-                  <span>
-                    {flashcardWordsCount}{" "}
-                    {flashcardWordsCount === 1 ? "word" : "words"} in flashcards
-                  </span>
-                </Badge>
-              )}
-
-              {/* Furigana Toggle Button */}
-              {selectedNote.jpText.trim() && !isEditingOriginalJp && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleToggleFurigana}
-                  className={`h-7 text-xs gap-1.5 cursor-pointer ${
-                    showFurigana
-                      ? "border-primary/40 bg-primary/5 text-primary"
-                      : "text-muted-foreground"
-                  }`}
-                  title={
-                    showFurigana
-                      ? "Hide Furigana readings"
-                      : "Show Furigana readings above Kanji"
-                  }
-                >
-                  {showFurigana ? <Eye size={13} /> : <EyeOff size={13} />}
-                  <span>Furigana</span>
-                </Button>
-              )}
-
               {/* Shadowing Studio Trigger */}
               {selectedNote.jpText.trim() && (
                 <Button
@@ -321,61 +261,16 @@ export function TextEditor({
                   <span>Shadowing</span>
                 </Button>
               )}
-
-              {selectedNote.jpText.trim() && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-foreground cursor-pointer"
-                  onClick={() => {
-                    if (!isEditingOriginalJp) {
-                      focusOnEditRef.current = true;
-                    }
-                    setIsEditingOriginalJp((prev) => !prev);
-                  }}
-                  title={isEditingOriginalJp ? "Done editing" : "Edit Japanese text"}
-                >
-                  {isEditingOriginalJp ? (
-                    <>
-                      <Check size={14} className="text-green-500" />
-                      <span className="text-green-600 font-medium">Done</span>
-                    </>
-                  ) : (
-                    <>
-                      <Pencil size={14} />
-                      <span>Edit Japanese</span>
-                    </>
-                  )}
-                </Button>
-              )}
             </div>
           </div>
 
-          {isEditingOriginalJp || !selectedNote.jpText.trim() ? (
-            <div className="space-y-1">
-              <Textarea
-                ref={jpTextareaRef}
-                value={selectedNote.jpText}
-                onChange={(e) => onChangeJpContent?.(e.target.value)}
-                onBlur={onBlurJpContent}
-                placeholder="Start typing in Japanese (日本語で入力)..."
-                className="min-h-28 sm:min-h-32 text-base font-sans resize-none border-none rounded-none shadow-none focus-visible:ring-0 p-0 bg-transparent text-foreground leading-relaxed font-japanese break-words w-full"
-              />
-              {isEditingOriginalJp && (
-                <p className="text-[11px] text-muted-foreground italic">
-                  * Manual edits are automatically saved on blur.
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="py-1 w-full min-w-0 overflow-x-hidden">
-              <TokenizedText
-                text={selectedNote.jpText}
-                showFurigana={showFurigana}
-                onFlashcardWordsCountChange={setFlashcardWordsCount}
-              />
-            </div>
-          )}
+          <Textarea
+            value={selectedNote.jpText}
+            onChange={(e) => onChangeJpContent?.(e.target.value)}
+            onBlur={onBlurJpContent}
+            placeholder="Start typing in Japanese (日本語で入力)..."
+            className="min-h-28 sm:min-h-32 text-base font-sans resize-none border-none rounded-none shadow-none focus-visible:ring-0 p-0 bg-transparent text-foreground leading-relaxed font-japanese break-words w-full"
+          />
         </div>
       )}
 

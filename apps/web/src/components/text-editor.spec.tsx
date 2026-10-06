@@ -82,7 +82,7 @@ describe("TextEditor Header Layout", () => {
 });
 
 describe("TextEditor Field Editability by Direction", () => {
-  it("when EN -> JA, renders English field as editable textarea by default and Japanese as translation view", () => {
+  it("when EN -> JA, renders English field as editable textarea by default, without Done button, and triggers onBlurContent", () => {
     const mockEnNote: Note = {
       id: "note-en-to-jp",
       title: "EN Note",
@@ -91,11 +91,13 @@ describe("TextEditor Field Editability by Direction", () => {
       sourceLang: "EN",
       updatedAt: "2026-01-01T00:00:00.000Z",
     };
+    const handleBlurContent = vi.fn();
 
     render(
       <TextEditor
         selectedNote={mockEnNote}
         onChangeContent={vi.fn()}
+        onBlurContent={handleBlurContent}
         onTranslate={vi.fn()}
         isTranslating={false}
       />
@@ -105,6 +107,13 @@ describe("TextEditor Field Editability by Direction", () => {
     const enTextarea = screen.getByPlaceholderText("Start typing in English...");
     expect(enTextarea).toBeInTheDocument();
     expect(enTextarea).toHaveValue("Hello there");
+
+    // There should NOT be a "Done" button in source
+    expect(screen.queryByRole("button", { name: /^done$/i })).not.toBeInTheDocument();
+
+    // Trigger blur on English textarea
+    fireEvent.blur(enTextarea);
+    expect(handleBlurContent).toHaveBeenCalledTimes(1);
 
     // Japanese target field is not a textarea by default (TokenizedText is rendered)
     expect(
@@ -116,7 +125,7 @@ describe("TextEditor Field Editability by Direction", () => {
     expect(screen.getByRole("button", { name: /edit japanese/i })).toBeInTheDocument();
   });
 
-  it("when JA -> EN, renders Japanese field as editable textarea by default instead of blocked", () => {
+  it("when JA -> EN, renders Japanese field as editable textarea without Done button and triggers onBlurJpContent on blur", () => {
     const mockJaNote: Note = {
       id: "note-ja-to-en",
       title: "JA Note",
@@ -125,78 +134,39 @@ describe("TextEditor Field Editability by Direction", () => {
       sourceLang: "JA",
       updatedAt: "2026-01-01T00:00:00.000Z",
     };
+    const handleBlurJpContent = vi.fn();
+    const handleChangeJpContent = vi.fn();
 
     render(
       <TextEditor
         selectedNote={mockJaNote}
         onChangeContent={vi.fn()}
-        onChangeJpContent={vi.fn()}
+        onChangeJpContent={handleChangeJpContent}
+        onBlurJpContent={handleBlurJpContent}
         onTranslate={vi.fn()}
         isTranslating={false}
       />
     );
 
-    // Japanese source field is editable by default
+    // Japanese source field is editable textarea directly
     const jpTextarea = screen.getByPlaceholderText(
       "Start typing in Japanese (日本語で入力)..."
     );
     expect(jpTextarea).toBeInTheDocument();
     expect(jpTextarea).toHaveValue("こんにちは");
 
-    // TokenizedText is not rendered while editing
-    expect(screen.queryByTestId("tokenized-text")).not.toBeInTheDocument();
+    // There should NOT be a "Done" or "Edit Japanese" button in source
+    expect(screen.queryByRole("button", { name: /^done$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /edit japanese/i })).not.toBeInTheDocument();
 
-    // "Done" button is rendered to allow switching to tokenized preview
-    const doneButton = screen.getByRole("button", { name: /done/i });
-    expect(doneButton).toBeInTheDocument();
+    // Trigger blur on Japanese textarea to verify save on blur
+    fireEvent.blur(jpTextarea);
+    expect(handleBlurJpContent).toHaveBeenCalledTimes(1);
 
     // English target field is not a textarea by default
     expect(
       screen.queryByPlaceholderText("Type or adjust English translation...")
     ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /edit english/i })).toBeInTheDocument();
-  });
-
-  it("when JA -> EN, clicking Done toggles to TokenizedText, and clicking Edit Japanese returns to textarea", () => {
-    const mockJaNote: Note = {
-      id: "note-ja-to-en-toggle",
-      title: "JA Note Toggle",
-      enText: "Hello",
-      jpText: "こんにちは",
-      sourceLang: "JA",
-      updatedAt: "2026-01-01T00:00:00.000Z",
-    };
-
-    render(
-      <TextEditor
-        selectedNote={mockJaNote}
-        onChangeContent={vi.fn()}
-        onChangeJpContent={vi.fn()}
-        onTranslate={vi.fn()}
-        isTranslating={false}
-      />
-    );
-
-    // Initially in edit mode
-    expect(
-      screen.getByPlaceholderText("Start typing in Japanese (日本語で入力)...")
-    ).toBeInTheDocument();
-
-    // Click Done -> switches to view mode
-    const doneButton = screen.getByRole("button", { name: /done/i });
-    fireEvent.click(doneButton);
-
-    expect(screen.getByTestId("tokenized-text")).toBeInTheDocument();
-    expect(
-      screen.queryByPlaceholderText("Start typing in Japanese (日本語で入力)...")
-    ).not.toBeInTheDocument();
-
-    // Click Edit Japanese -> switches back to textarea
-    const editButton = screen.getByRole("button", { name: /edit japanese/i });
-    fireEvent.click(editButton);
-
-    expect(
-      screen.getByPlaceholderText("Start typing in Japanese (日本語で入力)...")
-    ).toBeInTheDocument();
   });
 });
