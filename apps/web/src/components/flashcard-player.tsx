@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { useSpeech } from "@/hooks/use-speech";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
 import { formatIntervalPreview, getCardSRSStage } from "@/lib/srs";
-import confetti from "canvas-confetti";
+import type { Options as ConfettiOptions } from "canvas-confetti";
 import {
   Volume2,
   VolumeX,
@@ -44,15 +44,16 @@ export function FlashcardPlayer({ deck, onClose }: FlashcardPlayerProps) {
 
   const currentCard = queue[0];
 
-  const triggerConfetti = useCallback(() => {
+  const triggerConfetti = useCallback(async () => {
     try {
+      const confetti = (await import("canvas-confetti")).default;
       const count = 200;
       const defaults = {
         origin: { y: 0.7 },
         zIndex: 9999,
       };
 
-      const fire = (particleRatio: number, opts: confetti.Options) => {
+      const fire = (particleRatio: number, opts: ConfettiOptions) => {
         confetti({
           ...defaults,
           ...opts,

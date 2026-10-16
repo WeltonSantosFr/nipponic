@@ -11,27 +11,33 @@ import type {
 export class DecksService {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
-  private async populateDeckCards(deck: {
-    id: string;
-    name: string;
-    isPublic: boolean;
-    userId: string;
-    createdAt: Date;
-    updatedAt: Date;
-  }) {
+  private async populateDeckCards(
+    deck: {
+      id: string;
+      name: string;
+      isPublic: boolean;
+      userId: string;
+      createdAt: Date;
+      updatedAt: Date;
+    },
+    preloadedCardsMap?: Map<string, any>
+  ) {
     const deckCards = await this.prisma.db.orm.public.DeckCard.where({
       deckId: deck.id,
     }).all();
 
     deckCards.sort((a, b) => a.order - b.order);
 
-    const userCards = await this.prisma.db.orm.public.Card.where({
-      userId: deck.userId,
-    }).all();
-    const cardsMap = new Map(userCards.map((c) => [c.id, c]));
+    let cardsMap = preloadedCardsMap;
+    if (!cardsMap) {
+      const userCards = await this.prisma.db.orm.public.Card.where({
+        userId: deck.userId,
+      }).all();
+      cardsMap = new Map(userCards.map((c) => [c.id, c]));
+    }
 
     const cards = deckCards
-      .map((dc) => cardsMap.get(dc.cardId))
+      .map((dc) => cardsMap!.get(dc.cardId))
       .filter((c): c is NonNullable<typeof c> => !!c);
 
     return {
@@ -61,7 +67,16 @@ export class DecksService {
 
   async findAll(userId: string) {
     const decks = await this.prisma.db.orm.public.Deck.where({ userId }).all();
-    return await Promise.all(decks.map((deck) => this.populateDeckCards(deck)));
+    if (decks.length === 0) return [];
+
+    const userCards = await this.prisma.db.orm.public.Card.where({
+      userId,
+    }).all();
+    const cardsMap = new Map(userCards.map((c) => [c.id, c]));
+
+    return await Promise.all(
+      decks.map((deck) => this.populateDeckCards(deck, cardsMap))
+    );
   }
 
   async findPublic(currentUserId?: string) {

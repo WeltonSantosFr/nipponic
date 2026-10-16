@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   Popover,
   PopoverContent,
@@ -12,8 +13,24 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useKuromoji } from "@/hooks/use-kuromoji";
 import { useSpeech } from "@/hooks/use-speech";
-import { KanjiBreakdown } from "@/components/kanji-breakdown";
-import { SentenceMinerModal } from "@/components/sentence-miner-modal";
+
+const KanjiBreakdown = dynamic(
+  () => import("@/components/kanji-breakdown").then((mod) => mod.KanjiBreakdown),
+  {
+    loading: () => (
+      <div className="flex flex-1 items-center justify-center py-6 text-muted-foreground gap-2">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        <span className="text-xs">Loading kanji details...</span>
+      </div>
+    ),
+    ssr: false,
+  }
+);
+
+const SentenceMinerModal = dynamic(
+  () => import("@/components/sentence-miner-modal").then((mod) => mod.SentenceMinerModal),
+  { ssr: false }
+);
 import {
   Check,
   Layers,
@@ -68,7 +85,7 @@ function extractSentence(fullText: string, targetWord: string): string {
 
 export type { TokenDetailTab, TokenizedTextProps, TokenItemProps };
 
-function TokenItem({
+function TokenItemBase({
   word,
   reading,
   nextWord,
@@ -537,18 +554,33 @@ function TokenItem({
       </Popover>
 
       {/* Sentence Miner Modal */}
-      <SentenceMinerModal
-        isOpen={isMinerOpen}
-        onClose={() => setIsMinerOpen(false)}
-        word={word}
-        reading={dictData?.reading || reading}
-        meanings={dictData?.meanings}
-        sentenceJp={extractedSentence}
-        sentenceEn={enContext}
-      />
+      {isMinerOpen && (
+        <SentenceMinerModal
+          isOpen={isMinerOpen}
+          onClose={() => setIsMinerOpen(false)}
+          word={word}
+          reading={dictData?.reading || reading}
+          meanings={dictData?.meanings}
+          sentenceJp={extractedSentence}
+          sentenceEn={enContext}
+        />
+      )}
     </>
   );
 }
+
+const TokenItem = memo(TokenItemBase, (prev, next) => {
+  return (
+    prev.word === next.word &&
+    prev.reading === next.reading &&
+    prev.nextWord === next.nextWord &&
+    prev.isMerged === next.isMerged &&
+    prev.showFurigana === next.showFurigana &&
+    prev.hasFlashcard === next.hasFlashcard &&
+    prev.fullText === next.fullText &&
+    prev.enContext === next.enContext
+  );
+});
 
 export function TokenizedText({
   text,

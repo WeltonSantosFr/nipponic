@@ -18,14 +18,30 @@ import {
   SidebarTrigger,
   SidebarInset,
 } from "@/components/ui/sidebar";
+import dynamic from "next/dynamic";
 import { AppSidebar } from "@/components/app-sidebar";
-import { BookOpen, Layers } from "lucide-react";
+import { BookOpen, Layers, Loader2 } from "lucide-react";
 import { TextEditor } from "@/components/text-editor";
 import { useNotes } from "@/contexts/NotesContext";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
 import { getGlossaryRules } from "@/services/glossary";
-import { DeckWorkspace } from "@/components/deck-workspace";
-import { FlashcardPlayer } from "@/components/flashcard-player";
+
+const DeckWorkspace = dynamic(
+  () => import("@/components/deck-workspace").then((mod) => mod.DeckWorkspace),
+  {
+    loading: () => (
+      <div className="flex-1 flex items-center justify-center p-8">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    ),
+    ssr: false,
+  }
+);
+
+const FlashcardPlayer = dynamic(
+  () => import("@/components/flashcard-player").then((mod) => mod.FlashcardPlayer),
+  { ssr: false }
+);
 
 export function Workspace(props: WorkspaceProps = {}) {
   void props;
