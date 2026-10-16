@@ -24,8 +24,17 @@ import {
   EyeOff,
   Sparkles,
 } from "lucide-react";
-import { GlossaryModal } from "@/components/glossary-modal";
-import { ShadowingModal } from "@/components/shadowing-modal";
+import dynamic from "next/dynamic";
+
+const GlossaryModal = dynamic(
+  () => import("@/components/glossary-modal").then((mod) => mod.GlossaryModal),
+  { ssr: false }
+);
+
+const ShadowingModal = dynamic(
+  () => import("@/components/shadowing-modal").then((mod) => mod.ShadowingModal),
+  { ssr: false }
+);
 
 export function TextEditor({
   selectedNote,
@@ -517,17 +526,21 @@ export function TextEditor({
         )}
       </div>
 
-      <GlossaryModal
-        isOpen={isGlossaryOpen}
-        onClose={() => setIsGlossaryOpen(false)}
-      />
+      {isGlossaryOpen && (
+        <GlossaryModal
+          isOpen={isGlossaryOpen}
+          onClose={() => setIsGlossaryOpen(false)}
+        />
+      )}
 
-      <ShadowingModal
-        isOpen={isShadowingOpen}
-        onClose={() => setIsShadowingOpen(false)}
-        jpText={selectedNote.jpText}
-        enText={selectedNote.enText}
-      />
+      {isShadowingOpen && (
+        <ShadowingModal
+          isOpen={isShadowingOpen}
+          onClose={() => setIsShadowingOpen(false)}
+          jpText={selectedNote.jpText}
+          enText={selectedNote.enText}
+        />
+      )}
     </div>
   );
 }

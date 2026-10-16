@@ -1,10 +1,28 @@
 "use client";
 
-import { DeleteNoteModal } from "@/components/delete-note-modal";
-import { DeleteDeckModal } from "@/components/delete-deck-modal";
-import { LoginModal } from "@/components/login-modal";
-import { ProfileModal } from "@/components/profile-modal";
-import { SettingsModal } from "@/components/settings-modal";
+import dynamic from "next/dynamic";
+
+const DeleteNoteModal = dynamic(
+  () => import("@/components/delete-note-modal").then((mod) => mod.DeleteNoteModal),
+  { ssr: false }
+);
+const DeleteDeckModal = dynamic(
+  () => import("@/components/delete-deck-modal").then((mod) => mod.DeleteDeckModal),
+  { ssr: false }
+);
+const LoginModal = dynamic(
+  () => import("@/components/login-modal").then((mod) => mod.LoginModal),
+  { ssr: false }
+);
+const ProfileModal = dynamic(
+  () => import("@/components/profile-modal").then((mod) => mod.ProfileModal),
+  { ssr: false }
+);
+const SettingsModal = dynamic(
+  () => import("@/components/settings-modal").then((mod) => mod.SettingsModal),
+  { ssr: false }
+);
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -696,10 +714,12 @@ export function AppSidebar({
               <UserRound size={16} />
               <span>Profile</span>
             </SidebarMenuButton>
-            <ProfileModal
-              isOpen={isProfileModalOpen}
-              onClose={() => setIsProfileModalOpen(false)}
-            />
+            {isProfileModalOpen && (
+              <ProfileModal
+                isOpen={isProfileModalOpen}
+                onClose={() => setIsProfileModalOpen(false)}
+              />
+            )}
           </>
         ) : (
           <>
@@ -727,11 +747,13 @@ export function AppSidebar({
                 <span>Login</span>
               </SidebarMenuButton>
             </div>
-            <LoginModal
-              isOpen={isModalOpen}
-              onClose={() => setIsModalOpen(false)}
-              initialMode={authModalMode}
-            />
+            {isModalOpen && (
+              <LoginModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                initialMode={authModalMode}
+              />
+            )}
           </>
         )}
 
@@ -750,33 +772,39 @@ export function AppSidebar({
           <Settings size={16} />
           <span>Configurations</span>
         </SidebarMenuButton>
-        <SettingsModal
-          isOpen={isSettingsModalOpen}
-          onClose={() => setIsSettingsModalOpen(false)}
-        />
+        {isSettingsModalOpen && (
+          <SettingsModal
+            isOpen={isSettingsModalOpen}
+            onClose={() => setIsSettingsModalOpen(false)}
+          />
+        )}
       </SidebarFooter>
 
-      <DeleteNoteModal
-        note={noteToDelete}
-        isOpen={!!noteToDelete}
-        onClose={() => setNoteToDelete(null)}
-        onConfirm={() => {
-          if (noteToDelete) {
-            deleteNote(noteToDelete.id);
-          }
-        }}
-      />
+      {noteToDelete && (
+        <DeleteNoteModal
+          note={noteToDelete}
+          isOpen={!!noteToDelete}
+          onClose={() => setNoteToDelete(null)}
+          onConfirm={() => {
+            if (noteToDelete) {
+              deleteNote(noteToDelete.id);
+            }
+          }}
+        />
+      )}
 
-      <DeleteDeckModal
-        deck={deckToDelete}
-        isOpen={!!deckToDelete}
-        onClose={() => setDeckToDelete(null)}
-        onConfirm={() => {
-          if (deckToDelete) {
-            deleteDeck(deckToDelete.id);
-          }
-        }}
-      />
+      {deckToDelete && (
+        <DeleteDeckModal
+          deck={deckToDelete}
+          isOpen={!!deckToDelete}
+          onClose={() => setDeckToDelete(null)}
+          onConfirm={() => {
+            if (deckToDelete) {
+              deleteDeck(deckToDelete.id);
+            }
+          }}
+        />
+      )}
     </Sidebar>
   );
 }
