@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ForbiddenException } from '@nestjs/common';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import type { CreateUserDto } from './users.dto';
@@ -144,9 +145,14 @@ describe('UsersController', () => {
     expect(usersServiceMock.findOne).toHaveBeenCalledWith(userId);
   });
 
-  it('update - should call usersService.update with param id and body', async () => {
+  it('update - should call usersService.update with param id and body when authenticated user matches param id', async () => {
     // Arrange
     const userId = 'usr_target_123';
+    const mockUser: JwtPayload = {
+      sub: userId,
+      email: 'target@example.com',
+      username: 'target',
+    };
     const updateDto = { username: 'renamed' };
     const expectedUser = {
       id: userId,
@@ -156,24 +162,65 @@ describe('UsersController', () => {
     usersServiceMock.update.mockResolvedValue(expectedUser);
 
     // Act
-    const result = await controller.update(userId, updateDto);
+    const result = await controller.update(userId, updateDto, mockUser);
 
     // Assert
     expect(result).toEqual(expectedUser);
     expect(usersServiceMock.update).toHaveBeenCalledWith(userId, updateDto);
   });
 
-  it('delete - should call usersService.delete with param id', async () => {
+  it('delete - should call usersService.delete with param id when authenticated user matches param id', async () => {
     // Arrange
     const userId = 'usr_target_123';
+    const mockUser: JwtPayload = {
+      sub: userId,
+      email: 'target@example.com',
+      username: 'target',
+    };
     const deleteResult = { id: userId };
     usersServiceMock.delete.mockResolvedValue(deleteResult);
 
     // Act
-    const result = await controller.delete(userId);
+    const result = await controller.delete(userId, mockUser);
 
     // Assert
     expect(result).toEqual(deleteResult);
     expect(usersServiceMock.delete).toHaveBeenCalledWith(userId);
+  });
+
+  it('update - should throw ForbiddenException when user attempts to update another user account (IDOR prevention)', async () => {
+    // Arrange
+    const currentAuthUser: JwtPayload = {
+      sub: 'usr_authenticated_1',
+      email: 'auth@example.com',
+      username: 'authuser',
+    };
+    const targetUserId = 'usr_victim_2';
+    const updateDto = { username: 'malicious_update' };
+    usersServiceMock.update.mockResolvedValue({ id: targetUserId, ...updateDto });
+
+    // Act & Assert
+    await expect(
+      Promise.resolve().then(() => controller.update(targetUserId, updateDto, currentAuthUser))
+    ).rejects.toThrow(ForbiddenException);
+    expect(usersServiceMock.update).not.toHaveBeenCalled();
+  });
+
+  it('delete - should throw ForbiddenException when user attempts to delete another user account (IDOR prevention)', async () => {
+    // Arrange
+    const currentAuthUser: JwtPayload = {
+      sub: 'usr_authenticated_1',
+      email: 'auth@example.com',
+      username: 'authuser',
+    };
+    const targetUserId = 'usr_victim_2';
+    const deleteResult = { id: targetUserId };
+    usersServiceMock.delete.mockResolvedValue(deleteResult);
+
+    // Act & Assert
+    await expect(
+      Promise.resolve().then(() => controller.delete(targetUserId, currentAuthUser))
+    ).rejects.toThrow(ForbiddenException);
+    expect(usersServiceMock.delete).not.toHaveBeenCalled();
   });
 });
