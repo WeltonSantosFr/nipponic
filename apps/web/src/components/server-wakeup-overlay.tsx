@@ -87,7 +87,7 @@ export function ServerWakeupOverlay() {
 
       if (result.status === "valid" && result.user) {
         setUser(result.user);
-      } else if (result.status === "invalid") {
+      } else if (result.status === "invalid" || result.status === "no_token") {
         await logout();
       }
     } catch (err) {

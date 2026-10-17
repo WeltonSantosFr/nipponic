@@ -25,9 +25,17 @@ export function AuthProvider({
     }
     if (!initialUser && typeof window !== "undefined") {
       try {
-        const stored = localStorage.getItem("nipponic.user");
-        if (stored) {
-          setUser(JSON.parse(stored));
+        const storedToken = localStorage.getItem("nipponic.token");
+        const storedUser = localStorage.getItem("nipponic.user");
+
+        if (storedToken && storedUser) {
+          // Re-sync cookie with backend in background
+          saveAuthCookie(storedToken).catch(() => {});
+          setUser(JSON.parse(storedUser));
+        } else if (!storedToken) {
+          // If there is no token, remove orphaned user to avoid phantom login state
+          localStorage.removeItem("nipponic.user");
+          setUser(null);
         }
       } catch {
         // Ignore localStorage read errors
@@ -42,6 +50,7 @@ export function AuthProvider({
     const decoded = jwtDecode<UserPayload>(token);
     setUser(decoded);
     try {
+      localStorage.setItem("nipponic.token", token);
       localStorage.setItem("nipponic.user", JSON.stringify(decoded));
     } catch {
       // Ignore localStorage write errors
@@ -53,6 +62,7 @@ export function AuthProvider({
     await removeAuthCookie();
     setUser(null);
     try {
+      localStorage.removeItem("nipponic.token");
       localStorage.removeItem("nipponic.user");
     } catch {
       // Ignore localStorage remove errors

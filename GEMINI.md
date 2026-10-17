@@ -54,3 +54,6 @@ These rules are mandatory for all AI agents and developers working on the Nippon
   - Always run the relevant test suite before completing any modification (`pnpm --filter web test`, `pnpm --filter api test`, etc.).
   - Ensure existing tests pass and add unit tests for new services, utilities, or behavioral logic.
   - Check for type errors and build status when applicable.
+- **Mandatory Bug Regression Testing**:
+  - For every bug fix, always create dedicated automated regression tests that specifically replicate and validate the failing scenario before marking the task complete.
+  - Ensure tests cover edge cases (e.g., offline mode, page reload/refresh, unauthenticated state, debounce/flush lifecycles).
