@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ForbiddenException } from '@nestjs/common';
+import { GUARDS_METADATA } from '@nestjs/common/constants';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
+import { AuthGuard } from '../auth/auth.guard';
 import type { CreateUserDto } from './users.dto';
 import type { JwtPayload } from '@nipponic/shared';
 
@@ -62,6 +64,13 @@ describe('UsersController', () => {
     // Assert
     expect(result).toEqual(expectedUsers);
     expect(usersServiceMock.findAll).toHaveBeenCalledTimes(1);
+  });
+
+  it('findAll - should require authentication with AuthGuard', () => {
+    // Assert that AuthGuard is bound to the findAll route handler to prevent unauthorized user listing
+    const guards = Reflect.getMetadata(GUARDS_METADATA, UsersController.prototype.findAll);
+    expect(guards).toBeDefined();
+    expect(guards).toContain(AuthGuard);
   });
 
   it('getMe - should call usersService.findOne with current user sub', async () => {
