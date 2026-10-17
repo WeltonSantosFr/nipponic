@@ -62,7 +62,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 export type { AppSidebarProps };
 
@@ -99,65 +99,76 @@ export function AppSidebar({
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
   const [deckToDelete, setDeckToDelete] = useState<Deck | null>(null);
 
-  const now = new Date();
-  const startOfToday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate()
-  ).getTime();
-  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-  const sevenDaysAgo = startOfToday - 7 * ONE_DAY_MS;
-  const thirtyDaysAgo = startOfToday - 30 * ONE_DAY_MS;
-
-  const parseDateTime = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return isNaN(d.getTime()) ? now.getTime() : d.getTime();
-  };
-
-  const filteredNotes = notes.filter((note) => {
-    if (!searchQuery.trim()) return true;
+  const filteredNotes = useMemo(() => {
+    if (!searchQuery.trim()) return notes;
     const q = searchQuery.toLowerCase().trim();
-    const titleMatch = (note.title || "").toLowerCase().includes(q);
-    const enMatch = (note.enText || "").toLowerCase().includes(q);
-    const jpMatch = (note.jpText || "").toLowerCase().includes(q);
-    return titleMatch || enMatch || jpMatch;
-  });
+    return notes.filter((note) => {
+      const titleMatch = (note.title || "").toLowerCase().includes(q);
+      const enMatch = (note.enText || "").toLowerCase().includes(q);
+      const jpMatch = (note.jpText || "").toLowerCase().includes(q);
+      return titleMatch || enMatch || jpMatch;
+    });
+  }, [notes, searchQuery]);
 
-  const filteredMyDecks = decks.filter((deck) => {
-    if (!deckSearchQuery.trim()) return true;
+  const { todayNotes, weekNotes, monthNotes, olderNotes } = useMemo(() => {
+    const now = new Date();
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    ).getTime();
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    const sevenDaysAgo = startOfToday - 7 * ONE_DAY_MS;
+    const thirtyDaysAgo = startOfToday - 30 * ONE_DAY_MS;
+
+    const parseDateTime = (dateStr: string) => {
+      const d = new Date(dateStr);
+      return isNaN(d.getTime()) ? now.getTime() : d.getTime();
+    };
+
+    const today: Note[] = [];
+    const week: Note[] = [];
+    const month: Note[] = [];
+    const older: Note[] = [];
+
+    filteredNotes.forEach((note) => {
+      const noteTime = parseDateTime(note.updatedAt);
+      if (noteTime >= startOfToday) {
+        today.push(note);
+      } else if (noteTime >= sevenDaysAgo) {
+        week.push(note);
+      } else if (noteTime >= thirtyDaysAgo) {
+        month.push(note);
+      } else {
+        older.push(note);
+      }
+    });
+
+    return {
+      todayNotes: today,
+      weekNotes: week,
+      monthNotes: month,
+      olderNotes: older,
+    };
+  }, [filteredNotes]);
+
+  const filteredMyDecks = useMemo(() => {
+    if (!deckSearchQuery.trim()) return decks;
     const q = deckSearchQuery.toLowerCase().trim();
-    return (deck.name || "").toLowerCase().includes(q);
-  });
+    return decks.filter((deck) => (deck.name || "").toLowerCase().includes(q));
+  }, [decks, deckSearchQuery]);
 
-  const filteredAppDecks = appDecks.filter((deck) => {
-    if (!deckSearchQuery.trim()) return true;
+  const filteredAppDecks = useMemo(() => {
+    if (!deckSearchQuery.trim()) return appDecks;
     const q = deckSearchQuery.toLowerCase().trim();
-    return (deck.name || "").toLowerCase().includes(q);
-  });
+    return appDecks.filter((deck) => (deck.name || "").toLowerCase().includes(q));
+  }, [appDecks, deckSearchQuery]);
 
-  const filteredPublicDecks = publicDecks.filter((deck) => {
-    if (!deckSearchQuery.trim()) return true;
+  const filteredPublicDecks = useMemo(() => {
+    if (!deckSearchQuery.trim()) return publicDecks;
     const q = deckSearchQuery.toLowerCase().trim();
-    return (deck.name || "").toLowerCase().includes(q);
-  });
-
-  const todayNotes: Note[] = [];
-  const weekNotes: Note[] = [];
-  const monthNotes: Note[] = [];
-  const olderNotes: Note[] = [];
-
-  filteredNotes.forEach((note) => {
-    const noteTime = parseDateTime(note.updatedAt);
-    if (noteTime >= startOfToday) {
-      todayNotes.push(note);
-    } else if (noteTime >= sevenDaysAgo) {
-      weekNotes.push(note);
-    } else if (noteTime >= thirtyDaysAgo) {
-      monthNotes.push(note);
-    } else {
-      olderNotes.push(note);
-    }
-  });
+    return publicDecks.filter((deck) => (deck.name || "").toLowerCase().includes(q));
+  }, [publicDecks, deckSearchQuery]);
 
   const renderNoteItem = (note: Note) => (
     <SidebarMenuItem key={note.id}>

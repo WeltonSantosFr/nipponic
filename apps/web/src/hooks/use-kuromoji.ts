@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import kuromoji from "kuromoji";
+import type kuromoji from "kuromoji";
 
 let cachedTokenizerPromise: Promise<kuromoji.Tokenizer<kuromoji.IpadicFeatures>> | null = null;
 let cachedTokenizer: kuromoji.Tokenizer<kuromoji.IpadicFeatures> | null = null;
@@ -9,17 +9,24 @@ function getTokenizerInstance(): Promise<kuromoji.Tokenizer<kuromoji.IpadicFeatu
     return Promise.resolve(cachedTokenizer);
   }
   if (!cachedTokenizerPromise) {
-    cachedTokenizerPromise = new Promise((resolve, reject) => {
-      kuromoji.builder({ dicPath: "/dict" }).build((err, _tokenizer) => {
-        if (err) {
-          console.error("Error loading Kuromoji dictionary:", err);
-          cachedTokenizerPromise = null;
-          reject(err);
-          return;
-        }
-        cachedTokenizer = _tokenizer;
-        resolve(_tokenizer);
-      });
+    cachedTokenizerPromise = new Promise(async (resolve, reject) => {
+      try {
+        const kuromojiLib = (await import("kuromoji")).default;
+        kuromojiLib.builder({ dicPath: "/dict" }).build((err, _tokenizer) => {
+          if (err) {
+            console.error("Error loading Kuromoji dictionary:", err);
+            cachedTokenizerPromise = null;
+            reject(err);
+            return;
+          }
+          cachedTokenizer = _tokenizer;
+          resolve(_tokenizer);
+        });
+      } catch (err) {
+        console.error("Error dynamically loading kuromoji module:", err);
+        cachedTokenizerPromise = null;
+        reject(err);
+      }
     });
   }
   return cachedTokenizerPromise;

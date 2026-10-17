@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, memo, useCallback } from "react";
 import { Deck, Card, DeckCardFilterMode, DeckWorkspaceProps } from "@nipponic/shared";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
 import { isCardDue, getCardSRSStage, formatDueTime } from "@/lib/srs";
@@ -52,6 +52,8 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
     isCurrentDeckOwner,
     addDeckToMyDecks,
   } = useFlashCards();
+
+  const { speak, isPlaying } = useSpeech();
 
   const [filterMode, setFilterMode] = useState<DeckCardFilterMode>("all");
   const [isAddCardsModalOpen, setIsAddCardsModalOpen] = useState(false);
@@ -372,6 +374,8 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
                 total={displayedCards.length}
                 isRevealed={isRevealed}
                 isOwner={isCurrentDeckOwner}
+                isPlaying={isPlaying}
+                onSpeak={speak}
                 onToggleReveal={() => toggleRevealCard(card.id)}
                 onMoveLeft={() => handleMoveCard(index, "left")}
                 onMoveRight={() => handleMoveCard(index, "right")}
@@ -383,7 +387,7 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
       )}
 
       {/* Add Cards to Deck Modal */}
-      {isCurrentDeckOwner && (
+      {isCurrentDeckOwner && isAddCardsModalOpen && (
         <AddCardsModal
           deck={deck}
           isOpen={isAddCardsModalOpen}
@@ -394,12 +398,14 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
   );
 }
 
-function DeckCardGridItem({
+const DeckCardGridItem = memo(function DeckCardGridItem({
   card,
   index,
   total,
   isRevealed,
   isOwner = true,
+  isPlaying = false,
+  onSpeak,
   onToggleReveal,
   onMoveLeft,
   onMoveRight,
@@ -410,12 +416,13 @@ function DeckCardGridItem({
   total: number;
   isRevealed: boolean;
   isOwner?: boolean;
+  isPlaying?: boolean;
+  onSpeak: (text: string, lang: "en-US" | "ja-JP") => Promise<void> | void;
   onToggleReveal: () => void;
   onMoveLeft: () => void;
   onMoveRight: () => void;
   onRemove: () => void;
 }) {
-  const { speak, isPlaying } = useSpeech();
   const isDue = isCardDue(card);
   const srsStage = getCardSRSStage(card);
 
@@ -485,7 +492,7 @@ function DeckCardGridItem({
           </span>
           <button
             type="button"
-            onClick={() => speak(card.jpText, "ja-JP")}
+            onClick={() => onSpeak(card.jpText, "ja-JP")}
             disabled={isPlaying}
             className="p-1 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer shrink-0"
             title="Listen to pronunciation"
@@ -535,7 +542,7 @@ function DeckCardGridItem({
       </div>
     </div>
   );
-}
+});
 
 function AddCardsModal({
   deck,
@@ -569,7 +576,10 @@ function AddCardsModal({
     prevIsOpenRef.current = isOpen;
   }, [isOpen]);
 
-  const existingDeckCardIds = new Set(deck.cards.map((c) => c.id));
+  const existingDeckCardIds = useMemo(
+    () => new Set(deck.cards.map((c) => c.id)),
+    [deck.cards]
+  );
 
   const toggleSelectCard = (id: string) => {
     setSelectedCardIds((prev) => {
@@ -608,14 +618,15 @@ function AddCardsModal({
     }
   };
 
-  const filteredCards = cards.filter((card) => {
-    if (!searchQuery.trim()) return true;
+  const filteredCards = useMemo(() => {
+    if (!searchQuery.trim()) return cards;
     const q = searchQuery.toLowerCase().trim();
-    return (
-      card.jpText.toLowerCase().includes(q) ||
-      card.enText.toLowerCase().includes(q)
+    return cards.filter(
+      (card) =>
+        card.jpText.toLowerCase().includes(q) ||
+        card.enText.toLowerCase().includes(q)
     );
-  });
+  }, [cards, searchQuery]);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
