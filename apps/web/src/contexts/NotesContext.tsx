@@ -21,14 +21,43 @@ export type { NotesContextData };
 
 const NotesContext = createContext<NotesContextData>({} as NotesContextData);
 
+const persistNotes = (notesList: Note[]) => {
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem("nipponic.cached_notes", JSON.stringify(notesList));
+    } catch {
+      // Ignore localStorage write errors
+    }
+  }
+};
+
+const getStoredNotes = (): Note[] => {
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("nipponic.cached_notes");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {
+      // Ignore localStorage read errors
+    }
+  }
+  return [];
+};
+
 export function NotesProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, isWakingServer } = useAuth();
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
 
   const isHydratedRef = useRef(false);
-  const notesRef = useRef<Note[]>(notes);
-  notesRef.current = notes;
+  const notesRef = useRef<Note[]>([]);
+
+  // Keep notesRef in sync with notes state
+  useEffect(() => {
+    notesRef.current = notes;
+  }, [notes]);
 
   // Timers map for debounced autosaving
   const autosaveTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
@@ -48,33 +77,21 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Restore cached notes and active selected note from localStorage after client hydration
+  // Restore cached notes and active selected note from localStorage immediately after client mount
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("nipponic.cached_notes");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setNotes(parsed);
+    const cached = getStoredNotes();
+    if (cached.length > 0) {
+      setNotes(cached);
+      notesRef.current = cached;
 
-          const storedSelectedId = localStorage.getItem(
-            "nipponic.selected_note_id"
-          );
-          if (
-            storedSelectedId &&
-            parsed.some((n: Note) => n.id === storedSelectedId)
-          ) {
-            setSelectedNoteId(storedSelectedId);
-          } else if (parsed[0]) {
-            setSelectedNoteId(parsed[0].id);
-          }
-        }
+      const storedSelectedId = localStorage.getItem("nipponic.selected_note_id");
+      if (storedSelectedId && cached.some((n) => n.id === storedSelectedId)) {
+        setSelectedNoteId(storedSelectedId);
+      } else if (cached[0]) {
+        setSelectedNoteId(cached[0].id);
       }
-    } catch {
-      // Ignore localStorage read errors
-    } finally {
-      isHydratedRef.current = true;
     }
+    isHydratedRef.current = true;
   }, []);
 
   const selectedNote = notes.find((n) => n.id === selectedNoteId);
@@ -88,32 +105,90 @@ export function NotesProvider({ children }: { children: ReactNode }) {
         autosaveTimersRef.current.delete(id);
       }
 
-      if (!isAuthenticated || id.startsWith("temp-")) return;
-
-      const currentNote = notesRef.current.find((n) => n.id === id);
+      const currentList = notesRef.current.length > 0 ? notesRef.current : getStoredNotes();
+      const currentNote = currentList.find((n) => n.id === id);
       if (!currentNote) return;
 
+      let noteToSave = currentNote;
+      if (extraUpdates) {
+        noteToSave = {
+          ...currentNote,
+          ...extraUpdates,
+          updatedAt: new Date().toISOString(),
+        };
+        const updatedList = currentList.map((n) => (n.id === id ? noteToSave : n));
+        setNotes(updatedList);
+        notesRef.current = updatedList;
+        persistNotes(updatedList);
+      }
+
+      if (!isAuthenticated) return;
+
+      // If this is a temporary note, sync creation with backend now
+      if (id.startsWith("temp-")) {
+        try {
+          const created = await createNoteAction({
+            title: noteToSave.title,
+            enText: noteToSave.enText,
+            jpText: noteToSave.jpText,
+            sourceLang: noteToSave.sourceLang ?? "EN",
+          });
+
+          if (created && created.id) {
+            setNotes((prevNotes) => {
+              const swapped = prevNotes.map((n) =>
+                n.id === id
+                  ? {
+                      ...n,
+                      id: created.id,
+                      updatedAt: created.updatedAt || n.updatedAt,
+                    }
+                  : n
+              );
+              notesRef.current = swapped;
+              persistNotes(swapped);
+              return swapped;
+            });
+
+            setSelectedNoteId((prevId) => {
+              if (prevId === id) {
+                handleSelectNoteId(created.id);
+                return created.id;
+              }
+              return prevId;
+            });
+          }
+        } catch (error) {
+          console.error("Error creating temp note on backend:", error);
+        }
+        return;
+      }
+
+      // Normal note update on backend
       const payload = {
-        title: extraUpdates?.title ?? currentNote.title,
-        enText: extraUpdates?.enText ?? currentNote.enText,
-        jpText: extraUpdates?.jpText ?? currentNote.jpText,
-        sourceLang: extraUpdates?.sourceLang ?? currentNote.sourceLang ?? "EN",
+        title: noteToSave.title,
+        enText: noteToSave.enText,
+        jpText: noteToSave.jpText,
+        sourceLang: noteToSave.sourceLang ?? "EN",
       };
 
       try {
         const updated = await updateNoteAction(id, payload);
         if (updated && updated.updatedAt) {
-          setNotes((prevNotes) =>
-            prevNotes.map((n) =>
+          setNotes((prevNotes) => {
+            const next = prevNotes.map((n) =>
               n.id === id ? { ...n, updatedAt: updated.updatedAt } : n
-            )
-          );
+            );
+            notesRef.current = next;
+            persistNotes(next);
+            return next;
+          });
         }
       } catch (error) {
         console.error("Error updating note on backend:", error);
       }
     },
-    [isAuthenticated]
+    [isAuthenticated, handleSelectNoteId]
   );
 
   // Flush all pending debounced saves on tab hide or before unload
@@ -145,76 +220,60 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     if (typeof navigator !== "undefined" && !navigator.onLine) {
       return;
     }
-    if (isAuthenticated && !isWakingServer) {
-      try {
-        const data = await getNotesAction();
-        if (Array.isArray(data)) {
-          if (data.length === 0 && notesRef.current.length > 0) {
-            console.warn(
-              "[NotesContext] Received empty notes from server while having cached notes, preserving cache."
-            );
-            return;
-          }
+    if (!isAuthenticated || isWakingServer) {
+      return;
+    }
 
-          // Smart merge: retain any offline or in-flight temp notes that aren't on the server yet
-          const serverIds = new Set(data.map((n) => n.id));
-          const localOnlyNotes = notesRef.current.filter(
-            (n) => n.id.startsWith("temp-") && !serverIds.has(n.id)
-          );
-
-          const merged = [...localOnlyNotes, ...data];
-          setNotes(merged);
-
-          // Restore selection if selected note exists in merged list
-          const currentSelectedId =
-            selectedNoteId ||
-            (typeof window !== "undefined"
-              ? localStorage.getItem("nipponic.selected_note_id")
-              : null);
-
-          if (currentSelectedId && merged.some((n) => n.id === currentSelectedId)) {
-            setSelectedNoteId(currentSelectedId);
-          } else if (merged[0] && !selectedNoteId) {
-            handleSelectNoteId(merged[0].id);
-          }
-
-          if (typeof window !== "undefined" && merged.length > 0) {
-            try {
-              localStorage.setItem(
-                "nipponic.cached_notes",
-                JSON.stringify(merged)
-              );
-            } catch {
-              // Ignore localStorage write errors
-            }
-          }
+    try {
+      const data = await getNotesAction();
+      if (Array.isArray(data)) {
+        let currentLocal = notesRef.current;
+        if (currentLocal.length === 0) {
+          currentLocal = getStoredNotes();
         }
-      } catch (err) {
-        console.warn("[NotesContext] Error fetching notes:", err);
+
+        // If server returns empty list but we have local notes, preserve cache
+        if (data.length === 0 && currentLocal.length > 0) {
+          console.warn(
+            "[NotesContext] Received empty notes from server while having cached notes, preserving cache."
+          );
+          return;
+        }
+
+        // Retain any offline or temp notes that aren't on the server yet
+        const serverIds = new Set(data.map((n) => n.id));
+        const localOnlyNotes = currentLocal.filter(
+          (n) => n.id.startsWith("temp-") && !serverIds.has(n.id)
+        );
+
+        const merged = [...localOnlyNotes, ...data];
+        setNotes(merged);
+        notesRef.current = merged;
+        persistNotes(merged);
+
+        // Restore selection if selected note exists in merged list
+        const currentSelectedId =
+          selectedNoteId ||
+          (typeof window !== "undefined"
+            ? localStorage.getItem("nipponic.selected_note_id")
+            : null);
+
+        if (currentSelectedId && merged.some((n) => n.id === currentSelectedId)) {
+          setSelectedNoteId(currentSelectedId);
+        } else if (merged[0] && !selectedNoteId) {
+          handleSelectNoteId(merged[0].id);
+        }
       }
-    } else if (!isAuthenticated) {
-      setNotes([]);
-      handleSelectNoteId(null);
+    } catch (err) {
+      console.warn("[NotesContext] Error fetching notes:", err);
     }
   }, [isAuthenticated, isWakingServer, selectedNoteId, handleSelectNoteId]);
 
   useEffect(() => {
-    if (!isWakingServer) {
+    if (!isWakingServer && isHydratedRef.current) {
       refreshNotes();
     }
   }, [refreshNotes, isWakingServer]);
-
-  // Synchronize note updates with localStorage
-  useEffect(() => {
-    if (!isHydratedRef.current) return;
-    if (typeof window !== "undefined" && notes.length > 0) {
-      try {
-        localStorage.setItem("nipponic.cached_notes", JSON.stringify(notes));
-      } catch {
-        // Ignore localStorage write errors
-      }
-    }
-  }, [notes]);
 
   const createNewNote = async (): Promise<Note> => {
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -244,7 +303,12 @@ export function NotesProvider({ children }: { children: ReactNode }) {
             updatedAt: created.updatedAt || nowIso,
           };
 
-          setNotes((prev) => [finalNote, ...prev]);
+          setNotes((prev) => {
+            const next = [finalNote, ...prev];
+            notesRef.current = next;
+            persistNotes(next);
+            return next;
+          });
           handleSelectNoteId(finalNote.id);
           return finalNote;
         }
@@ -253,16 +317,21 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // Fallback for unauthenticated or offline creation
-    setNotes((prev) => [newNote, ...prev]);
+    // Fallback for unauthenticated, offline, or when backend action returns null
+    setNotes((prev) => {
+      const next = [newNote, ...prev];
+      notesRef.current = next;
+      persistNotes(next);
+      return next;
+    });
     handleSelectNoteId(tempId);
     return newNote;
   };
 
   const updateNoteContent = (id: string, updates: UpdateNoteInput) => {
     const nowIso = new Date().toISOString();
-    setNotes((prevNotes) =>
-      prevNotes.map((note) =>
+    setNotes((prevNotes) => {
+      const next = prevNotes.map((note) =>
         note.id === id
           ? {
               ...note,
@@ -270,11 +339,14 @@ export function NotesProvider({ children }: { children: ReactNode }) {
               updatedAt: nowIso,
             }
           : note
-      )
-    );
+      );
+      notesRef.current = next;
+      persistNotes(next);
+      return next;
+    });
 
-    // Schedule debounced autosave (500ms) for authenticated notes
-    if (isAuthenticated && !id.startsWith("temp-")) {
+    // Schedule debounced autosave (500ms) for backend sync
+    if (isAuthenticated) {
       const existingTimer = autosaveTimersRef.current.get(id);
       if (existingTimer) {
         clearTimeout(existingTimer);
@@ -297,8 +369,14 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       autosaveTimersRef.current.delete(id);
     }
 
-    // Optimistic delete
-    setNotes((prev) => prev.filter((n) => n.id !== id));
+    // Optimistic delete with instant persistence
+    setNotes((prev) => {
+      const next = prev.filter((n) => n.id !== id);
+      notesRef.current = next;
+      persistNotes(next);
+      return next;
+    });
+
     if (selectedNoteId === id) {
       handleSelectNoteId(null);
     }
