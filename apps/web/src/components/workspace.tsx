@@ -151,7 +151,7 @@ export function Workspace(props: WorkspaceProps = {}) {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full cursor-pointer" onClick={() => createNewNote()}>
+                  <Button className="w-full cursor-pointer" onClick={async () => { await createNewNote(); }}>
                     Create New Note
                   </Button>
                 </CardContent>
