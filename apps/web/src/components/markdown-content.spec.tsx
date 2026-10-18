@@ -128,4 +128,23 @@ In polite Japanese (*Teineigo*), this pattern is used in everyday conversation t
     expect(container.textContent).not.toContain("####");
     expect(container.textContent).not.toContain("(*Teineigo*)");
   });
+
+  it("renders ruby furigana notation {漢字|かんじ} as semantic ruby element", () => {
+    const markdown = "Example: {失礼|しつれい}極まりない態度";
+    const { container } = render(<MarkdownContent content={markdown} showFurigana={true} />);
+
+    const ruby = container.querySelector("ruby");
+    expect(ruby).not.toBeNull();
+    expect(ruby).toHaveTextContent("しつれい");
+    expect(ruby).toHaveTextContent("失礼");
+  });
+
+  it("renders plain kanji without ruby when showFurigana is false", () => {
+    const markdown = "Example: {失礼|しつれい}極まりない態度";
+    const { container } = render(<MarkdownContent content={markdown} showFurigana={false} />);
+
+    const ruby = container.querySelector("ruby");
+    expect(ruby).toBeNull();
+    expect(container).toHaveTextContent("失礼極まりない態度");
+  });
 });

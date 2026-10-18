@@ -153,12 +153,34 @@ export class TutorService implements OnModuleInit {
       .where({ topicId })
       .first();
 
+    const hasRomajiSlugLeak = Boolean(
+      lesson &&
+      (
+        (lesson.theoryMarkdown && (
+          /[a-zA-Z]{3,}-[a-zA-Z]{3,}/.test(lesson.theoryMarkdown) ||
+          lesson.theoryMarkdown.includes("kiwamarinai-extreme")
+        )) ||
+        (Array.isArray(lesson.vocabularyJson) &&
+          (lesson.vocabularyJson as any[]).some(
+            (v) =>
+              /^[a-zA-Z0-9\-_ ]+$/.test(v.jpText) ||
+              /[a-zA-Z]{3,}-[a-zA-Z]{3,}/.test(v.jpText) ||
+              /[a-zA-Z]{3,}-[a-zA-Z]{3,}/.test(v.reading)
+          ))
+      )
+    );
+
     const isStaleBogusFallback = Boolean(
       lesson &&
-      topic.grammarKey !== "desu" &&
-      (lesson.theoryMarkdown?.includes("[Noun / Phrase] + です") ||
-       lesson.theoryMarkdown?.includes("[Noun] + です") ||
-       lesson.title === "Polite Copula です")
+      (
+        hasRomajiSlugLeak ||
+        (
+          topic.grammarKey !== "desu" &&
+          (lesson.theoryMarkdown?.includes("[Noun / Phrase] + です") ||
+           lesson.theoryMarkdown?.includes("[Noun] + です") ||
+           lesson.title === "Polite Copula です")
+        )
+      )
     );
 
     if (!lesson || isStaleBogusFallback) {

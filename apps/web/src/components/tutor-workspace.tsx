@@ -25,6 +25,8 @@ import {
   Loader2,
   Award,
   AlertCircle,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 type LessonStep = "theory" | "dialogue" | "exercises" | "vocabulary";
@@ -58,6 +60,29 @@ export function TutorWorkspace() {
   const [cardsAddedCount, setCardsAddedCount] = useState<number | null>(null);
   const [activeAudioId, setActiveAudioId] = useState<string | null>(null);
   const [isFinishing, setIsFinishing] = useState<boolean>(false);
+  const [showFurigana, setShowFurigana] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("nipponic_tutor_furigana");
+        return saved !== null ? saved === "true" : true;
+      } catch {
+        return true;
+      }
+    }
+    return true;
+  });
+
+  const handleToggleFurigana = () => {
+    setShowFurigana((prev) => {
+      const next = !prev;
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("nipponic_tutor_furigana", String(next));
+        } catch {}
+      }
+      return next;
+    });
+  };
 
   // Group curriculum topics by unit
   const units = useMemo(() => {
@@ -442,8 +467,30 @@ export function TutorWorkspace() {
           </div>
         </div>
 
-        {/* 4 Steps Nav Selector */}
-        <div className="flex p-0.5 bg-muted/70 rounded-lg border border-border/70 text-xs font-medium">
+        <div className="flex items-center gap-2.5">
+          {/* Furigana Toggle Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleToggleFurigana}
+            className={`h-8 text-xs gap-1.5 cursor-pointer font-medium ${
+              showFurigana
+                ? "border-primary/40 bg-primary/10 text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+            title={
+              showFurigana
+                ? "Hide Furigana readings"
+                : "Show Furigana readings above Kanji"
+            }
+            data-testid="tutor-furigana-toggle"
+          >
+            {showFurigana ? <Eye size={13} /> : <EyeOff size={13} />}
+            <span>Furigana</span>
+          </Button>
+
+          {/* 4 Steps Nav Selector */}
+          <div className="flex p-0.5 bg-muted/70 rounded-lg border border-border/70 text-xs font-medium">
           <button
             type="button"
             onClick={() => setActiveStep("theory")}
@@ -494,6 +541,7 @@ export function TutorWorkspace() {
           </button>
         </div>
       </div>
+    </div>
 
       {/* Error Notification Banner */}
       {error && (
@@ -519,7 +567,10 @@ export function TutorWorkspace() {
         {activeStep === "theory" && (
           <div className="space-y-6 animate-in fade-in duration-200">
             <div className="rounded-2xl border border-border/80 bg-card p-6 md:p-8 shadow-xs">
-              <MarkdownContent content={currentLesson.theoryMarkdown} />
+              <MarkdownContent
+                content={currentLesson.theoryMarkdown}
+                showFurigana={showFurigana}
+              />
             </div>
 
             <div className="flex justify-end">
@@ -560,7 +611,10 @@ export function TutorWorkspace() {
                         {line.speaker}
                       </div>
                       <div className="text-base font-medium text-foreground tracking-wide leading-relaxed">
-                        <TokenizedText text={line.jpText} />
+                        <TokenizedText
+                          text={line.jpText}
+                          showFurigana={showFurigana}
+                        />
                       </div>
                       <div className="text-xs text-muted-foreground pt-0.5">
                         {line.enText}
@@ -639,6 +693,7 @@ export function TutorWorkspace() {
                     exercise={exercise}
                     isAnswered={isAnswered}
                     wasCorrect={wasCorrect}
+                    showFurigana={showFurigana}
                     onAnswer={(isCorrect) =>
                       handleExerciseAnswer(exercise.order, isCorrect)
                     }
@@ -747,11 +802,22 @@ export function TutorWorkspace() {
                   >
                     <div className="space-y-0.5">
                       <div className="text-base font-bold text-foreground">
-                        {item.jpText}
-                        {item.reading && item.reading !== item.jpText && (
-                          <span className="text-xs text-muted-foreground font-normal ml-2">
-                            ({item.reading})
-                          </span>
+                        {showFurigana && item.reading && item.reading !== item.jpText ? (
+                          <ruby className="inline-flex flex-col items-start leading-none">
+                            <span className="text-[10px] font-normal text-muted-foreground select-none pb-0.5 leading-none">
+                              {item.reading}
+                            </span>
+                            <span className="leading-tight">{item.jpText}</span>
+                          </ruby>
+                        ) : (
+                          <>
+                            <span>{item.jpText}</span>
+                            {item.reading && item.reading !== item.jpText && (
+                              <span className="text-xs text-muted-foreground font-normal ml-2">
+                                ({item.reading})
+                              </span>
+                            )}
+                          </>
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground">

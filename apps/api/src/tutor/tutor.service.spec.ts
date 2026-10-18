@@ -349,6 +349,85 @@ describe("TutorService", () => {
       expect(result.theoryMarkdown).toContain("ざるを得ない");
     });
 
+    it("STALE BOGUS FALLBACK: should discard bogus lesson with romaji slug leaks (e.g. kiwamarinai-extreme) and regenerate via Gemini", async () => {
+      const mockTopic = {
+        id: "top_kiwamar",
+        level: "N1",
+        title: "Extreme Emotional States (〜極まりない / 〜極まる)",
+        grammarKey: "kiwamarinai-extreme",
+        objective: "Express uncontainable extreme emotional states",
+      };
+
+      const mockBogusRomajiLesson = {
+        id: "les_bogus_slug",
+        topicId: "top_kiwamar",
+        title: "Extreme Emotional States",
+        level: "N1",
+        theoryMarkdown: "### Key Formula\n`[Phrase / Stem] + kiwamarinai-extreme`",
+        dialogueJson: [],
+        vocabularyJson: [
+          { jpText: "kiwamarinai-extreme", reading: "kiwamarinai-extreme", enText: "Extreme" },
+        ],
+        createdAt: new Date(),
+      };
+
+      const mockFreshGenerated = {
+        title: "Extreme Emotional States (〜極まりない / 〜極まる)",
+        theoryMarkdown: "### 〜極まりない\nFormulas: Na-stem + 極まりない",
+        dialogue: [{ speaker: "田中", jpText: "危険極まりない", enText: "Extremely dangerous" }],
+        vocabulary: [{ jpText: "極まりない", reading: "きわまりない", enText: "Extreme" }],
+        exercises: [
+          {
+            order: 1,
+            type: "multiple_choice" as const,
+            prompt: "Choose the correct phrase",
+            options: ["危険極まりない", "危険だ"],
+            correctAnswer: "危険極まりない",
+            explanation: "Natural N1 expression",
+          },
+        ],
+      };
+
+      const deleteLessonMock = vi.fn().mockResolvedValue({});
+      const deleteExerciseMock = vi.fn().mockResolvedValue({});
+
+      prismaMock.db.orm.public.CurriculumTopic.where.mockReturnValue({
+        first: vi.fn().mockResolvedValue(mockTopic),
+      });
+
+      prismaMock.db.orm.public.Lesson.where.mockReturnValue({
+        first: vi.fn().mockResolvedValue(mockBogusRomajiLesson),
+        delete: deleteLessonMock,
+      });
+
+      prismaMock.db.orm.public.Lesson.create.mockResolvedValue({
+        id: "les_fresh_kiwamar",
+        topicId: "top_kiwamar",
+        title: mockFreshGenerated.title,
+        level: "N1",
+        theoryMarkdown: mockFreshGenerated.theoryMarkdown,
+        dialogueJson: mockFreshGenerated.dialogue,
+        vocabularyJson: mockFreshGenerated.vocabulary,
+        createdAt: new Date(),
+      });
+
+      prismaMock.db.orm.public.LessonExercise.where.mockImplementation((filter: any) => ({
+        all: vi.fn().mockResolvedValue(
+          filter.lessonId === "les_bogus_slug" ? [{ id: "old_ex_slug" }] : [{ id: "new_ex_1", order: 1 }]
+        ),
+        delete: deleteExerciseMock,
+      }));
+
+      vi.mocked(geminiServiceMock.generateLesson).mockResolvedValue(mockFreshGenerated);
+
+      const result = await service.getLessonByTopicId("top_kiwamar");
+
+      expect(deleteLessonMock).toHaveBeenCalled();
+      expect(deleteExerciseMock).toHaveBeenCalled();
+      expect(result.id).toBe("les_fresh_kiwamar");
+      expect(result.theoryMarkdown).toContain("極まりない");
+    });
+
     it("should throw NotFoundException if topic does not exist", async () => {
       prismaMock.db.orm.public.CurriculumTopic.where.mockReturnValue({
         first: vi.fn().mockResolvedValue(null),

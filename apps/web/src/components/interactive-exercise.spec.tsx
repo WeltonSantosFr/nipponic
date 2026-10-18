@@ -56,7 +56,7 @@ describe("InteractiveExercise", () => {
     };
 
     const onAnswer = vi.fn();
-    render(
+    const { container } = render(
       <InteractiveExercise
         exercise={exercise}
         onAnswer={onAnswer}
@@ -67,7 +67,7 @@ describe("InteractiveExercise", () => {
 
     expect(screen.getByText("Incorrect")).toBeDefined();
     expect(screen.getByText("です is the polite copula.")).toBeDefined();
-    expect(screen.getByText("です", { selector: "span.font-bold.underline" })).toBeDefined();
+    expect(container.querySelector("span.font-bold.underline")).toHaveTextContent("です");
   });
 
   it("handles fill in the blank exercise", () => {
@@ -127,5 +127,31 @@ describe("InteractiveExercise", () => {
     fireEvent.click(checkOrderBtn);
 
     expect(onAnswer).toHaveBeenCalledWith(true);
+  });
+
+  it("renders options with ruby furigana when markdown ruby notation is provided", () => {
+    const exercise: LessonExercise = {
+      id: "ex_4",
+      order: 4,
+      type: "multiple_choice",
+      prompt: "Select the formal expression:",
+      options: ["{極|きわ}まりない", "簡単です"],
+      correctAnswer: "{極|きわ}まりない",
+      explanation: "極まりない is high literary register.",
+    };
+
+    const { container } = render(
+      <InteractiveExercise
+        exercise={exercise}
+        onAnswer={vi.fn()}
+        isAnswered={false}
+        showFurigana={true}
+      />
+    );
+
+    const ruby = container.querySelector("ruby");
+    expect(ruby).not.toBeNull();
+    expect(ruby).toHaveTextContent("きわ");
+    expect(ruby).toHaveTextContent("極");
   });
 });

@@ -2,9 +2,12 @@
 
 import React, { useMemo } from "react";
 
-interface MarkdownContentProps {
+import { FuriganaText } from "@/components/furigana-text";
+
+export interface MarkdownContentProps {
   content: string;
   className?: string;
+  showFurigana?: boolean;
 }
 
 type Block =
@@ -23,12 +26,13 @@ type InlineToken =
   | { type: "em"; value: string }
   | { type: "strong_em"; value: string }
   | { type: "del"; value: string }
-  | { type: "link"; text: string; href: string };
+  | { type: "link"; text: string; href: string }
+  | { type: "ruby"; kanji: string; reading: string };
 
 function parseInlineTokens(text: string): InlineToken[] {
   const tokens: InlineToken[] = [];
   const regex =
-    /(`[^`]+`|\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*|__[^_]+__|_[^_]+_|~~[^~]+~~|\[[^\]]+\]\([^)]+\))/g;
+    /(`[^`]+`|\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*|__[^_]+__|_[^_]+_|~~[^~]+~~|\[[^\]]+\]\([^)]+\)|<ruby>[\s\S]*?<\/ruby>|\{[^{}|]+?\|[^{}|]+?\})/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
@@ -57,6 +61,24 @@ function parseInlineTokens(text: string): InlineToken[] {
         tokens.push({ type: "link", text: linkMatch[1], href: linkMatch[2] });
       } else {
         tokens.push({ type: "text", value: raw });
+      }
+    } else if (raw.startsWith("{") && raw.endsWith("}")) {
+      const parts = raw.slice(1, -1).split("|");
+      if (parts.length === 2 && parts[0] && parts[1]) {
+        tokens.push({ type: "ruby", kanji: parts[0], reading: parts[1] });
+      } else {
+        tokens.push({ type: "text", value: raw });
+      }
+    } else if (raw.startsWith("<ruby>")) {
+      const rtMatch = raw.match(/<ruby>([\s\S]*?)<rt>([\s\S]*?)<\/rt>[\s\S]*?<\/ruby>/i);
+      if (rtMatch && rtMatch[1] && rtMatch[2]) {
+        tokens.push({
+          type: "ruby",
+          kanji: rtMatch[1].replace(/<[^>]+>/g, "").trim(),
+          reading: rtMatch[2].replace(/<[^>]+>/g, "").trim(),
+        });
+      } else {
+        tokens.push({ type: "text", value: raw.replace(/<[^>]+>/g, "") });
       }
     }
     lastIndex = regex.lastIndex;
@@ -208,7 +230,11 @@ function parseMarkdownBlocks(text: string): Block[] {
   return blocks;
 }
 
-export function MarkdownContent({ content, className = "" }: MarkdownContentProps) {
+export function MarkdownContent({
+  content,
+  className = "",
+  showFurigana = true,
+}: MarkdownContentProps) {
   const blocks = useMemo(() => parseMarkdownBlocks(content), [content]);
 
   if (!content || blocks.length === 0) {
@@ -217,25 +243,25 @@ export function MarkdownContent({ content, className = "" }: MarkdownContentProp
 
   return (
     <div className={`space-y-4 text-foreground ${className}`} data-testid="markdown-content">
-      {blocks.map((block, index) => renderBlock(block, index))}
+      {blocks.map((block, index) => renderBlock(block, index, showFurigana))}
     </div>
   );
 }
 
-function renderInline(text: string): React.ReactNode {
+function renderInline(text: string, showFurigana: boolean = true): React.ReactNode {
   const lines = text.split("\n");
   if (lines.length > 1) {
     return lines.map((line, idx) => (
       <React.Fragment key={idx}>
-        {renderInlineSingleLine(line)}
+        {renderInlineSingleLine(line, showFurigana)}
         {idx < lines.length - 1 && <br />}
       </React.Fragment>
     ));
   }
-  return renderInlineSingleLine(text);
+  return renderInlineSingleLine(text, showFurigana);
 }
 
-function renderInlineSingleLine(text: string): React.ReactNode {
+function renderInlineSingleLine(text: string, showFurigana: boolean = true): React.ReactNode {
   const tokens = parseInlineTokens(text);
   return tokens.map((token, index) => {
     switch (token.type) {
@@ -284,17 +310,45 @@ function renderInlineSingleLine(text: string): React.ReactNode {
             {token.text}
           </a>
         );
+      case "ruby":
+        if (!showFurigana) {
+          return <span key={index}>{token.kanji}</span>;
+        }
+        return (
+          <ruby
+            key={index}
+            className="inline-flex flex-col items-center leading-none text-center mx-0.5 align-baseline"
+          >
+            <span className="text-[10px] font-normal select-none pb-0.5 leading-none text-muted-foreground">
+              {token.reading}
+            </span>
+            <span className="leading-tight">{token.kanji}</span>
+          </ruby>
+        );
       case "text":
       default:
+        if (showFurigana && /[\u4e00-\u9faf]/.test(token.value)) {
+          return (
+            <FuriganaText
+              key={index}
+              text={token.value}
+              showFurigana={showFurigana}
+            />
+          );
+        }
         return <React.Fragment key={index}>{token.value}</React.Fragment>;
     }
   });
 }
 
-function renderBlock(block: Block, key: number | string): React.ReactNode {
+function renderBlock(
+  block: Block,
+  key: number | string,
+  showFurigana: boolean = true
+): React.ReactNode {
   switch (block.type) {
     case "heading": {
-      const inline = renderInline(block.text);
+      const inline = renderInline(block.text, showFurigana);
       switch (block.level) {
         case 1:
           return (
@@ -340,7 +394,7 @@ function renderBlock(block: Block, key: number | string): React.ReactNode {
     case "paragraph":
       return (
         <p key={key} className="text-sm md:text-base text-foreground/90 leading-relaxed mb-3 last:mb-0">
-          {renderInline(block.text)}
+          {renderInline(block.text, showFurigana)}
         </p>
       );
 
@@ -365,7 +419,7 @@ function renderBlock(block: Block, key: number | string): React.ReactNode {
           key={key}
           className="my-3.5 pl-4 border-l-4 border-primary/70 bg-primary/5 dark:bg-primary/10 py-3 pr-4 rounded-r-xl text-sm text-foreground/90 space-y-2"
         >
-          {renderInline(block.text)}
+          {renderInline(block.text, showFurigana)}
         </blockquote>
       );
 
@@ -378,7 +432,7 @@ function renderBlock(block: Block, key: number | string): React.ReactNode {
           >
             {block.items.map((item, idx) => (
               <li key={idx} className="leading-relaxed pl-1">
-                {renderInline(item)}
+                {renderInline(item, showFurigana)}
               </li>
             ))}
           </ol>
@@ -391,7 +445,7 @@ function renderBlock(block: Block, key: number | string): React.ReactNode {
         >
           {block.items.map((item, idx) => (
             <li key={idx} className="leading-relaxed pl-1">
-              {renderInline(item)}
+              {renderInline(item, showFurigana)}
             </li>
           ))}
         </ul>
@@ -405,7 +459,7 @@ function renderBlock(block: Block, key: number | string): React.ReactNode {
               <tr>
                 {block.headers.map((header, idx) => (
                   <th key={idx} className="p-3 text-left">
-                    {renderInline(header)}
+                    {renderInline(header, showFurigana)}
                   </th>
                 ))}
               </tr>
@@ -415,7 +469,7 @@ function renderBlock(block: Block, key: number | string): React.ReactNode {
                 <tr key={rowIdx} className="hover:bg-muted/30 transition-colors">
                   {row.map((cell, colIdx) => (
                     <td key={colIdx} className="p-3 align-top">
-                      {renderInline(cell ?? "")}
+                      {renderInline(cell ?? "", showFurigana)}
                     </td>
                   ))}
                 </tr>

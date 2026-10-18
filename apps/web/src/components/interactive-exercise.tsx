@@ -5,12 +5,14 @@ import type { LessonExercise } from "@nipponic/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CheckCircle2, XCircle, RotateCcw, HelpCircle } from "lucide-react";
+import { FuriganaText } from "@/components/furigana-text";
 
 interface InteractiveExerciseProps {
   exercise: LessonExercise;
   onAnswer: (isCorrect: boolean) => void;
   isAnswered: boolean;
   wasCorrect?: boolean;
+  showFurigana?: boolean;
 }
 
 export function InteractiveExercise({
@@ -18,6 +20,7 @@ export function InteractiveExercise({
   onAnswer,
   isAnswered,
   wasCorrect,
+  showFurigana = true,
 }: InteractiveExerciseProps) {
   // State for multiple choice
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -111,9 +114,9 @@ export function InteractiveExercise({
       </div>
 
       {/* Prompt */}
-      <p className="text-sm font-medium text-foreground leading-relaxed">
-        {exercise.prompt}
-      </p>
+      <div className="text-sm font-medium text-foreground leading-relaxed">
+        <FuriganaText text={exercise.prompt} showFurigana={showFurigana} />
+      </div>
 
       {/* Multiple Choice Options */}
       {exercise.type === "multiple_choice" && exercise.options && (
@@ -149,10 +152,12 @@ export function InteractiveExercise({
                 disabled={isAnswered}
                 onClick={() => handleSelectOption(option)}
               >
-                <span className="w-5 text-xs text-muted-foreground font-mono">
+                <span className="w-5 text-xs text-muted-foreground font-mono shrink-0">
                   {String.fromCharCode(65 + idx)}.
                 </span>
-                <span className="flex-1">{option}</span>
+                <span className="flex-1">
+                  <FuriganaText text={option} showFurigana={showFurigana} />
+                </span>
               </Button>
             );
           })}
@@ -200,7 +205,7 @@ export function InteractiveExercise({
                   className="px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-sm font-medium shadow-2xs hover:bg-primary/90 transition-all cursor-pointer"
                   title="Click to remove"
                 >
-                  {chip}
+                  <FuriganaText text={chip} showFurigana={showFurigana} />
                 </button>
               ))
             )}
@@ -217,7 +222,7 @@ export function InteractiveExercise({
                   onClick={() => handleTapChip(chip, idx)}
                   className="px-3 py-1.5 rounded-md border border-border bg-card hover:bg-muted text-sm font-medium transition-all cursor-pointer shadow-2xs"
                 >
-                  {chip}
+                  <FuriganaText text={chip} showFurigana={showFurigana} />
                 </button>
               ))}
             </div>
@@ -263,12 +268,16 @@ export function InteractiveExercise({
             <HelpCircle size={14} />
             <span>Explanation</span>
           </div>
-          <p>{exercise.explanation}</p>
+          <div>
+            <FuriganaText text={exercise.explanation} showFurigana={showFurigana} />
+          </div>
           {!wasCorrect && (
-            <p className="font-medium pt-1">
+            <div className="font-medium pt-1">
               Correct answer:{" "}
-              <span className="font-bold underline">{exercise.correctAnswer}</span>
-            </p>
+              <span className="font-bold underline">
+                <FuriganaText text={exercise.correctAnswer} showFurigana={showFurigana} />
+              </span>
+            </div>
           )}
         </div>
       )}

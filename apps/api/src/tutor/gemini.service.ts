@@ -28,13 +28,20 @@ export class GeminiService {
         path.resolve(process.cwd(), "apps/api/src/.env"),
         path.resolve(process.cwd(), "src/.env"),
         path.resolve(process.cwd(), ".env"),
-        path.resolve(__dirname, "../.env"),
-        path.resolve(__dirname, "../../.env"),
-        path.resolve(__dirname, ".env"),
         "/app/apps/api/.env",
         "/app/apps/api/src/.env",
         "/app/.env",
       ];
+      try {
+        if (typeof __dirname !== "undefined") {
+          candidates.push(
+            path.resolve(__dirname, "../.env"),
+            path.resolve(__dirname, "../../.env"),
+            path.resolve(__dirname, ".env")
+          );
+        }
+      } catch {}
+
       for (const c of candidates) {
         try {
           if (fs.existsSync(c)) {
@@ -75,13 +82,33 @@ export class GeminiService {
         const prompt = `
 You are an expert Japanese language tutor creating a structured daily micro-lesson for JLPT level ${context.level}.
 Topic: ${context.title}
-Grammar Key: ${context.grammarKey}
+Grammar Slug: ${context.grammarKey}
 Objective: ${context.objective}
+
+CRITICAL LINGUISTIC & FORMATTING RULES:
+1. NEVER output Romaji or English slug identifiers (such as "${context.grammarKey}", "kiwamarinai-extreme", or hyphenated text) in any Japanese field ("jpText", "reading", "dialogue", options, or exercise answers).
+2. The grammar slug "${context.grammarKey}" is an internal code identifier. You MUST identify the real Japanese grammar pattern (e.g. from the topic "${context.title}") and write it using authentic Japanese Kanji and Kana.
+3. In "vocabulary":
+   - "jpText" MUST be written in genuine Japanese characters (Kanji and Kana, e.g. "極まりない").
+   - "reading" MUST be the pure Hiragana reading (or Katakana for loanwords, e.g. "きわまりない").
+   - "enText" is the clear English meaning.
+4. In "dialogue":
+   - Every "jpText" MUST be authentic Japanese with appropriate Kanji and Kana.
+   - Dialogue must be 4 to 6 lines demonstrating the grammar in natural conversation between 2 speakers.
+5. In "exercises":
+   - Exercise question prompts and instructions MUST be in English.
+   - Multiple choice choices/options in Japanese MUST be written in Japanese Kanji/Kana.
+   - For fill-in-the-blank ("fill_blank") and questions where the learner enters/identifies the grammar, "correctAnswer" MUST be written in real Japanese (Kanji or Kana, e.g. "極まりない"), NEVER Romaji or hyphenated English.
+   - In "reorder", the choices must be natural Japanese word/phrase chunks.
+6. In "theoryMarkdown":
+   - Explain the grammar rule clearly in English with structural formulas (e.g. "[Na-adj stem] + 極まりない", "[Noun] + を皮切りに").
+   - For all Japanese example sentences in the theory, provide Furigana readings using markdown ruby format "{漢字|かんじ}" or "<ruby>漢字<rt>かんじ</rt></ruby>" so learners can easily read advanced kanji.
+   - Include nuances, register (formal, literary, spoken), and typical pitfalls.
 
 Return ONLY valid JSON adhering strictly to this schema:
 {
   "title": string (Lesson title in English),
-  "theoryMarkdown": string (Concise, engaging explanation of the grammar rule with formulas like "[Noun] + です", examples with romaji/furigana, and cultural or usage tips),
+  "theoryMarkdown": string (Concise, engaging explanation of the grammar rule with formulas and examples with furigana),
   "dialogue": [
     { "speaker": string, "jpText": string, "enText": string }
   ] (4 to 6 natural conversation lines between two speakers applying this grammar point),
@@ -100,8 +127,8 @@ Return ONLY valid JSON adhering strictly to this schema:
   ] (3 to 4 exercises testing the grammar)
 }
 
-All instructions, theory, and question prompts MUST be in English.
-Japanese text should use appropriate Kanji with kana readings provided in vocabulary.
+All instructions, theory explanation, and question prompts MUST be in English.
+All Japanese content MUST use authentic Kanji and Kana. NEVER USE ROMAJI.
 `;
 
         const response = await fetch(
@@ -154,20 +181,31 @@ Japanese text should use appropriate Kanji with kana readings provided in vocabu
   generateFallbackLesson(
     context: TopicGenerationContext
   ): GenerateLessonPayload {
-    const key = context.grammarKey || "grammar point";
+    // Extract authentic Japanese grammar pattern from title (e.g. "〜極まりない / 〜極まる" -> "極まりない")
+    let cleanJpPattern = "";
+    const matchParen = context.title.match(/[（(]([^）)]+)[）)]/);
+    if (matchParen) {
+      cleanJpPattern = matchParen[1].replace(/^[〜~]/, "").split(/[/／]/)[0].trim();
+    }
+    if (!cleanJpPattern || /^[a-zA-Z0-9\-_ ]+$/.test(cleanJpPattern)) {
+      const matchJp = context.title.match(/[\u4e00-\u9faf\u3040-\u309f\u30a0-\u30ff]+/);
+      cleanJpPattern = matchJp ? matchJp[0] : "";
+    }
+    const key = cleanJpPattern || "文法表現";
+
     return {
       title: context.title,
-      theoryMarkdown: `### ${context.title}\n\n${context.objective}\n\n#### Key Formula\n\`[Phrase / Stem] + ${key}\`\n\n#### Usage Notes\nIn JLPT ${context.level}, this pattern is used to convey: *${context.objective}*. Notice the nuances and formal register compared to similar basic expressions.`,
+      theoryMarkdown: `### ${context.title}\n\n${context.objective}\n\n#### Key Formula\n\`[Phrase / Stem] + ${key}\`\n\n#### Example\nこの文脈では、{${key}|きわまりない}を使うのが最も自然です。\n\n#### Usage Notes\nIn JLPT ${context.level}, this pattern is used to convey: *${context.objective}*. Notice the formal register compared to conversational expressions.`,
       dialogue: [
         {
           speaker: "田中 (Tanaka)",
           jpText: `この文脈では、${key}を使うのが最も自然です。`,
-          enText: `In this context, using ${context.title} is the most natural.`,
+          enText: `In this context, using ${key} is the most natural.`,
         },
         {
           speaker: "スミス (Smith)",
-          jpText: `なるほど、${context.objective}ということですね。`,
-          enText: `I see, so it means ${context.objective.toLowerCase()}.`,
+          jpText: `なるほど、${key}を使うことでニュアンスが明確になりますね。`,
+          enText: `I see, so using ${key} makes the nuance clear.`,
         },
         {
           speaker: "田中 (Tanaka)",
@@ -221,7 +259,7 @@ Japanese text should use appropriate Kanji with kana readings provided in vocabu
         {
           order: 3,
           type: "reorder",
-          prompt: `Arrange the words to form: "In this context, using ${key} is most natural."`,
+          prompt: `Arrange the words in order: "In this context, using ${key} is most natural."`,
           options: ["この文脈では、", key, "を使うのが", "最も自然です。"],
           correctAnswer: `この文脈では、 ${key} を使うのが 最も自然です。`,
           explanation: "Standard natural Japanese word order.",

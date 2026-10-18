@@ -441,5 +441,53 @@ describe("TutorWorkspace", () => {
 
     expect(helpfulBtn.getAttribute("disabled")).not.toBeNull();
   });
+
+  it("toggles Furigana on and off via the header toggle button", () => {
+    const mockLesson = {
+      id: "les_furigana",
+      topicId: "top_1",
+      title: "Polite Copula です",
+      level: "N5",
+      theoryMarkdown: "### Key Formula",
+      dialogue: [],
+      vocabulary: [
+        { jpText: "学生", reading: "がくせい", enText: "Student" },
+      ],
+      exercises: [],
+    };
+
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [],
+      selectedLevel: "N5",
+      currentLesson: mockLesson,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+    } as any);
+
+    const { container } = render(<TutorWorkspace />);
+
+    // Go to vocabulary step
+    fireEvent.click(screen.getByRole("button", { name: /4\.\s*Vocabulary/i }));
+
+    // By default, furigana is ON, so vocabulary word has <ruby>
+    const rubyElement = container.querySelector("ruby");
+    expect(rubyElement).not.toBeNull();
+    expect(rubyElement).toHaveTextContent("がくせい");
+    expect(rubyElement).toHaveTextContent("学生");
+
+    // Click Furigana toggle button in header
+    const furiganaToggle = screen.getByTestId("tutor-furigana-toggle");
+    fireEvent.click(furiganaToggle);
+
+    // Now furigana is OFF, so ruby element is replaced by plain text with parens
+    expect(container.querySelector("ruby")).toBeNull();
+    expect(container).toHaveTextContent("学生");
+    expect(container).toHaveTextContent("(がくせい)");
+  });
 });
 
