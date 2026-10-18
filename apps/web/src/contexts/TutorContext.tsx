@@ -18,6 +18,7 @@ import {
   getLessonAction,
   submitLessonProgressAction,
   submitLessonFeedbackAction,
+  generateNextUnitAction,
 } from "@/actions/tutor";
 import { useAuth } from "./AuthContext";
 import { useFlashCards } from "./FlashCardsContext";
@@ -31,8 +32,10 @@ export interface TutorContextData {
   currentLesson: Lesson | null;
   isLoadingCurriculum: boolean;
   isLoadingLesson: boolean;
+  isGeneratingUnit: boolean;
   error: string | null;
   loadLesson: (topicId: string) => Promise<Lesson | null>;
+  generateNextUnit: (level?: CurriculumLevel) => Promise<boolean>;
   submitProgress: (score: number) => Promise<boolean>;
   submitFeedback: (
     rating: "helpful" | "confusing",
@@ -80,41 +83,136 @@ export function TutorProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
   const { decks, createDeck, createCard, addCardsToDeck } = useFlashCards();
 
-  const [selectedLevel, setSelectedLevel] = useState<CurriculumLevel>("N5");
+  const [selectedLevel, setSelectedLevelState] = useState<CurriculumLevel>("N5");
+  const [curriculumCache, setCurriculumCache] = useState<
+    Record<CurriculumLevel, CurriculumTopic[]>
+  >({
+    N5: [],
+    N4: [],
+    N3: [],
+    N2: [],
+    N1: [],
+  });
   const [curriculum, setCurriculum] = useState<CurriculumTopic[]>([]);
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
   const [isLoadingCurriculum, setIsLoadingCurriculum] = useState<boolean>(false);
   const [isLoadingLesson, setIsLoadingLesson] = useState<boolean>(false);
+  const [isGeneratingUnit, setIsGeneratingUnit] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch curriculum for selected level
-  const loadCurriculum = useCallback(async (level: CurriculumLevel) => {
-    setIsLoadingCurriculum(true);
-    setError(null);
-    try {
-      const data = await getCurriculumAction(level);
-      const localProgress = getStoredProgress();
+  // Fetch curriculum for selected level with optional silent background revalidation
+  const loadCurriculum = useCallback(
+    async (level: CurriculumLevel, isSilent: boolean = false) => {
+      if (!isSilent) {
+        setIsLoadingCurriculum(true);
+      }
+      setError(null);
+      try {
+        const data = await getCurriculumAction(level);
+        const localProgress = getStoredProgress();
 
-      // Merge server progress with local storage for guests
-      const merged = data.map((topic) => {
-        if (topic.isCompleted) return topic;
-        // Check if cached locally
-        return topic;
-      });
+        // Merge server progress with local storage for guests
+        const merged = data.map((topic) => {
+          if (topic.isCompleted) return topic;
+          const local = localProgress[topic.id];
+          if (local) {
+            return {
+              ...topic,
+              isCompleted: true,
+              completedScore: local.score,
+            };
+          }
+          return topic;
+        });
 
-      setCurriculum(merged);
-    } catch (err) {
-      console.error("Failed to load curriculum:", err);
-      setError("Failed to load curriculum topics. Please try again.");
-    } finally {
-      setIsLoadingCurriculum(false);
-    }
-  }, []);
+        setCurriculumCache((prev) => ({
+          ...prev,
+          [level]: merged,
+        }));
 
+        setCurriculum(merged);
+      } catch (err) {
+        console.error("Failed to load curriculum:", err);
+        setError("Failed to load curriculum topics. Please try again.");
+      } finally {
+        if (!isSilent) {
+          setIsLoadingCurriculum(false);
+        }
+      }
+    },
+    []
+  );
+
+  // Instant level switching from in-memory cache
+  const setSelectedLevel = useCallback(
+    (level: CurriculumLevel) => {
+      setSelectedLevelState(level);
+      setSelectedTopicId(null);
+      setCurrentLesson(null);
+
+      const cached = curriculumCache[level];
+      if (cached && cached.length > 0) {
+        setCurriculum(cached);
+        // Silent background sync
+        loadCurriculum(level, true);
+      } else {
+        // First time load with visible spinner
+        loadCurriculum(level, false);
+      }
+    },
+    [curriculumCache, loadCurriculum]
+  );
+
+  // Generate next unit with AI for current or specified level
+  const generateNextUnit = useCallback(
+    async (level?: CurriculumLevel): Promise<boolean> => {
+      const targetLevel = level || selectedLevel;
+      setIsGeneratingUnit(true);
+      setError(null);
+      try {
+        const updated = await generateNextUnitAction(targetLevel);
+        if (updated && updated.length > 0) {
+          const localProgress = getStoredProgress();
+          const merged = updated.map((topic) => {
+            if (topic.isCompleted) return topic;
+            const local = localProgress[topic.id];
+            if (local) {
+              return {
+                ...topic,
+                isCompleted: true,
+                completedScore: local.score,
+              };
+            }
+            return topic;
+          });
+
+          setCurriculumCache((prev) => ({
+            ...prev,
+            [targetLevel]: merged,
+          }));
+
+          if (targetLevel === selectedLevel) {
+            setCurriculum(merged);
+          }
+          return true;
+        }
+        return false;
+      } catch (err) {
+        console.error("Failed to generate next unit:", err);
+        setError("Failed to generate next unit with AI. Please try again.");
+        return false;
+      } finally {
+        setIsGeneratingUnit(false);
+      }
+    },
+    [selectedLevel]
+  );
+
+  // Initial load
   useEffect(() => {
-    loadCurriculum(selectedLevel);
-  }, [selectedLevel, loadCurriculum, isAuthenticated]);
+    loadCurriculum(selectedLevel, false);
+  }, [loadCurriculum, isAuthenticated]);
 
   const loadLesson = useCallback(
     async (topicId: string): Promise<Lesson | null> => {
@@ -247,8 +345,10 @@ export function TutorProvider({ children }: { children: ReactNode }) {
         currentLesson,
         isLoadingCurriculum,
         isLoadingLesson,
+        isGeneratingUnit,
         error,
         loadLesson,
+        generateNextUnit,
         submitProgress,
         submitFeedback,
         addVocabularyToDeck,

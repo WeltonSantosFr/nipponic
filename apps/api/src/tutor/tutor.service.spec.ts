@@ -43,6 +43,7 @@ describe("TutorService", () => {
 
     geminiServiceMock = {
       generateLesson: vi.fn(),
+      generateCurriculumUnit: vi.fn(),
     } as unknown as GeminiService;
 
     service = new TutorService(
@@ -329,4 +330,54 @@ describe("TutorService", () => {
       );
     });
   });
+
+  describe("generateNextUnitForLevel", () => {
+    it("should generate and persist next unit topics for a level", async () => {
+      vi.mocked(geminiServiceMock.generateCurriculumUnit).mockResolvedValue({
+        unitTitle: "Unit 2: Daily Routines",
+        topics: [
+          {
+            lessonIndex: 5,
+            title: "Morning Routine",
+            grammarKey: "routine-5",
+            objective: "Learn morning expressions.",
+          },
+        ],
+      });
+
+      prismaMock.db.orm.public.CurriculumTopic.where.mockReturnValue({
+        all: vi.fn().mockResolvedValue([
+          {
+            id: "top_1",
+            level: "N5",
+            unitIndex: 1,
+            unitTitle: "Unit 1",
+            lessonIndex: 4,
+            title: "Lesson 4",
+            grammarKey: "key-4",
+            objective: "Obj 4",
+          },
+        ]),
+      });
+
+      prismaMock.db.orm.public.Lesson.where.mockReturnValue({
+        all: vi.fn().mockResolvedValue([]),
+      });
+
+      const result = await service.generateNextUnitForLevel("N5");
+
+      expect(geminiServiceMock.generateCurriculumUnit).toHaveBeenCalledWith("N5", 2, 5);
+      expect(prismaMock.db.orm.public.CurriculumTopic.create).toHaveBeenCalledWith({
+        level: "N5",
+        unitIndex: 2,
+        unitTitle: "Unit 2: Daily Routines",
+        lessonIndex: 5,
+        title: "Morning Routine",
+        grammarKey: "routine-5",
+        objective: "Learn morning expressions.",
+      });
+      expect(result).toBeDefined();
+    });
+  });
 });
+

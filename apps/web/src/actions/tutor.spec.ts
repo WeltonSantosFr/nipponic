@@ -5,6 +5,7 @@ import {
   getLessonAction,
   submitLessonProgressAction,
   submitLessonFeedbackAction,
+  generateNextUnitAction,
 } from "./tutor";
 
 vi.mock("next/headers", () => ({
@@ -195,4 +196,49 @@ describe("tutor actions", () => {
       );
     });
   });
+
+  describe("generateNextUnitAction", () => {
+    it("should post level and return generated curriculum topics", async () => {
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue(undefined),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const mockTopics = [{ id: "top_new", title: "New Unit Topic" }];
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockTopics),
+      });
+      global.fetch = fetchMock;
+
+      const result = await generateNextUnitAction("N1");
+
+      expect(result).toEqual(mockTopics);
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining("/tutor/curriculum/generate"),
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({ level: "N1" }),
+        })
+      );
+    });
+
+    it("should return empty array on failure", async () => {
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue(undefined),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+      global.fetch = fetchMock;
+
+      const result = await generateNextUnitAction("N1");
+
+      expect(result).toEqual([]);
+    });
+  });
 });
+

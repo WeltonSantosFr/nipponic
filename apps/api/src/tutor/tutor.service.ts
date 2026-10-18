@@ -7,8 +7,9 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
 import { GeminiService } from "./gemini.service";
-import { SEED_CURRICULUM_N5 } from "./curriculum.seed";
+import { ALL_SEED_CURRICULA } from "./curriculum.seed";
 import type {
+  CurriculumLevel,
   CurriculumTopic,
   Lesson,
   LessonExercise,
@@ -31,31 +32,69 @@ export class TutorService implements OnModuleInit {
 
   async seedCurriculumIfEmpty() {
     try {
-      const existingTopic = await this.prisma.db.orm.public.CurriculumTopic.first();
-      if (!existingTopic) {
-        this.logger.log("Seeding initial N5 curriculum topics...");
-        for (const topic of SEED_CURRICULUM_N5) {
-          await this.prisma.db.orm.public.CurriculumTopic.create({
-            level: topic.level,
-            unitIndex: topic.unitIndex,
-            unitTitle: topic.unitTitle,
-            lessonIndex: topic.lessonIndex,
-            title: topic.title,
-            grammarKey: topic.grammarKey,
-            objective: topic.objective,
-          });
+      const levels: ("N5" | "N4" | "N3" | "N2" | "N1")[] = [
+        "N5",
+        "N4",
+        "N3",
+        "N2",
+        "N1",
+      ];
+      for (const level of levels) {
+        const existingTopic = await this.prisma.db.orm.public.CurriculumTopic
+          .where({ level })
+          .first();
+
+        if (!existingTopic && ALL_SEED_CURRICULA[level]) {
+          this.logger.log(`Seeding initial ${level} curriculum topics...`);
+          for (const topic of ALL_SEED_CURRICULA[level]) {
+            await this.prisma.db.orm.public.CurriculumTopic.create({
+              level: topic.level,
+              unitIndex: topic.unitIndex,
+              unitTitle: topic.unitTitle,
+              lessonIndex: topic.lessonIndex,
+              title: topic.title,
+              grammarKey: topic.grammarKey,
+              objective: topic.objective,
+            });
+          }
+          this.logger.log(
+            `Seeded ${ALL_SEED_CURRICULA[level].length} ${level} curriculum topics.`
+          );
         }
-        this.logger.log(`Seeded ${SEED_CURRICULUM_N5.length} N5 curriculum topics.`);
       }
     } catch (error) {
-      this.logger.warn(`Could not seed curriculum topics: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.warn(
+        `Could not seed curriculum topics: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
   async getCurriculum(level: string = "N5", userId?: string): Promise<CurriculumTopic[]> {
-    const topics = await this.prisma.db.orm.public.CurriculumTopic
+    let topics = await this.prisma.db.orm.public.CurriculumTopic
       .where({ level })
       .all();
+
+    // Auto-seed level if empty and default curriculum is available
+    if (
+      topics.length === 0 &&
+      ALL_SEED_CURRICULA[level as keyof typeof ALL_SEED_CURRICULA]
+    ) {
+      const seedList = ALL_SEED_CURRICULA[level as keyof typeof ALL_SEED_CURRICULA];
+      for (const topic of seedList) {
+        await this.prisma.db.orm.public.CurriculumTopic.create({
+          level: topic.level,
+          unitIndex: topic.unitIndex,
+          unitTitle: topic.unitTitle,
+          lessonIndex: topic.lessonIndex,
+          title: topic.title,
+          grammarKey: topic.grammarKey,
+          objective: topic.objective,
+        });
+      }
+      topics = await this.prisma.db.orm.public.CurriculumTopic
+        .where({ level })
+        .all();
+    }
 
     topics.sort((a, b) =>
       a.unitIndex === b.unitIndex
@@ -283,4 +322,52 @@ export class TutorService implements OnModuleInit {
 
     return { success: true };
   }
+
+  async generateNextUnitForLevel(
+    level: string = "N5",
+    userId?: string
+  ): Promise<CurriculumTopic[]> {
+    const existingTopics = await this.prisma.db.orm.public.CurriculumTopic
+      .where({ level })
+      .all();
+
+    const maxUnit = existingTopics.length
+      ? Math.max(...existingTopics.map((t) => t.unitIndex))
+      : 0;
+    const nextUnitIndex = maxUnit + 1;
+
+    const maxLesson = existingTopics.length
+      ? Math.max(...existingTopics.map((t) => t.lessonIndex))
+      : 0;
+    const startingLessonIndex = maxLesson + 1;
+
+    this.logger.log(
+      `Generating unit ${nextUnitIndex} for JLPT ${level} starting at lesson ${startingLessonIndex} with AI...`
+    );
+
+    const generatedUnit = await this.geminiService.generateCurriculumUnit(
+      level,
+      nextUnitIndex,
+      startingLessonIndex
+    );
+
+    for (const topic of generatedUnit.topics) {
+      await this.prisma.db.orm.public.CurriculumTopic.create({
+        level: level as "N5" | "N4" | "N3" | "N2" | "N1",
+        unitIndex: nextUnitIndex,
+        unitTitle: generatedUnit.unitTitle,
+        lessonIndex: topic.lessonIndex,
+        title: topic.title,
+        grammarKey: topic.grammarKey,
+        objective: topic.objective,
+      });
+    }
+
+    this.logger.log(
+      `Successfully generated and saved ${generatedUnit.topics.length} topics for JLPT ${level} Unit ${nextUnitIndex}.`
+    );
+
+    return await this.getCurriculum(level, userId);
+  }
 }
+

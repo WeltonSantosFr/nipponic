@@ -166,4 +166,76 @@ describe("TutorWorkspace", () => {
 
     expect(mockSubmitFeedback).toHaveBeenCalledWith("helpful");
   });
+
+  it("renders empty state with AI generation button when curriculum is empty", () => {
+    const mockGenerateNextUnit = vi.fn();
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [],
+      selectedLevel: "N1",
+      currentLesson: null,
+      isLoadingCurriculum: false,
+      isLoadingLesson: false,
+      isGeneratingUnit: false,
+      generateNextUnit: mockGenerateNextUnit,
+      loadLesson: mockLoadLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+    } as any);
+
+    render(<TutorWorkspace />);
+
+    expect(
+      screen.getByText("No lessons generated for JLPT N1 yet")
+    ).toBeDefined();
+    const generateBtn = screen.getByRole("button", {
+      name: /Generate JLPT N1 Topics with AI/i,
+    });
+    expect(generateBtn).toBeDefined();
+
+    fireEvent.click(generateBtn);
+    expect(mockGenerateNextUnit).toHaveBeenCalled();
+  });
+
+  it("triggers generateNextUnit when '+ Generate Next Unit (AI)' is clicked", () => {
+    const mockGenerateNextUnit = vi.fn();
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [
+        {
+          id: "top_1",
+          level: "N5",
+          unitIndex: 1,
+          unitTitle: "Foundations",
+          lessonIndex: 1,
+          title: "Polite Copula です",
+          grammarKey: "desu",
+          objective: "Learn to introduce yourself",
+          isCompleted: false,
+        },
+      ],
+      selectedLevel: "N5",
+      currentLesson: null,
+      isLoadingCurriculum: false,
+      isLoadingLesson: false,
+      isGeneratingUnit: false,
+      generateNextUnit: mockGenerateNextUnit,
+      loadLesson: mockLoadLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+    } as any);
+
+    render(<TutorWorkspace />);
+
+    const nextUnitBtn = screen.getByRole("button", {
+      name: /\+ Generate Next Unit \(AI\)/i,
+    });
+    expect(nextUnitBtn).toBeDefined();
+
+    fireEvent.click(nextUnitBtn);
+    expect(mockGenerateNextUnit).toHaveBeenCalled();
+  });
 });
+

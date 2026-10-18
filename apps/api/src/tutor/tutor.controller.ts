@@ -52,6 +52,15 @@ export class TutorController {
     return await this.tutorService.getCurriculum(level || "N5", userId);
   }
 
+  @Post("curriculum/generate")
+  async generateNextUnit(
+    @Body("level") level: string = "N5",
+    @Req() request: Request
+  ) {
+    const userId = this.extractUserId(request);
+    return await this.tutorService.generateNextUnitForLevel(level || "N5", userId);
+  }
+
   @Get("topics/:topicId/lesson")
   async getLessonByTopic(
     @Param("topicId") topicId: string,

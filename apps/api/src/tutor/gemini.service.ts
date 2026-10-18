@@ -2,6 +2,8 @@ import { Injectable, Logger } from "@nestjs/common";
 import {
   type GenerateLessonPayload,
   GenerateLessonPayloadSchema,
+  type GenerateUnitPayload,
+  GenerateUnitPayloadSchema,
 } from "@nipponic/shared";
 
 interface TopicGenerationContext {
@@ -176,4 +178,128 @@ Japanese text should use appropriate Kanji with kana readings provided in vocabu
       ],
     };
   }
+
+  async generateCurriculumUnit(
+    level: string,
+    unitIndex: number,
+    startingLessonIndex: number
+  ): Promise<GenerateUnitPayload> {
+    if (!this.apiKey) {
+      this.logger.warn(
+        `GEMINI_API_KEY not configured. Generating high-quality deterministic fallback unit for JLPT ${level} Unit ${unitIndex}.`
+      );
+      return this.generateFallbackUnit(level, unitIndex, startingLessonIndex);
+    }
+
+    try {
+      const prompt = `
+You are an expert Japanese curriculum designer creating a structured study unit for JLPT level ${level}.
+Unit Index: ${unitIndex}
+Starting Lesson Index: ${startingLessonIndex}
+
+Generate a cohesive unit containing 4 to 5 daily micro-lessons focusing on essential grammar patterns, particle usage, and practical everyday communication appropriate for JLPT ${level}.
+
+Return ONLY valid JSON adhering strictly to this schema:
+{
+  "unitTitle": string (Engaging Unit title in English, e.g. "Practical Everyday Routines"),
+  "topics": [
+    {
+      "lessonIndex": number (starting at ${startingLessonIndex}, ${startingLessonIndex + 1}, etc.),
+      "title": string (Lesson title in English, e.g. "Desire with 〜たい (Want to do)"),
+      "grammarKey": string (e.g. "tai-form-desire"),
+      "objective": string (1-2 sentences in English explaining what the student will learn and apply)
+    }
+  ]
 }
+
+All unitTitle, title, and objective fields MUST be in English.
+`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              responseMimeType: "application/json",
+              temperature: 0.4,
+            },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.logger.error(
+          `Gemini API request failed for curriculum unit (${response.status}): ${errorText}`
+        );
+        return this.generateFallbackUnit(level, unitIndex, startingLessonIndex);
+      }
+
+      const data = await response.json();
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!rawText) {
+        throw new Error("No text content returned from Gemini API");
+      }
+
+      const parsedJson = JSON.parse(rawText);
+      return GenerateUnitPayloadSchema.parse(parsedJson);
+    } catch (error) {
+      this.logger.error(
+        `Error generating curriculum unit with Gemini API: ${error instanceof Error ? error.message : String(error)}`
+      );
+      return this.generateFallbackUnit(level, unitIndex, startingLessonIndex);
+    }
+  }
+
+  generateFallbackUnit(
+    level: string,
+    unitIndex: number,
+    startingLessonIndex: number
+  ): GenerateUnitPayload {
+    const titlesByLevel: Record<string, string> = {
+      N5: `Everyday Conversation & Actions (Unit ${unitIndex})`,
+      N4: `Intermediate Connections & Reasoning (Unit ${unitIndex})`,
+      N3: `Conversational Nuances & Situational Grammar (Unit ${unitIndex})`,
+      N2: `Formal Communication & Advanced Logic (Unit ${unitIndex})`,
+      N1: `Nuanced Discourse & Literary Constructs (Unit ${unitIndex})`,
+    };
+
+    const unitTitle =
+      titlesByLevel[level] || `JLPT ${level} Advanced Study (Unit ${unitIndex})`;
+
+    return {
+      unitTitle,
+      topics: [
+        {
+          lessonIndex: startingLessonIndex,
+          title: `Expressing Intentions & Plans (${level})`,
+          grammarKey: `intention-${level.toLowerCase()}-${startingLessonIndex}`,
+          objective: `Master standard patterns used to communicate personal intentions and future plans in JLPT ${level}.`,
+        },
+        {
+          lessonIndex: startingLessonIndex + 1,
+          title: `Giving & Explaining Reasons (${level})`,
+          grammarKey: `reasons-${level.toLowerCase()}-${startingLessonIndex + 1}`,
+          objective: `Express causes, justifications, and logical connectors naturally in everyday dialogue.`,
+        },
+        {
+          lessonIndex: startingLessonIndex + 2,
+          title: `Conditional Circumstances & Context (${level})`,
+          grammarKey: `conditionals-${level.toLowerCase()}-${startingLessonIndex + 2}`,
+          objective: `Formulate situational statements and conditional clauses appropriate for level ${level}.`,
+        },
+        {
+          lessonIndex: startingLessonIndex + 3,
+          title: `Practical Nuances & Colloquial Expressions (${level})`,
+          grammarKey: `nuances-${level.toLowerCase()}-${startingLessonIndex + 3}`,
+          objective: `Understand the subtle emotional undertones and social context in authentic Japanese interactions.`,
+        },
+      ],
+    };
+  }
+}
+

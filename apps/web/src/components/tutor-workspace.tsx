@@ -32,7 +32,10 @@ export function TutorWorkspace() {
     curriculum,
     selectedLevel,
     currentLesson,
+    isLoadingCurriculum,
     isLoadingLesson,
+    isGeneratingUnit,
+    generateNextUnit,
     loadLesson,
     submitProgress,
     submitFeedback,
@@ -116,6 +119,18 @@ export function TutorWorkspace() {
     setFeedbackSubmitted(true);
   };
 
+  // If loading curriculum on first load with no cached items
+  if (isLoadingCurriculum && curriculum.length === 0) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm font-medium text-muted-foreground">
+          Loading JLPT {selectedLevel} curriculum...
+        </p>
+      </div>
+    );
+  }
+
   // If a lesson is actively loading (JIT generation by Gemini)
   if (isLoadingLesson) {
     return (
@@ -133,6 +148,7 @@ export function TutorWorkspace() {
       </div>
     );
   }
+
 
   // Dashboard / Roadmap View when no lesson is active
   if (!currentLesson) {
@@ -198,75 +214,135 @@ export function TutorWorkspace() {
 
         {/* Units Roadmap */}
         <div className="space-y-6">
-          <h2 className="text-lg font-bold tracking-tight text-foreground">
-            Curriculum Roadmap
-          </h2>
-
-          <div className="space-y-6">
-            {units.map(([unitIndex, unit]) => (
-              <div
-                key={unitIndex}
-                className="rounded-xl border border-border/80 bg-card/60 p-5 shadow-xs space-y-4"
-              >
-                <div className="flex items-center gap-2.5">
-                  <span className="w-6 h-6 rounded-md bg-muted text-muted-foreground text-xs font-bold flex items-center justify-center">
-                    {unitIndex}
-                  </span>
-                  <h3 className="font-bold text-base text-foreground">
-                    Unit {unitIndex}: {unit.title}
-                  </h3>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {unit.topics.map((topic) => (
-                    <div
-                      key={topic.id}
-                      onClick={() => handleStartLesson(topic.id)}
-                      className={`group p-4 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-3 ${
-                        topic.isCompleted
-                          ? "border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/50"
-                          : topic.id === nextRecommendedTopic?.id
-                          ? "border-primary/50 bg-primary/5 hover:border-primary shadow-xs"
-                          : "border-border/70 hover:border-border hover:bg-muted/40"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div
-                          className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
-                            topic.isCompleted
-                              ? "bg-emerald-500 text-white"
-                              : topic.id === nextRecommendedTopic?.id
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          {topic.isCompleted ? (
-                            <CheckCircle2 size={16} />
-                          ) : (
-                            topic.lessonIndex
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                            {topic.title}
-                          </h4>
-                          <p className="text-xs text-muted-foreground line-clamp-1">
-                            {topic.objective}
-                          </p>
-                        </div>
-                      </div>
-
-                      <ChevronRight
-                        size={16}
-                        className="text-muted-foreground group-hover:text-foreground shrink-0 transition-transform group-hover:translate-x-0.5"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold tracking-tight text-foreground">
+                Curriculum Roadmap
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                {curriculum.length} lesson{curriculum.length === 1 ? "" : "s"} across {units.length} unit{units.length === 1 ? "" : "s"}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => generateNextUnit()}
+              disabled={isGeneratingUnit}
+              className="gap-2 cursor-pointer shadow-xs text-xs font-semibold self-start sm:self-auto"
+            >
+              {isGeneratingUnit ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                  Generating Unit with AI...
+                </>
+              ) : (
+                <>
+                  <Sparkles size={14} className="text-primary" />
+                  + Generate Next Unit (AI)
+                </>
+              )}
+            </Button>
           </div>
+
+          {curriculum.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border p-10 text-center space-y-4 bg-card/40">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary mx-auto flex items-center justify-center">
+                <Sparkles size={24} />
+              </div>
+              <div className="space-y-1.5 max-w-md mx-auto">
+                <h3 className="text-base font-bold text-foreground">
+                  No lessons generated for JLPT {selectedLevel} yet
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  The AI Tutor can generate a tailored study unit for JLPT {selectedLevel} with grammar explanations, natural dialogues, audio, and exercises.
+                </p>
+              </div>
+              <Button
+                onClick={() => generateNextUnit()}
+                disabled={isGeneratingUnit}
+                className="gap-2 cursor-pointer font-semibold shadow-xs"
+              >
+                {isGeneratingUnit ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Generating JLPT {selectedLevel} Topics with AI...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={16} />
+                    Generate JLPT {selectedLevel} Topics with AI
+                  </>
+                )}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {units.map(([unitIndex, unit]) => (
+                <div
+                  key={unitIndex}
+                  className="rounded-xl border border-border/80 bg-card/60 p-5 shadow-xs space-y-4"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-6 h-6 rounded-md bg-muted text-muted-foreground text-xs font-bold flex items-center justify-center">
+                      {unitIndex}
+                    </span>
+                    <h3 className="font-bold text-base text-foreground">
+                      Unit {unitIndex}: {unit.title}
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {unit.topics.map((topic) => (
+                      <div
+                        key={topic.id}
+                        onClick={() => handleStartLesson(topic.id)}
+                        className={`group p-4 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                          topic.isCompleted
+                            ? "border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/50"
+                            : topic.id === nextRecommendedTopic?.id
+                            ? "border-primary/50 bg-primary/5 hover:border-primary shadow-xs"
+                            : "border-border/70 hover:border-border hover:bg-muted/40"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div
+                            className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
+                              topic.isCompleted
+                                ? "bg-emerald-500 text-white"
+                                : topic.id === nextRecommendedTopic?.id
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {topic.isCompleted ? (
+                              <CheckCircle2 size={16} />
+                            ) : (
+                              topic.lessonIndex
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                              {topic.title}
+                            </h4>
+                            <p className="text-xs text-muted-foreground line-clamp-1">
+                              {topic.objective}
+                            </p>
+                          </div>
+                        </div>
+
+                        <ChevronRight
+                          size={16}
+                          className="text-muted-foreground group-hover:text-foreground shrink-0 transition-transform group-hover:translate-x-0.5"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+
       </div>
     );
   }

@@ -131,3 +131,37 @@ export async function submitLessonFeedbackAction(
     return { success: false };
   }
 }
+
+export async function generateNextUnitAction(
+  level: string = "N5"
+): Promise<CurriculumTopic[]> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("nipponic.token")?.value;
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(`${API_URL}/tutor/curriculum/generate`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ level }),
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      console.warn(`Failed to generate next unit for ${level} (${res.status})`);
+      return [];
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error(`Error generating next unit for ${level}:`, error);
+    return [];
+  }
+}
+

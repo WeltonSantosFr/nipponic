@@ -77,4 +77,16 @@ describe("TutorController", () => {
       undefined
     );
   });
+
+  it("generateNextUnit should call tutorService.generateNextUnitForLevel", async () => {
+    const mockTopics = [{ id: "top_new", title: "New Generated Topic" }];
+    tutorServiceMock.generateNextUnitForLevel = vi.fn().mockResolvedValue(mockTopics as any);
+
+    const mockReq = { headers: {} } as Request;
+    const result = await controller.generateNextUnit("N1", mockReq);
+
+    expect(result).toEqual(mockTopics);
+    expect(tutorServiceMock.generateNextUnitForLevel).toHaveBeenCalledWith("N1", undefined);
+  });
 });
+

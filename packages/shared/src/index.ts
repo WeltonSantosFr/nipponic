@@ -809,3 +809,16 @@ export const GenerateLessonPayloadSchema = z.object({
 });
 export type GenerateLessonPayload = z.infer<typeof GenerateLessonPayloadSchema>;
 
+export const GeneratedTopicSchema = z.object({
+  lessonIndex: z.number(),
+  title: z.string(),
+  grammarKey: z.string(),
+  objective: z.string(),
+});
+export type GeneratedTopic = z.infer<typeof GeneratedTopicSchema>;
+
+export const GenerateUnitPayloadSchema = z.object({
+  unitTitle: z.string(),
+  topics: z.array(GeneratedTopicSchema),
+});
+export type GenerateUnitPayload = z.infer<typeof GenerateUnitPayloadSchema>;
