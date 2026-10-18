@@ -88,7 +88,24 @@ export class DecksService {
       ? allPublicDecks.filter((d) => d.userId !== currentUserId)
       : allPublicDecks;
 
-    return await Promise.all(decks.map((deck) => this.populateDeckCards(deck)));
+    if (decks.length === 0) return [];
+
+    const uniqueUserIds = Array.from(new Set(decks.map((d) => d.userId)));
+    const userCardsLists = await Promise.all(
+      uniqueUserIds.map((uid) =>
+        this.prisma.db.orm.public.Card.where({ userId: uid }).all()
+      )
+    );
+    const cardsMap = new Map<string, any>();
+    for (const userCards of userCardsLists) {
+      for (const card of userCards) {
+        cardsMap.set(card.id, card);
+      }
+    }
+
+    return await Promise.all(
+      decks.map((deck) => this.populateDeckCards(deck, cardsMap))
+    );
   }
 
   async findOne(userId: string, id: string) {

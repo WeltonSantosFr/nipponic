@@ -232,13 +232,13 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
   }, [cards]);
 
 
-  const startPlayingDeck = (deck: Deck) => {
+  const startPlayingDeck = useCallback((deck: Deck) => {
     setPlayingDeck(deck);
-  };
+  }, []);
 
-  const stopPlayingDeck = () => {
+  const stopPlayingDeck = useCallback(() => {
     setPlayingDeck(null);
-  };
+  }, []);
 
   const getDueCards = useCallback(
     (deckId?: string): Card[] => {
@@ -684,39 +684,71 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const contextValue = useMemo(
+    () => ({
+      cards,
+      decks,
+      appDecks,
+      publicDecks,
+      activeDeckTab,
+      setActiveDeckTab,
+      selectedDeckId,
+      selectedDeck,
+      isCurrentDeckOwner,
+      setSelectedDeckId,
+      activeSidebarView,
+      setActiveSidebarView,
+      playingDeck,
+      startPlayingDeck,
+      stopPlayingDeck,
+      createCard,
+      updateCard,
+      deleteCard,
+      reviewCard,
+      getDueCards,
+      createDeck,
+      updateDeck,
+      deleteDeck,
+      addCardsToDeck,
+      removeCardFromDeck,
+      reorderDeckCards,
+      addDeckToMyDecks,
+      refreshAll,
+    }),
+    [
+      cards,
+      decks,
+      appDecks,
+      publicDecks,
+      activeDeckTab,
+      setActiveDeckTab,
+      selectedDeckId,
+      selectedDeck,
+      isCurrentDeckOwner,
+      setSelectedDeckId,
+      activeSidebarView,
+      setActiveSidebarView,
+      playingDeck,
+      startPlayingDeck,
+      stopPlayingDeck,
+      createCard,
+      updateCard,
+      deleteCard,
+      reviewCard,
+      getDueCards,
+      createDeck,
+      updateDeck,
+      deleteDeck,
+      addCardsToDeck,
+      removeCardFromDeck,
+      reorderDeckCards,
+      addDeckToMyDecks,
+      refreshAll,
+    ]
+  );
+
   return (
-    <FlashCardsContext.Provider
-      value={{
-        cards,
-        decks,
-        appDecks,
-        publicDecks,
-        activeDeckTab,
-        setActiveDeckTab,
-        selectedDeckId,
-        selectedDeck,
-        isCurrentDeckOwner,
-        setSelectedDeckId,
-        activeSidebarView,
-        setActiveSidebarView,
-        playingDeck,
-        startPlayingDeck,
-        stopPlayingDeck,
-        createCard,
-        updateCard,
-        deleteCard,
-        reviewCard,
-        getDueCards,
-        createDeck,
-        updateDeck,
-        deleteDeck,
-        addCardsToDeck,
-        removeCardFromDeck,
-        reorderDeckCards,
-        addDeckToMyDecks,
-        refreshAll,
-      }}
-    >
+    <FlashCardsContext.Provider value={contextValue}>
       {children}
     </FlashCardsContext.Provider>
   );
