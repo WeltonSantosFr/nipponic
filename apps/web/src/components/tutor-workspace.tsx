@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useTutor } from "@/contexts/TutorContext";
 import { TokenizedText } from "@/components/tokenized-text";
+import { MarkdownContent } from "@/components/markdown-content";
 import { InteractiveExercise } from "@/components/interactive-exercise";
 import { useSpeech } from "@/hooks/use-speech";
 import { Button } from "@/components/ui/button";
@@ -470,12 +471,8 @@ export function TutorWorkspace() {
         {/* Step 1: Theory */}
         {activeStep === "theory" && (
           <div className="space-y-6 animate-in fade-in duration-200">
-            <div className="rounded-2xl border border-border/80 bg-card p-6 md:p-8 shadow-xs space-y-4">
-              <div className="prose dark:prose-invert max-w-none text-sm md:text-base leading-relaxed space-y-4">
-                <div className="whitespace-pre-wrap font-sans text-foreground">
-                  {currentLesson.theoryMarkdown}
-                </div>
-              </div>
+            <div className="rounded-2xl border border-border/80 bg-card p-6 md:p-8 shadow-xs">
+              <MarkdownContent content={currentLesson.theoryMarkdown} />
             </div>
 
             <div className="flex justify-end">
