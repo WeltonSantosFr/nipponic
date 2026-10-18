@@ -173,6 +173,32 @@ describe('DecksService', () => {
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('deck_1');
     });
+
+    it('should batch preload cards once per unique user to eliminate N+1 queries', async () => {
+      const allPublicDecks = [
+        { id: 'deck_1', userId: 'user_shared', name: 'Deck 1', isPublic: true },
+        { id: 'deck_2', userId: 'user_shared', name: 'Deck 2', isPublic: true },
+        { id: 'deck_3', userId: 'user_other', name: 'Deck 3', isPublic: true },
+      ];
+
+      const deckAllMock = vi.fn().mockResolvedValue(allPublicDecks);
+      prismaMock.db.orm.public.Deck.where.mockReturnValue({ all: deckAllMock });
+
+      const cardWhereMock = vi.fn().mockReturnValue({
+        all: vi.fn().mockResolvedValue([]),
+      });
+      prismaMock.db.orm.public.Card.where = cardWhereMock;
+      prismaMock.db.orm.public.DeckCard.where = vi.fn().mockReturnValue({
+        all: vi.fn().mockResolvedValue([]),
+      });
+
+      const result = await service.findPublic();
+
+      expect(result).toHaveLength(3);
+      expect(cardWhereMock).toHaveBeenCalledTimes(2);
+      expect(cardWhereMock).toHaveBeenCalledWith({ userId: 'user_shared' });
+      expect(cardWhereMock).toHaveBeenCalledWith({ userId: 'user_other' });
+    });
   });
 
   describe('findOne', () => {
