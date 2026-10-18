@@ -1,45 +1,301 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { marked, type Tokens, type Token } from "marked";
 
 interface MarkdownContentProps {
   content: string;
   className?: string;
 }
 
-export function MarkdownContent({ content, className = "" }: MarkdownContentProps) {
-  const tokens = useMemo(() => {
-    if (!content) return [];
-    try {
-      return marked.lexer(content);
-    } catch {
-      return [];
-    }
-  }, [content]);
+type Block =
+  | { type: "heading"; level: number; text: string }
+  | { type: "code"; lang?: string; text: string }
+  | { type: "blockquote"; text: string }
+  | { type: "list"; ordered: boolean; items: string[] }
+  | { type: "table"; headers: string[]; rows: string[][] }
+  | { type: "hr" }
+  | { type: "paragraph"; text: string };
 
-  if (!content) {
+type InlineToken =
+  | { type: "text"; value: string }
+  | { type: "code"; value: string }
+  | { type: "strong"; value: string }
+  | { type: "em"; value: string }
+  | { type: "strong_em"; value: string }
+  | { type: "del"; value: string }
+  | { type: "link"; text: string; href: string };
+
+function parseInlineTokens(text: string): InlineToken[] {
+  const tokens: InlineToken[] = [];
+  const regex =
+    /(`[^`]+`|\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*|__[^_]+__|_[^_]+_|~~[^~]+~~|\[[^\]]+\]\([^)]+\))/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      tokens.push({ type: "text", value: text.slice(lastIndex, match.index) });
+    }
+    const raw = match[0];
+    if (raw.startsWith("`") && raw.endsWith("`")) {
+      tokens.push({ type: "code", value: raw.slice(1, -1) });
+    } else if (raw.startsWith("***") && raw.endsWith("***")) {
+      tokens.push({ type: "strong_em", value: raw.slice(3, -3) });
+    } else if (raw.startsWith("**") && raw.endsWith("**")) {
+      tokens.push({ type: "strong", value: raw.slice(2, -2) });
+    } else if (raw.startsWith("__") && raw.endsWith("__")) {
+      tokens.push({ type: "strong", value: raw.slice(2, -2) });
+    } else if (raw.startsWith("*") && raw.endsWith("*")) {
+      tokens.push({ type: "em", value: raw.slice(1, -1) });
+    } else if (raw.startsWith("_") && raw.endsWith("_")) {
+      tokens.push({ type: "em", value: raw.slice(1, -1) });
+    } else if (raw.startsWith("~~") && raw.endsWith("~~")) {
+      tokens.push({ type: "del", value: raw.slice(2, -2) });
+    } else if (raw.startsWith("[") && raw.includes("](")) {
+      const linkMatch = raw.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+      if (linkMatch && linkMatch[1] && linkMatch[2]) {
+        tokens.push({ type: "link", text: linkMatch[1], href: linkMatch[2] });
+      } else {
+        tokens.push({ type: "text", value: raw });
+      }
+    }
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < text.length) {
+    tokens.push({ type: "text", value: text.slice(lastIndex) });
+  }
+  return tokens;
+}
+
+function parseMarkdownBlocks(text: string): Block[] {
+  if (!text) return [];
+
+  const lines = text.replace(/\r\n/g, "\n").split("\n");
+  const blocks: Block[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const currentLine = lines[i];
+    if (currentLine === undefined) break;
+
+    // Blank line
+    if (!currentLine.trim()) {
+      i++;
+      continue;
+    }
+
+    // Fenced Code Block: ```lang
+    if (currentLine.trim().startsWith("```")) {
+      const lang = currentLine.trim().slice(3).trim();
+      const codeLines: string[] = [];
+      i++;
+      while (i < lines.length) {
+        const cl = lines[i];
+        if (cl === undefined || cl.trim().startsWith("```")) break;
+        codeLines.push(cl);
+        i++;
+      }
+      if (i < lines.length) i++; // skip closing ```
+      blocks.push({ type: "code", lang: lang || undefined, text: codeLines.join("\n") });
+      continue;
+    }
+
+    // Headings: #, ##, ###, ####, etc.
+    const headingMatch = currentLine.match(/^(#{1,6})\s+(.*)$/);
+    if (headingMatch && headingMatch[1] && headingMatch[2]) {
+      blocks.push({
+        type: "heading",
+        level: headingMatch[1].length,
+        text: headingMatch[2].trim(),
+      });
+      i++;
+      continue;
+    }
+
+    // Horizontal Rule: --- or *** or ___
+    if (/^(\*{3,}|-{3,}|_{3,})$/.test(currentLine.trim())) {
+      blocks.push({ type: "hr" });
+      i++;
+      continue;
+    }
+
+    // Blockquote: > text
+    if (currentLine.trim().startsWith(">")) {
+      const quoteLines: string[] = [];
+      while (i < lines.length) {
+        const ql = lines[i];
+        if (!ql || !ql.trim().startsWith(">")) break;
+        quoteLines.push(ql.replace(/^>\s?/, ""));
+        i++;
+      }
+      blocks.push({ type: "blockquote", text: quoteLines.join("\n").trim() });
+      continue;
+    }
+
+    // Table: | Header 1 | Header 2 |
+    if (currentLine.trim().startsWith("|") && currentLine.trim().endsWith("|")) {
+      const tableLines: string[] = [];
+      while (i < lines.length) {
+        const tl = lines[i];
+        if (!tl || !tl.trim().startsWith("|") || !tl.trim().endsWith("|")) break;
+        tableLines.push(tl.trim());
+        i++;
+      }
+      if (tableLines.length >= 2 && tableLines[0]) {
+        const splitRow = (row: string) =>
+          row
+            .slice(1, -1)
+            .split("|")
+            .map((cell) => cell.trim());
+
+        const headers = splitRow(tableLines[0]);
+        const rows = tableLines.slice(2).map(splitRow);
+        blocks.push({ type: "table", headers, rows });
+        continue;
+      }
+    }
+
+    // Unordered List: - item or * item
+    if (/^[-*+]\s+/.test(currentLine.trim())) {
+      const items: string[] = [];
+      while (i < lines.length) {
+        const ulLine = lines[i];
+        if (!ulLine || !/^[-*+]\s+/.test(ulLine.trim())) break;
+        items.push(ulLine.trim().replace(/^[-*+]\s+/, ""));
+        i++;
+      }
+      blocks.push({ type: "list", ordered: false, items });
+      continue;
+    }
+
+    // Ordered List: 1. item
+    if (/^\d+\.\s+/.test(currentLine.trim())) {
+      const items: string[] = [];
+      while (i < lines.length) {
+        const olLine = lines[i];
+        if (!olLine || !/^\d+\.\s+/.test(olLine.trim())) break;
+        items.push(olLine.trim().replace(/^\d+\.\s+/, ""));
+        i++;
+      }
+      blocks.push({ type: "list", ordered: true, items });
+      continue;
+    }
+
+    // Paragraph (accumulate consecutive non-empty lines that don't start other blocks)
+    const paragraphLines: string[] = [currentLine];
+    i++;
+    while (i < lines.length) {
+      const pLine = lines[i];
+      if (
+        !pLine ||
+        !pLine.trim() ||
+        pLine.trim().startsWith("#") ||
+        pLine.trim().startsWith("```") ||
+        pLine.trim().startsWith(">") ||
+        /^[-*+]\s+/.test(pLine.trim()) ||
+        /^\d+\.\s+/.test(pLine.trim()) ||
+        (pLine.trim().startsWith("|") && pLine.trim().endsWith("|")) ||
+        /^(\*{3,}|-{3,}|_{3,})$/.test(pLine.trim())
+      ) {
+        break;
+      }
+      paragraphLines.push(pLine);
+      i++;
+    }
+    blocks.push({ type: "paragraph", text: paragraphLines.join("\n") });
+  }
+
+  return blocks;
+}
+
+export function MarkdownContent({ content, className = "" }: MarkdownContentProps) {
+  const blocks = useMemo(() => parseMarkdownBlocks(content), [content]);
+
+  if (!content || blocks.length === 0) {
     return null;
   }
 
   return (
     <div className={`space-y-4 text-foreground ${className}`} data-testid="markdown-content">
-      {renderTokens(tokens)}
+      {blocks.map((block, index) => renderBlock(block, index))}
     </div>
   );
 }
 
-function renderTokens(tokens: Token[]): React.ReactNode {
-  return tokens.map((token, index) => renderBlockToken(token, index));
+function renderInline(text: string): React.ReactNode {
+  const lines = text.split("\n");
+  if (lines.length > 1) {
+    return lines.map((line, idx) => (
+      <React.Fragment key={idx}>
+        {renderInlineSingleLine(line)}
+        {idx < lines.length - 1 && <br />}
+      </React.Fragment>
+    ));
+  }
+  return renderInlineSingleLine(text);
 }
 
-function renderBlockToken(token: Token, key: number | string): React.ReactNode {
-  switch (token.type) {
-    case "heading": {
-      const headingToken = token as Tokens.Heading;
-      const inline = renderInlineTokens(headingToken.tokens);
+function renderInlineSingleLine(text: string): React.ReactNode {
+  const tokens = parseInlineTokens(text);
+  return tokens.map((token, index) => {
+    switch (token.type) {
+      case "code":
+        return (
+          <code
+            key={index}
+            className="px-1.5 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-primary font-mono text-xs md:text-sm font-semibold tracking-wide"
+          >
+            {token.value}
+          </code>
+        );
+      case "strong_em":
+        return (
+          <strong key={index} className="font-bold italic text-foreground">
+            {token.value}
+          </strong>
+        );
+      case "strong":
+        return (
+          <strong key={index} className="font-bold text-foreground">
+            {token.value}
+          </strong>
+        );
+      case "em":
+        return (
+          <em key={index} className="italic text-foreground/90">
+            {token.value}
+          </em>
+        );
+      case "del":
+        return (
+          <del key={index} className="line-through text-muted-foreground">
+            {token.value}
+          </del>
+        );
+      case "link":
+        return (
+          <a
+            key={index}
+            href={token.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline font-medium hover:text-primary/80 transition-colors"
+          >
+            {token.text}
+          </a>
+        );
+      case "text":
+      default:
+        return <React.Fragment key={index}>{token.value}</React.Fragment>;
+    }
+  });
+}
 
-      switch (headingToken.depth) {
+function renderBlock(block: Block, key: number | string): React.ReactNode {
+  switch (block.type) {
+    case "heading": {
+      const inline = renderInline(block.text);
+      switch (block.level) {
         case 1:
           return (
             <h1
@@ -81,56 +337,48 @@ function renderBlockToken(token: Token, key: number | string): React.ReactNode {
       }
     }
 
-    case "paragraph": {
-      const pToken = token as Tokens.Paragraph;
+    case "paragraph":
       return (
         <p key={key} className="text-sm md:text-base text-foreground/90 leading-relaxed mb-3 last:mb-0">
-          {renderInlineTokens(pToken.tokens)}
+          {renderInline(block.text)}
         </p>
       );
-    }
 
-    case "code": {
-      const codeToken = token as Tokens.Code;
+    case "code":
       return (
         <div
           key={key}
           className="my-3.5 rounded-xl border border-border/80 bg-muted/60 dark:bg-muted/30 p-4 font-mono text-xs md:text-sm text-foreground overflow-x-auto shadow-xs"
         >
-          {codeToken.lang && (
+          {block.lang && (
             <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground pb-2 border-b border-border/50 mb-2">
-              {codeToken.lang}
+              {block.lang}
             </div>
           )}
-          <pre className="whitespace-pre-wrap break-words">{codeToken.text}</pre>
+          <pre className="whitespace-pre-wrap break-words">{block.text}</pre>
         </div>
       );
-    }
 
-    case "blockquote": {
-      const bqToken = token as Tokens.Blockquote;
+    case "blockquote":
       return (
         <blockquote
           key={key}
           className="my-3.5 pl-4 border-l-4 border-primary/70 bg-primary/5 dark:bg-primary/10 py-3 pr-4 rounded-r-xl text-sm text-foreground/90 space-y-2"
         >
-          {bqToken.tokens ? renderTokens(bqToken.tokens) : <p>{bqToken.text}</p>}
+          {renderInline(block.text)}
         </blockquote>
       );
-    }
 
-    case "list": {
-      const listToken = token as Tokens.List;
-      if (listToken.ordered) {
+    case "list":
+      if (block.ordered) {
         return (
           <ol
             key={key}
-            start={listToken.start ? Number(listToken.start) : 1}
             className="my-3 space-y-1.5 pl-5 list-decimal text-sm md:text-base text-foreground/90"
           >
-            {listToken.items.map((item, idx) => (
+            {block.items.map((item, idx) => (
               <li key={idx} className="leading-relaxed pl-1">
-                {renderListItem(item)}
+                {renderInline(item)}
               </li>
             ))}
           </ol>
@@ -141,35 +389,33 @@ function renderBlockToken(token: Token, key: number | string): React.ReactNode {
           key={key}
           className="my-3 space-y-1.5 pl-5 list-disc marker:text-primary text-sm md:text-base text-foreground/90"
         >
-          {listToken.items.map((item, idx) => (
+          {block.items.map((item, idx) => (
             <li key={idx} className="leading-relaxed pl-1">
-              {renderListItem(item)}
+              {renderInline(item)}
             </li>
           ))}
         </ul>
       );
-    }
 
-    case "table": {
-      const tableToken = token as Tokens.Table;
+    case "table":
       return (
         <div key={key} className="my-4 overflow-x-auto rounded-xl border border-border/80 bg-card shadow-xs">
           <table className="w-full text-xs md:text-sm text-left border-collapse">
             <thead className="bg-muted/50 border-b border-border/80 font-bold text-foreground">
               <tr>
-                {tableToken.header.map((cell, idx) => (
+                {block.headers.map((header, idx) => (
                   <th key={idx} className="p-3 text-left">
-                    {renderInlineTokens(cell.tokens)}
+                    {renderInline(header)}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">
-              {tableToken.rows.map((row, rowIdx) => (
+              {block.rows.map((row, rowIdx) => (
                 <tr key={rowIdx} className="hover:bg-muted/30 transition-colors">
                   {row.map((cell, colIdx) => (
                     <td key={colIdx} className="p-3 align-top">
-                      {renderInlineTokens(cell.tokens)}
+                      {renderInline(cell ?? "")}
                     </td>
                   ))}
                 </tr>
@@ -178,141 +424,11 @@ function renderBlockToken(token: Token, key: number | string): React.ReactNode {
           </table>
         </div>
       );
-    }
 
     case "hr":
       return <hr key={key} className="my-6 border-border/80" />;
 
-    case "space":
-      return null;
-
     default:
-      if ("tokens" in token && Array.isArray((token as any).tokens)) {
-        return <div key={key}>{renderTokens((token as any).tokens)}</div>;
-      }
-      if ("text" in token && typeof (token as any).text === "string") {
-        return (
-          <p key={key} className="text-sm md:text-base text-foreground/90 leading-relaxed mb-3">
-            {(token as any).text}
-          </p>
-        );
-      }
-      return null;
-  }
-}
-
-function renderListItem(item: Tokens.ListItem): React.ReactNode {
-  if (item.tokens && item.tokens.length > 0) {
-    // If list item contains only text/paragraph tokens, render them inline to prevent double spacing
-    const firstToken = item.tokens[0];
-    const isSingleSimple =
-      item.tokens.length === 1 &&
-      Boolean(firstToken && (firstToken.type === "text" || firstToken.type === "paragraph"));
-
-    if (isSingleSimple && firstToken) {
-      const child = firstToken as Tokens.Text | Tokens.Paragraph;
-      return renderInlineTokens(child.tokens || [{ type: "text", raw: child.text, text: child.text }]);
-    }
-
-    return item.tokens.map((child, idx) => {
-      if (child.type === "text" || child.type === "paragraph") {
-        const textChild = child as Tokens.Text | Tokens.Paragraph;
-        return (
-          <span key={idx}>
-            {renderInlineTokens(textChild.tokens || [{ type: "text", raw: textChild.text, text: textChild.text }])}
-          </span>
-        );
-      }
-      return renderBlockToken(child, idx);
-    });
-  }
-
-  return item.text;
-}
-
-function renderInlineTokens(tokens?: Token[]): React.ReactNode {
-  if (!tokens || tokens.length === 0) {
-    return null;
-  }
-
-  return tokens.map((token, index) => renderInlineToken(token, index));
-}
-
-function renderInlineToken(token: Token, key: number | string): React.ReactNode {
-  switch (token.type) {
-    case "text": {
-      const textToken = token as Tokens.Text;
-      if (textToken.tokens && textToken.tokens.length > 0) {
-        return <React.Fragment key={key}>{renderInlineTokens(textToken.tokens)}</React.Fragment>;
-      }
-      return <React.Fragment key={key}>{textToken.text}</React.Fragment>;
-    }
-
-    case "strong": {
-      const strongToken = token as Tokens.Strong;
-      return (
-        <strong key={key} className="font-bold text-foreground">
-          {renderInlineTokens(strongToken.tokens)}
-        </strong>
-      );
-    }
-
-    case "em": {
-      const emToken = token as Tokens.Em;
-      return (
-        <em key={key} className="italic text-foreground/90">
-          {renderInlineTokens(emToken.tokens)}
-        </em>
-      );
-    }
-
-    case "codespan": {
-      const codeToken = token as Tokens.Codespan;
-      return (
-        <code
-          key={key}
-          className="px-1.5 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-primary font-mono text-xs md:text-sm font-semibold tracking-wide"
-        >
-          {codeToken.text}
-        </code>
-      );
-    }
-
-    case "del": {
-      const delToken = token as Tokens.Del;
-      return (
-        <del key={key} className="line-through text-muted-foreground">
-          {renderInlineTokens(delToken.tokens)}
-        </del>
-      );
-    }
-
-    case "link": {
-      const linkToken = token as Tokens.Link;
-      return (
-        <a
-          key={key}
-          href={linkToken.href}
-          title={linkToken.title ?? undefined}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary underline font-medium hover:text-primary/80 transition-colors"
-        >
-          {renderInlineTokens(linkToken.tokens)}
-        </a>
-      );
-    }
-
-    case "br":
-      return <br key={key} />;
-
-    case "escape":
-      return <React.Fragment key={key}>{(token as Tokens.Escape).text}</React.Fragment>;
-
-    default:
-      if ("text" in token && typeof (token as any).text === "string") {
-        return <React.Fragment key={key}>{(token as any).text}</React.Fragment>;
-      }
       return null;
   }
 }
