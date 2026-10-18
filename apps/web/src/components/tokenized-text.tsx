@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   Popover,
@@ -556,12 +556,17 @@ function TokenItemBase({
   );
   const [isMinerOpen, setIsMinerOpen] = useState(false);
 
+  const fullTextRef = useRef(fullText);
+  fullTextRef.current = fullText;
+  const enContextRef = useRef(enContext);
+  enContextRef.current = enContext;
+
   if (isPunctuation) {
     return <span className="text-muted-foreground">{word}</span>;
   }
 
   const furiganaText = toHiragana(reading || dictData?.reading || "");
-  const extractedSentence = isMinerOpen ? extractSentence(fullText, word) : "";
+  const extractedSentence = isMinerOpen ? extractSentence(fullTextRef.current, word) : "";
 
   return (
     <>
@@ -627,7 +632,7 @@ function TokenItemBase({
           reading={dictData?.reading || reading}
           meanings={dictData?.meanings}
           sentenceJp={extractedSentence}
-          sentenceEn={enContext}
+          sentenceEn={enContextRef.current}
         />
       )}
     </>
@@ -641,9 +646,7 @@ const TokenItem = memo(TokenItemBase, (prev, next) => {
     prev.nextWord === next.nextWord &&
     prev.isMerged === next.isMerged &&
     prev.showFurigana === next.showFurigana &&
-    prev.hasFlashcard === next.hasFlashcard &&
-    prev.fullText === next.fullText &&
-    prev.enContext === next.enContext
+    prev.hasFlashcard === next.hasFlashcard
   );
 });
 

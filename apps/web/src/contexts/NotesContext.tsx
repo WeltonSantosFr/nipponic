@@ -6,6 +6,7 @@ import {
   useEffect,
   useCallback,
   useRef,
+  useMemo,
   ReactNode,
 } from "react";
 import {
@@ -94,7 +95,10 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     isHydratedRef.current = true;
   }, []);
 
-  const selectedNote = notes.find((n) => n.id === selectedNoteId);
+  const selectedNote = useMemo(
+    () => notes.find((n) => n.id === selectedNoteId),
+    [notes, selectedNoteId]
+  );
 
   const saveNote = useCallback(
     async (id: string, extraUpdates?: UpdateNoteInput) => {
@@ -275,7 +279,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     }
   }, [refreshNotes, isWakingServer]);
 
-  const createNewNote = async (): Promise<Note> => {
+  const createNewNote = useCallback(async (): Promise<Note> => {
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const nowIso = new Date().toISOString();
     const newNote: Note = {
@@ -326,84 +330,103 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     });
     handleSelectNoteId(tempId);
     return newNote;
-  };
+  }, [isAuthenticated, handleSelectNoteId]);
 
-  const updateNoteContent = (id: string, updates: UpdateNoteInput) => {
-    const nowIso = new Date().toISOString();
-    setNotes((prevNotes) => {
-      const next = prevNotes.map((note) =>
-        note.id === id
-          ? {
-              ...note,
-              ...updates,
-              updatedAt: nowIso,
-            }
-          : note
-      );
-      notesRef.current = next;
-      persistNotes(next);
-      return next;
-    });
+  const updateNoteContent = useCallback(
+    (id: string, updates: UpdateNoteInput) => {
+      const nowIso = new Date().toISOString();
+      setNotes((prevNotes) => {
+        const next = prevNotes.map((note) =>
+          note.id === id
+            ? {
+                ...note,
+                ...updates,
+                updatedAt: nowIso,
+              }
+            : note
+        );
+        notesRef.current = next;
+        persistNotes(next);
+        return next;
+      });
 
-    // Schedule debounced autosave (500ms) for backend sync
-    if (isAuthenticated) {
+      // Schedule debounced autosave (500ms) for backend sync
+      if (isAuthenticated) {
+        const existingTimer = autosaveTimersRef.current.get(id);
+        if (existingTimer) {
+          clearTimeout(existingTimer);
+        }
+
+        const timer = setTimeout(() => {
+          autosaveTimersRef.current.delete(id);
+          saveNote(id);
+        }, 500);
+
+        autosaveTimersRef.current.set(id, timer);
+      }
+    },
+    [isAuthenticated, saveNote]
+  );
+
+  const deleteNote = useCallback(
+    async (id: string) => {
+      // Clear any active autosave timer
       const existingTimer = autosaveTimersRef.current.get(id);
       if (existingTimer) {
         clearTimeout(existingTimer);
+        autosaveTimersRef.current.delete(id);
       }
 
-      const timer = setTimeout(() => {
-        autosaveTimersRef.current.delete(id);
-        saveNote(id);
-      }, 500);
+      // Optimistic delete with instant persistence
+      setNotes((prev) => {
+        const next = prev.filter((n) => n.id !== id);
+        notesRef.current = next;
+        persistNotes(next);
+        return next;
+      });
 
-      autosaveTimersRef.current.set(id, timer);
-    }
-  };
+      if (selectedNoteId === id) {
+        handleSelectNoteId(null);
+      }
 
-  const deleteNote = async (id: string) => {
-    // Clear any active autosave timer
-    const existingTimer = autosaveTimersRef.current.get(id);
-    if (existingTimer) {
-      clearTimeout(existingTimer);
-      autosaveTimersRef.current.delete(id);
-    }
+      if (!isAuthenticated || id.startsWith("temp-")) return;
 
-    // Optimistic delete with instant persistence
-    setNotes((prev) => {
-      const next = prev.filter((n) => n.id !== id);
-      notesRef.current = next;
-      persistNotes(next);
-      return next;
-    });
+      try {
+        await deleteNoteAction(id);
+      } catch (error) {
+        console.error("Error deleting note on backend:", error);
+      }
+    },
+    [isAuthenticated, selectedNoteId, handleSelectNoteId]
+  );
 
-    if (selectedNoteId === id) {
-      handleSelectNoteId(null);
-    }
-
-    if (!isAuthenticated || id.startsWith("temp-")) return;
-
-    try {
-      await deleteNoteAction(id);
-    } catch (error) {
-      console.error("Error deleting note on backend:", error);
-    }
-  };
+  const contextValue = useMemo(
+    () => ({
+      notes,
+      selectedNoteId,
+      selectedNote,
+      setSelectedNoteId: handleSelectNoteId,
+      createNewNote,
+      updateNoteContent,
+      saveNote,
+      deleteNote,
+      refreshNotes,
+    }),
+    [
+      notes,
+      selectedNoteId,
+      selectedNote,
+      handleSelectNoteId,
+      createNewNote,
+      updateNoteContent,
+      saveNote,
+      deleteNote,
+      refreshNotes,
+    ]
+  );
 
   return (
-    <NotesContext.Provider
-      value={{
-        notes,
-        selectedNoteId,
-        selectedNote,
-        setSelectedNoteId: handleSelectNoteId,
-        createNewNote,
-        updateNoteContent,
-        saveNote,
-        deleteNote,
-        refreshNotes,
-      }}
-    >
+    <NotesContext.Provider value={contextValue}>
       {children}
     </NotesContext.Provider>
   );

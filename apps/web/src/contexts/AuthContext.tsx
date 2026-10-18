@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from "react";
 import { saveAuthCookie, removeAuthCookie } from "../actions/auth";
 import { jwtDecode } from "jwt-decode";
 import type { UserPayload, AuthContextData } from "@nipponic/shared";
@@ -45,7 +45,7 @@ export function AuthProvider({
 
   const hasInitialToken = !!initialUser || !!user;
 
-  const login = async (token: string) => {
+  const login = useCallback(async (token: string) => {
     await saveAuthCookie(token);
     const decoded = jwtDecode<UserPayload>(token);
     setUser(decoded);
@@ -56,9 +56,9 @@ export function AuthProvider({
       // Ignore localStorage write errors
     }
     setIsWakingServer(false);
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await removeAuthCookie();
     setUser(null);
     try {
@@ -68,21 +68,24 @@ export function AuthProvider({
       // Ignore localStorage remove errors
     }
     setIsWakingServer(false);
-  };
+  }, []);
+
+  const contextValue = useMemo(
+    () => ({
+      user,
+      isAuthenticated: !!user,
+      isWakingServer,
+      setIsWakingServer,
+      hasInitialToken,
+      login,
+      logout,
+      setUser,
+    }),
+    [user, isWakingServer, hasInitialToken, login, logout]
+  );
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isWakingServer,
-        setIsWakingServer,
-        hasInitialToken,
-        login,
-        logout,
-        setUser,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
