@@ -46,6 +46,62 @@ describe("useSpeech hook", () => {
   it("should initialize with default states", () => {
     const { result } = renderHook(() => useSpeech());
     expect(result.current.isPlaying).toBe(false);
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.activeLang).toBeNull();
+  });
+
+  it("should set isLoading while audio is fetching/buffering, then transition to isPlaying once playback starts", async () => {
+    // Override MockAudio so play() does NOT automatically call onplay synchronously
+    let audioInstance: any;
+    vi.stubGlobal(
+      "Audio",
+      class ManualMockAudio {
+        src: string;
+        playbackRate = 1.0;
+        onplay: (() => void) | null = null;
+        onended: (() => void) | null = null;
+        onerror: ((e: any) => void) | null = null;
+        play = vi.fn().mockImplementation(() => {
+          // Do not call onplay yet to simulate network/buffering delay
+          return Promise.resolve();
+        });
+        pause = vi.fn();
+
+        constructor(src: string) {
+          this.src = src;
+          audioInstance = this;
+        }
+      }
+    );
+
+    const { result } = renderHook(() => useSpeech());
+
+    let promise: Promise<void>;
+    act(() => {
+      promise = result.current.speak("こんにちは", "ja-JP", 1.0);
+    });
+
+    // In-flight: isLoading must be true and isPlaying false
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.isPlaying).toBe(false);
+    expect(result.current.activeLang).toBe("ja-JP");
+
+    // Audio starts playing
+    act(() => {
+      audioInstance.onplay?.();
+    });
+
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.isPlaying).toBe(true);
+
+    // Audio finishes
+    await act(async () => {
+      audioInstance.onended?.();
+      await promise;
+    });
+
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.isPlaying).toBe(false);
     expect(result.current.activeLang).toBeNull();
   });
 

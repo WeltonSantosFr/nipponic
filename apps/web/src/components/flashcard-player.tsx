@@ -18,6 +18,7 @@ import {
   Trophy,
   Layers,
   Flame,
+  Loader2,
 } from "lucide-react";
 import { OfflineIndicator } from "@/components/offline-indicator";
 
@@ -40,7 +41,7 @@ export function FlashcardPlayer({ deck, onClose }: FlashcardPlayerProps) {
     easy: 0,
   });
 
-  const { speak, stop, isPlaying } = useSpeech();
+  const { speak, stop, isPlaying, isLoading: isSpeechLoading } = useSpeech();
 
   const currentCard = queue[0];
 
@@ -398,11 +399,13 @@ export function FlashcardPlayer({ deck, onClose }: FlashcardPlayerProps) {
                   <button
                     type="button"
                     onClick={(e) => handleSpeech(e, currentCard?.jpText || "")}
-                    disabled={isPlaying}
+                    disabled={isPlaying || isSpeechLoading}
                     className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all cursor-pointer text-xs font-semibold mt-1"
                     title={`Pronounce at ${speechRate}x`}
                   >
-                    {isPlaying ? (
+                    {isSpeechLoading ? (
+                      <Loader2 size={15} className="animate-spin text-primary" />
+                    ) : isPlaying ? (
                       <VolumeX size={15} className="animate-pulse" />
                     ) : (
                       <Volume2 size={15} />
@@ -420,11 +423,15 @@ export function FlashcardPlayer({ deck, onClose }: FlashcardPlayerProps) {
                       onClick={(e) =>
                         handleSpeech(e, currentCard?.jpText || "")
                       }
-                      disabled={isPlaying}
+                      disabled={isPlaying || isSpeechLoading}
                       className="p-1 rounded-full hover:text-primary hover:bg-primary/10 transition-colors shrink-0"
                       title="Pronounce Japanese"
                     >
-                      <Volume2 size={14} />
+                      {isSpeechLoading ? (
+                        <Loader2 size={14} className="animate-spin text-primary" />
+                      ) : (
+                        <Volume2 size={14} />
+                      )}
                     </button>
                   </div>
 

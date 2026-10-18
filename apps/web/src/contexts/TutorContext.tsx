@@ -43,6 +43,7 @@ export interface TutorContextData {
     comment?: string
   ) => Promise<boolean>;
   addVocabularyToDeck: (targetDeckId?: string) => Promise<{ createdCount: number }>;
+  closeLesson: () => void;
 }
 
 const TutorContext = createContext<TutorContextData>({} as TutorContextData);
@@ -348,6 +349,11 @@ export function TutorProvider({ children }: { children: ReactNode }) {
     [currentLesson, selectedLevel, decks, createDeck, createCard, addCardsToDeck]
   );
 
+  const closeLesson = useCallback(() => {
+    setSelectedTopicId(null);
+    setCurrentLesson(null);
+  }, []);
+
   return (
     <TutorContext.Provider
       value={{
@@ -363,6 +369,7 @@ export function TutorProvider({ children }: { children: ReactNode }) {
         error,
         clearError,
         loadLesson,
+        closeLesson,
         generateNextUnit,
         submitProgress,
         submitFeedback,

@@ -31,6 +31,7 @@ vi.mock("@/hooks/use-speech", () => ({
     speak: mockSpeak,
     stop: mockStop,
     isPlaying: false,
+    isLoading: false,
   }),
 }));
 

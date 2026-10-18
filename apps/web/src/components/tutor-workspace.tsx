@@ -39,6 +39,7 @@ export function TutorWorkspace() {
     isGeneratingUnit,
     generateNextUnit,
     loadLesson,
+    closeLesson,
     submitProgress,
     submitFeedback,
     addVocabularyToDeck,
@@ -47,13 +48,16 @@ export function TutorWorkspace() {
     clearError,
   } = useTutor();
 
-  const { speak, isPlaying } = useSpeech();
+  const { speak, stop, isPlaying, isLoading } = useSpeech();
 
   const [activeStep, setActiveStep] = useState<LessonStep>("theory");
   const [exerciseAnswers, setExerciseAnswers] = useState<Record<number, boolean>>({});
   const [feedbackSubmitted, setFeedbackSubmitted] = useState<boolean>(false);
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState<boolean>(false);
   const [isAddingCards, setIsAddingCards] = useState<boolean>(false);
   const [cardsAddedCount, setCardsAddedCount] = useState<number | null>(null);
+  const [activeAudioId, setActiveAudioId] = useState<string | null>(null);
+  const [isFinishing, setIsFinishing] = useState<boolean>(false);
 
   // Group curriculum topics by unit
   const units = useMemo(() => {
@@ -117,10 +121,54 @@ export function TutorWorkspace() {
     }
   };
 
+  const handlePlayAudio = async (id: string, text: string) => {
+    if (activeAudioId === id) {
+      stop();
+      setActiveAudioId(null);
+      return;
+    }
+
+    setActiveAudioId(id);
+    try {
+      await speak(text, "ja-JP", 1.0, () => {
+        setActiveAudioId((current) => (current === id ? null : current));
+      });
+    } finally {
+      setActiveAudioId((current) => (current === id ? null : current));
+    }
+  };
+
+  const handleFinishLesson = async () => {
+    setIsFinishing(true);
+    try {
+      if (currentLesson) {
+        const exerciseCount = currentLesson.exercises?.length || 0;
+        const answeredCount = Object.keys(exerciseAnswers).length;
+        if (exerciseCount > 0 && answeredCount > 0) {
+          const correctCount = Object.values(exerciseAnswers).filter(Boolean).length;
+          const score = Math.round((correctCount / exerciseCount) * 100);
+          await submitProgress(score);
+        } else {
+          await submitProgress(100);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to submit progress on finish:", err);
+    } finally {
+      setIsFinishing(false);
+      closeLesson();
+    }
+  };
+
   const handleFeedback = async (rating: "helpful" | "confusing") => {
-    if (feedbackSubmitted) return;
-    await submitFeedback(rating);
-    setFeedbackSubmitted(true);
+    if (feedbackSubmitted || isSubmittingFeedback) return;
+    setIsSubmittingFeedback(true);
+    try {
+      await submitFeedback(rating);
+      setFeedbackSubmitted(true);
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
   };
 
   // If loading curriculum on first load with no cached items
@@ -378,7 +426,7 @@ export function TutorWorkspace() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setSelectedTopicId(null)}
+            onClick={closeLesson}
             className="gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
           >
             <ChevronLeft size={16} />
@@ -523,11 +571,18 @@ export function TutorWorkspace() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      onClick={() => speak(line.jpText, "ja-JP")}
+                      onClick={() => handlePlayAudio(`dialogue-${idx}`, line.jpText)}
                       className="shrink-0 text-muted-foreground hover:text-foreground cursor-pointer h-9 w-9"
                       title="Play pronunciation audio"
+                      aria-label="Play pronunciation audio"
                     >
-                      <Volume2 size={18} />
+                      {activeAudioId === `dialogue-${idx}` && isLoading ? (
+                        <Loader2 size={18} className="animate-spin text-primary" />
+                      ) : activeAudioId === `dialogue-${idx}` && isPlaying ? (
+                        <Volume2 size={18} className="text-primary animate-pulse" />
+                      ) : (
+                        <Volume2 size={18} />
+                      )}
                     </Button>
                   </div>
                 ))}
@@ -708,11 +763,18 @@ export function TutorWorkspace() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      onClick={() => speak(item.jpText, "ja-JP")}
+                      onClick={() => handlePlayAudio(`vocab-${idx}`, item.jpText)}
                       className="text-muted-foreground hover:text-foreground cursor-pointer"
                       title="Listen"
+                      aria-label="Listen"
                     >
-                      <Volume2 size={16} />
+                      {activeAudioId === `vocab-${idx}` && isLoading ? (
+                        <Loader2 size={16} className="animate-spin text-primary" />
+                      ) : activeAudioId === `vocab-${idx}` && isPlaying ? (
+                        <Volume2 size={16} className="text-primary animate-pulse" />
+                      ) : (
+                        <Volume2 size={16} />
+                      )}
                     </Button>
                   </div>
                 ))}
@@ -725,21 +787,29 @@ export function TutorWorkspace() {
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled={feedbackSubmitted}
+                    disabled={feedbackSubmitted || isSubmittingFeedback}
                     onClick={() => handleFeedback("helpful")}
                     className="h-8 gap-1.5 text-xs cursor-pointer hover:text-emerald-600 hover:border-emerald-500/50"
                   >
-                    <ThumbsUp size={13} />
+                    {isSubmittingFeedback ? (
+                      <Loader2 size={13} className="animate-spin" />
+                    ) : (
+                      <ThumbsUp size={13} />
+                    )}
                     Helpful
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled={feedbackSubmitted}
+                    disabled={feedbackSubmitted || isSubmittingFeedback}
                     onClick={() => handleFeedback("confusing")}
                     className="h-8 gap-1.5 text-xs cursor-pointer hover:text-red-500 hover:border-red-500/50"
                   >
-                    <ThumbsDown size={13} />
+                    {isSubmittingFeedback ? (
+                      <Loader2 size={13} className="animate-spin" />
+                    ) : (
+                      <ThumbsDown size={13} />
+                    )}
                     Needs improvement
                   </Button>
                 </div>
@@ -756,11 +826,21 @@ export function TutorWorkspace() {
                 Back to Exercises
               </Button>
               <Button
-                onClick={() => setSelectedTopicId(null)}
+                onClick={handleFinishLesson}
+                disabled={isFinishing}
                 className="gap-2 cursor-pointer font-semibold shadow-xs"
               >
-                <span>Finish & Return to Curriculum</span>
-                <CheckCircle2 size={16} />
+                {isFinishing ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Finishing...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Finish & Return to Curriculum</span>
+                    <CheckCircle2 size={16} />
+                  </>
+                )}
               </Button>
             </div>
           </div>

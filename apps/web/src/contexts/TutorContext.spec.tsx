@@ -163,4 +163,38 @@ describe("TutorContext Regression Tests", () => {
     expect(result.current.currentLesson).toBeNull();
     expect(result.current.error).toBe("Failed to generate or load lesson. Please try again.");
   });
+
+  it("should clear both currentLesson and selectedTopicId when closeLesson is called", async () => {
+    const mockLesson: Lesson = {
+      id: "les_1",
+      topicId: "top_1",
+      title: "Test Lesson",
+      level: "N5",
+      theoryMarkdown: "# Test",
+      dialogue: [],
+      vocabulary: [],
+      exercises: [],
+    };
+
+    vi.mocked(getCurriculumAction).mockResolvedValue([]);
+    vi.mocked(getLessonAction).mockResolvedValue(mockLesson);
+
+    const { result } = renderHook(() => useTutor(), {
+      wrapper: ({ children }) => <TutorProvider>{children}</TutorProvider>,
+    });
+
+    await act(async () => {
+      await result.current.loadLesson("top_1");
+    });
+
+    expect(result.current.selectedTopicId).toBe("top_1");
+    expect(result.current.currentLesson).toEqual(mockLesson);
+
+    act(() => {
+      result.current.closeLesson();
+    });
+
+    expect(result.current.selectedTopicId).toBeNull();
+    expect(result.current.currentLesson).toBeNull();
+  });
 });

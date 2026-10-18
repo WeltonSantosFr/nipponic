@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { TutorWorkspace } from "./tutor-workspace";
 import * as TutorContextModule from "@/contexts/TutorContext";
 import * as SpeechModule from "@/hooks/use-speech";
@@ -24,6 +24,7 @@ describe("TutorWorkspace", () => {
   const mockSubmitFeedback = vi.fn();
   const mockAddVocabularyToDeck = vi.fn().mockResolvedValue({ createdCount: 2 });
   const mockSetSelectedTopicId = vi.fn();
+  const mockCloseLesson = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -31,6 +32,7 @@ describe("TutorWorkspace", () => {
     vi.mocked(SpeechModule.useSpeech).mockReturnValue({
       speak: mockSpeak,
       isPlaying: false,
+      isLoading: false,
       stop: vi.fn(),
       isSupported: true,
       voices: [],
@@ -56,6 +58,7 @@ describe("TutorWorkspace", () => {
       currentLesson: null,
       isLoadingLesson: false,
       loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
       submitProgress: mockSubmitProgress,
       submitFeedback: mockSubmitFeedback,
       addVocabularyToDeck: mockAddVocabularyToDeck,
@@ -117,6 +120,7 @@ describe("TutorWorkspace", () => {
       submitFeedback: mockSubmitFeedback,
       addVocabularyToDeck: mockAddVocabularyToDeck,
       setSelectedTopicId: mockSetSelectedTopicId,
+      closeLesson: mockCloseLesson,
     } as any);
 
     render(<TutorWorkspace />);
@@ -133,7 +137,7 @@ describe("TutorWorkspace", () => {
     // Test Audio play
     const audioBtn = screen.getByTitle("Play pronunciation audio");
     fireEvent.click(audioBtn);
-    expect(mockSpeak).toHaveBeenCalledWith("田中です。", "ja-JP");
+    expect(mockSpeak).toHaveBeenCalledWith("田中です。", "ja-JP", 1, expect.any(Function));
 
     const continueExercisesBtn = screen.getByText("Continue to Exercises");
     fireEvent.click(continueExercisesBtn);
@@ -182,6 +186,7 @@ describe("TutorWorkspace", () => {
       submitFeedback: mockSubmitFeedback,
       addVocabularyToDeck: mockAddVocabularyToDeck,
       setSelectedTopicId: mockSetSelectedTopicId,
+      closeLesson: mockCloseLesson,
     } as any);
 
     render(<TutorWorkspace />);
@@ -225,6 +230,7 @@ describe("TutorWorkspace", () => {
       submitFeedback: mockSubmitFeedback,
       addVocabularyToDeck: mockAddVocabularyToDeck,
       setSelectedTopicId: mockSetSelectedTopicId,
+      closeLesson: mockCloseLesson,
     } as any);
 
     render(<TutorWorkspace />);
@@ -236,6 +242,204 @@ describe("TutorWorkspace", () => {
 
     fireEvent.click(nextUnitBtn);
     expect(mockGenerateNextUnit).toHaveBeenCalled();
+  });
+
+  it("should call closeLesson when top-left '< Curriculum' button is clicked", () => {
+    const mockLesson = {
+      id: "les_1",
+      topicId: "top_1",
+      title: "Polite Copula です",
+      level: "N5",
+      theoryMarkdown: "### Key Formula",
+      dialogue: [],
+      vocabulary: [],
+      exercises: [],
+    };
+
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [],
+      selectedLevel: "N5",
+      currentLesson: mockLesson,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+    } as any);
+
+    render(<TutorWorkspace />);
+
+    const backBtn = screen.getByRole("button", { name: /curriculum/i });
+    expect(backBtn).toBeDefined();
+    fireEvent.click(backBtn);
+
+    expect(mockCloseLesson).toHaveBeenCalledTimes(1);
+  });
+
+  it("should submit progress and call closeLesson when 'Finish & Return to Curriculum' is clicked", async () => {
+    const mockLesson = {
+      id: "les_1",
+      topicId: "top_1",
+      title: "Polite Copula です",
+      level: "N5",
+      theoryMarkdown: "### Key Formula",
+      dialogue: [],
+      vocabulary: [
+        { jpText: "学生", reading: "がくせい", enText: "Student" }
+      ],
+      exercises: [],
+    };
+
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [],
+      selectedLevel: "N5",
+      currentLesson: mockLesson,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockSubmitProgress.mockResolvedValue(true),
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+    } as any);
+
+    render(<TutorWorkspace />);
+
+    // Navigate to Vocabulary step (last step)
+    const vocabStepBtn = screen.getByRole("button", { name: /4\.\s*Vocabulary/i });
+    fireEvent.click(vocabStepBtn);
+
+    const finishBtn = screen.getByRole("button", {
+      name: /Finish & Return to Curriculum/i,
+    });
+    expect(finishBtn).toBeDefined();
+
+    await fireEvent.click(finishBtn);
+
+    await waitFor(() => {
+      expect(mockSubmitProgress).toHaveBeenCalledWith(100);
+      expect(mockCloseLesson).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("should show loading spinner on the active dialogue audio button while audio is loading", () => {
+    let audioCallback: (() => void) | undefined;
+    const mockAsyncSpeak = vi.fn().mockImplementation((_t, _l, _r, cb) => {
+      audioCallback = cb;
+      return new Promise(() => {}); // Remains pending
+    });
+
+    vi.mocked(SpeechModule.useSpeech).mockReturnValue({
+      speak: mockAsyncSpeak,
+      isPlaying: false,
+      isLoading: true,
+      stop: vi.fn(),
+      isSupported: true,
+      voices: [],
+    } as any);
+
+    const mockLesson = {
+      id: "les_1",
+      topicId: "top_1",
+      title: "Polite Copula です",
+      level: "N5",
+      theoryMarkdown: "### Key Formula",
+      dialogue: [
+        {
+          speaker: "Tanaka",
+          jpText: "田中です。",
+          enText: "I am Tanaka.",
+        },
+      ],
+      vocabulary: [],
+      exercises: [],
+    };
+
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [],
+      selectedLevel: "N5",
+      currentLesson: mockLesson,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+    } as any);
+
+    render(<TutorWorkspace />);
+
+    // Navigate to dialogue step
+    fireEvent.click(screen.getByText("Continue to Dialogue"));
+
+    const audioBtn = screen.getByTitle("Play pronunciation audio");
+    fireEvent.click(audioBtn);
+
+    // mockAsyncSpeak was called
+    expect(mockAsyncSpeak).toHaveBeenCalledWith("田中です。", "ja-JP", 1, expect.any(Function));
+
+    // Because isLoading is true and this button is active, an animated spinner svg must be present inside the button
+    const svgIcon = audioBtn.querySelector("svg");
+    expect(svgIcon?.getAttribute("class")).toContain("animate-spin");
+  });
+
+  it("should show loading spinner on feedback button while submitting feedback", async () => {
+    let resolveFeedback: (val: boolean) => void;
+    const feedbackPromise = new Promise<boolean>((resolve) => {
+      resolveFeedback = resolve;
+    });
+    const mockAsyncFeedback = vi.fn().mockReturnValue(feedbackPromise);
+
+    const mockLesson = {
+      id: "les_1",
+      topicId: "top_1",
+      title: "Polite Copula です",
+      level: "N5",
+      theoryMarkdown: "### Key Formula",
+      dialogue: [],
+      vocabulary: [
+        { jpText: "学生", reading: "がくせい", enText: "Student" }
+      ],
+      exercises: [],
+    };
+
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [],
+      selectedLevel: "N5",
+      currentLesson: mockLesson,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockAsyncFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+    } as any);
+
+    render(<TutorWorkspace />);
+
+    // Navigate to step 4 (vocabulary / feedback)
+    fireEvent.click(screen.getByRole("button", { name: /4\.\s*Vocabulary/i }));
+
+    const helpfulBtn = screen.getByRole("button", { name: /Helpful/i });
+    fireEvent.click(helpfulBtn);
+
+    expect(mockAsyncFeedback).toHaveBeenCalledWith("helpful");
+
+    // While in-flight, button should show animate-spin
+    const svgIcon = helpfulBtn.querySelector("svg");
+    expect(svgIcon?.getAttribute("class")).toContain("animate-spin");
+
+    // Resolve feedback
+    await act(async () => {
+      resolveFeedback!(true);
+      await feedbackPromise;
+    });
+
+    expect(helpfulBtn.getAttribute("disabled")).not.toBeNull();
   });
 });
 

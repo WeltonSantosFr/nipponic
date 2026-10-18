@@ -122,7 +122,7 @@ function TokenDetailContent({
   const [editMeanings, setEditMeanings] = useState("");
   const [editTag, setEditTag] = useState("");
 
-  const { speak, stop, isPlaying } = useSpeech();
+  const { speak, stop, isPlaying, isLoading: isSpeechLoading } = useSpeech();
 
   // Stop audio when unmounting
   useEffect(() => {
@@ -330,7 +330,9 @@ function TokenDetailContent({
               }}
               title="Listen to pronunciation"
             >
-              {isPlaying ? (
+              {isSpeechLoading ? (
+                <Loader2 className="h-3.5 w-3.5 text-primary animate-spin" />
+              ) : isPlaying ? (
                 <VolumeX className="h-3.5 w-3.5 text-primary animate-pulse" />
               ) : (
                 <Volume2 className="h-3.5 w-3.5" />

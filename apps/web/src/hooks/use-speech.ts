@@ -15,6 +15,7 @@ function cleanTextForSpeech(text: string): string {
 
 export function useSpeech() {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [activeLang, setActiveLang] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const activeBlobUrlRef = useRef<string | null>(null);
@@ -40,6 +41,7 @@ export function useSpeech() {
       resolveCurrentRef.current = null;
     }
     setIsPlaying(false);
+    setIsLoading(false);
     setActiveLang(null);
   }, []);
 
@@ -77,13 +79,15 @@ export function useSpeech() {
           audioRef.current = null;
           resolveCurrentRef.current = null;
           setIsPlaying(false);
+          setIsLoading(false);
           setActiveLang(null);
           onEnd?.();
           resolve();
         };
 
         resolveCurrentRef.current = complete;
-        setIsPlaying(true);
+        setIsLoading(true);
+        setIsPlaying(false);
         setActiveLang(lang);
 
         const fallbackToSpeechSynthesis = () => {
@@ -93,6 +97,10 @@ export function useSpeech() {
               const utterance = new SpeechSynthesisUtterance(cleanText);
               utterance.lang = langCode === "ja" ? "ja-JP" : "en-US";
               utterance.rate = rate;
+              utterance.onstart = () => {
+                setIsLoading(false);
+                setIsPlaying(true);
+              };
               utterance.onend = () => {
                 complete();
               };
@@ -114,10 +122,14 @@ export function useSpeech() {
           audioRef.current = audio;
           audio.playbackRate = rate;
 
-          audio.onplay = () => {
+          const handlePlaybackStart = () => {
+            setIsLoading(false);
             setIsPlaying(true);
             setActiveLang(lang);
           };
+
+          audio.onplay = handlePlaybackStart;
+          audio.onplaying = handlePlaybackStart;
 
           audio.onended = () => {
             complete();
@@ -171,5 +183,5 @@ export function useSpeech() {
     [stop]
   );
 
-  return { speak, stop, isPlaying, activeLang };
+  return { speak, stop, isPlaying, isLoading, activeLang };
 }
