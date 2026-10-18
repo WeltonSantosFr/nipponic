@@ -153,7 +153,29 @@ export class TutorService implements OnModuleInit {
       .where({ topicId })
       .first();
 
-    if (!lesson) {
+    const isStaleBogusFallback = Boolean(
+      lesson &&
+      topic.grammarKey !== "desu" &&
+      (lesson.theoryMarkdown?.includes("[Noun / Phrase] + です") ||
+       lesson.theoryMarkdown?.includes("[Noun] + です") ||
+       lesson.title === "Polite Copula です")
+    );
+
+    if (!lesson || isStaleBogusFallback) {
+      if (isStaleBogusFallback && lesson) {
+        this.logger.log(
+          `Replacing stale bogus fallback lesson for topic "${topic.title}" (${topic.id}) with fresh Gemini generation...`
+        );
+        const oldExercises = await this.prisma.db.orm.public.LessonExercise
+          .where({ lessonId: lesson.id })
+          .all();
+        for (const ex of oldExercises) {
+          await this.prisma.db.orm.public.LessonExercise.where({ id: ex.id }).delete();
+        }
+        await this.prisma.db.orm.public.Lesson.where({ id: lesson.id }).delete();
+        lesson = null;
+      }
+
       this.logger.log(
         `Lesson for topic "${topic.title}" (${topic.id}) not found in DB. Triggering JIT generation with Gemini...`
       );

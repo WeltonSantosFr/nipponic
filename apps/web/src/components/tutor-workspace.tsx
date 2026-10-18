@@ -86,21 +86,20 @@ export function TutorWorkspace() {
 
   // Handle exercise completion
   const handleExerciseAnswer = (order: number, isCorrect: boolean) => {
-    setExerciseAnswers((prev) => {
-      const updated = { ...prev, [order]: isCorrect };
-      // Check if all exercises are now answered
-      if (
-        currentLesson &&
-        Object.keys(updated).length === currentLesson.exercises.length
-      ) {
-        const correctCount = Object.values(updated).filter(Boolean).length;
-        const score = Math.round(
-          (correctCount / currentLesson.exercises.length) * 100
-        );
-        submitProgress(score);
-      }
-      return updated;
-    });
+    const updated = { ...exerciseAnswers, [order]: isCorrect };
+    setExerciseAnswers(updated);
+
+    // Check if all exercises are now answered
+    if (
+      currentLesson &&
+      Object.keys(updated).length === currentLesson.exercises.length
+    ) {
+      const correctCount = Object.values(updated).filter(Boolean).length;
+      const score = Math.round(
+        (correctCount / currentLesson.exercises.length) * 100
+      );
+      submitProgress(score);
+    }
   };
 
   const handleStartLesson = async (topicId: string) => {

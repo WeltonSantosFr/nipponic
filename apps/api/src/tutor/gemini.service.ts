@@ -25,15 +25,28 @@ export class GeminiService {
     if (!raw) {
       const candidates = [
         path.resolve(process.cwd(), "apps/api/.env"),
+        path.resolve(process.cwd(), "apps/api/src/.env"),
+        path.resolve(process.cwd(), "src/.env"),
         path.resolve(process.cwd(), ".env"),
+        path.resolve(__dirname, "../.env"),
+        path.resolve(__dirname, "../../.env"),
+        path.resolve(__dirname, ".env"),
         "/app/apps/api/.env",
+        "/app/apps/api/src/.env",
+        "/app/.env",
       ];
       for (const c of candidates) {
         try {
           if (fs.existsSync(c)) {
-            const parsed = dotenv.parse(fs.readFileSync(c));
+            const content = fs.readFileSync(c, "utf-8");
+            const parsed = dotenv.parse(content);
             if (parsed.GEMINI_API_KEY) {
               raw = parsed.GEMINI_API_KEY;
+              break;
+            }
+            const match = content.match(/^\s*GEMINI_API_KEY\s*=\s*["']?([^"'\r\n]+)["']?/m);
+            if (match?.[1]) {
+              raw = match[1].trim();
               break;
             }
           }
@@ -55,7 +68,7 @@ export class GeminiService {
       return this.generateFallbackLesson(context);
     }
 
-    const models = ["gemini-2.5-flash", "gemini-1.5-flash"];
+    const models = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-1.5-flash"];
 
     for (const model of models) {
       try {
@@ -141,76 +154,77 @@ Japanese text should use appropriate Kanji with kana readings provided in vocabu
   generateFallbackLesson(
     context: TopicGenerationContext
   ): GenerateLessonPayload {
+    const key = context.grammarKey || "grammar point";
     return {
       title: context.title,
-      theoryMarkdown: `### ${context.title}\n\n${context.objective}\n\n#### Key Formula\n\`[Noun / Phrase] + です\`\n\n#### Usage Notes\nIn polite Japanese (*Teineigo*), this pattern is used in everyday conversation to create natural and polite statements. Remember to match particle usage carefully.`,
+      theoryMarkdown: `### ${context.title}\n\n${context.objective}\n\n#### Key Formula\n\`[Phrase / Stem] + ${key}\`\n\n#### Usage Notes\nIn JLPT ${context.level}, this pattern is used to convey: *${context.objective}*. Notice the nuances and formal register compared to similar basic expressions.`,
       dialogue: [
         {
           speaker: "田中 (Tanaka)",
-          jpText: "はじめまして、田中です。よろしくお願いします。",
-          enText: "Nice to meet you, I am Tanaka. Please treat me well.",
+          jpText: `この文脈では、${key}を使うのが最も自然です。`,
+          enText: `In this context, using ${context.title} is the most natural.`,
         },
         {
           speaker: "スミス (Smith)",
-          jpText: "はじめまして、スミスです。こちらこそよろしくお願いします。",
-          enText: "Nice to meet you, I am Smith. Likewise, please treat me well.",
+          jpText: `なるほど、${context.objective}ということですね。`,
+          enText: `I see, so it means ${context.objective.toLowerCase()}.`,
         },
         {
           speaker: "田中 (Tanaka)",
-          jpText: "スミスさんは学生ですか。",
-          enText: "Smith-san, are you a student?",
+          jpText: `はい、その通りです。実際の会話や文章でもよく見られます。`,
+          enText: `Yes, exactly. It is frequently seen in authentic conversations and texts.`,
         },
         {
           speaker: "スミス (Smith)",
-          jpText: "はい、学生です。",
-          enText: "Yes, I am a student.",
+          jpText: `よく分かりました。しっかり復習しておきます。`,
+          enText: `I understand well. I will review it thoroughly.`,
         },
       ],
       vocabulary: [
         {
-          jpText: "はじめまして",
-          reading: "はじめまして",
-          enText: "Nice to meet you",
+          jpText: key,
+          reading: key,
+          enText: context.title,
         },
         {
-          jpText: "学生",
-          reading: "がくせい",
-          enText: "Student",
+          jpText: "文脈",
+          reading: "ぶんみゃく",
+          enText: "Context",
         },
         {
-          jpText: "はい",
-          reading: "はい",
-          enText: "Yes",
+          jpText: "自然",
+          reading: "しぜん",
+          enText: "Natural",
         },
         {
-          jpText: "よろしく",
-          reading: "よろしく",
-          enText: "Best regards / Please treat me well",
+          jpText: "復習",
+          reading: "ふくしゅう",
+          enText: "Review / revision",
         },
       ],
       exercises: [
         {
           order: 1,
           type: "multiple_choice",
-          prompt: "Select the polite copula used to say 'I am Tanaka':",
-          options: ["です", "ます", "でした", "ません"],
-          correctAnswer: "です",
-          explanation: "です (desu) is the polite copula equivalent to 'to be' in English.",
+          prompt: `Select the pattern that correctly expresses: "${context.objective}"`,
+          options: [key, "かもしれない", "わけではない", "ことになっている"],
+          correctAnswer: key,
+          explanation: `${key} correctly expresses ${context.objective}.`,
         },
         {
           order: 2,
           type: "fill_blank",
-          prompt: "Complete the sentence: 'はい、学生____' (Yes, I am a student).",
-          correctAnswer: "です",
-          explanation: "です completes the sentence politely.",
+          prompt: `Fill in the blank with the target grammar: "この文脈では、____を使うのが最も自然です。"`,
+          correctAnswer: key,
+          explanation: `${key} correctly completes the contextual sentence.`,
         },
         {
           order: 3,
           type: "reorder",
-          prompt: "Arrange the words to form: 'Nice to meet you, I am Smith.'",
-          options: ["はじめまして、", "スミス", "です。"],
-          correctAnswer: "はじめまして、 スミス です。",
-          explanation: "Natural polite introduction order.",
+          prompt: `Arrange the words to form: "In this context, using ${key} is most natural."`,
+          options: ["この文脈では、", key, "を使うのが", "最も自然です。"],
+          correctAnswer: `この文脈では、 ${key} を使うのが 最も自然です。`,
+          explanation: "Standard natural Japanese word order.",
         },
       ],
     };
@@ -229,7 +243,7 @@ Japanese text should use appropriate Kanji with kana readings provided in vocabu
       return this.generateFallbackUnit(level, unitIndex, startingLessonIndex);
     }
 
-    const models = ["gemini-2.5-flash", "gemini-1.5-flash"];
+    const models = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-1.5-flash"];
 
     for (const model of models) {
       try {

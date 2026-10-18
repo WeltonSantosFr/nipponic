@@ -259,6 +259,96 @@ describe("TutorService", () => {
       expect(result.exercises).toHaveLength(1);
     });
 
+    it("STALE BOGUS FALLBACK: should discard bogus desu fallback lesson on non-desu topics and regenerate via Gemini", async () => {
+      const mockTopic = {
+        id: "top_n1",
+        level: "N1",
+        title: "Classical Negative Nuance ざるを得ない",
+        grammarKey: "zaru-wo-enai",
+        objective: "Master expressing unavoidable actions",
+      };
+
+      const mockStaleLesson = {
+        id: "les_stale",
+        topicId: "top_n1",
+        title: "Classical Negative Nuance ざるを得ない",
+        level: "N1",
+        theoryMarkdown: "### Key Formula\n`[Noun / Phrase] + です`",
+        dialogueJson: [],
+        vocabularyJson: [],
+        createdAt: new Date(),
+      };
+
+      const mockGenerated = {
+        title: "Classical Negative Nuance ざるを得ない",
+        theoryMarkdown: "### ざるを得ない\nFormulas: V-ない (stem) + ざるを得ない",
+        dialogue: [{ speaker: "A", jpText: "行かざるを得ない", enText: "I have no choice but to go" }],
+        vocabulary: [{ jpText: "ざるを得ない", reading: "ざるをえない", enText: "Cannot help but" }],
+        exercises: [
+          {
+            order: 1,
+            type: "multiple_choice" as const,
+            prompt: "Choose the correct form",
+            options: ["行かざるを得ない", "行くです"],
+            correctAnswer: "行かざるを得ない",
+            explanation: "Correct N1 grammar",
+          },
+        ],
+      };
+
+      const mockNewLesson = {
+        id: "les_fresh_n1",
+        topicId: "top_n1",
+        title: "Classical Negative Nuance ざるを得ない",
+        level: "N1",
+        theoryMarkdown: mockGenerated.theoryMarkdown,
+        dialogueJson: mockGenerated.dialogue,
+        vocabularyJson: mockGenerated.vocabulary,
+        createdAt: new Date(),
+      };
+
+      const deleteLessonMock = vi.fn().mockResolvedValue({});
+      const deleteExerciseMock = vi.fn().mockResolvedValue({});
+
+      prismaMock.db.orm.public.CurriculumTopic.where.mockReturnValue({
+        first: vi.fn().mockResolvedValue(mockTopic),
+      });
+
+      prismaMock.db.orm.public.Lesson.where.mockReturnValue({
+        first: vi.fn().mockResolvedValue(mockStaleLesson),
+        delete: deleteLessonMock,
+      });
+
+      prismaMock.db.orm.public.Lesson.create.mockResolvedValue(mockNewLesson);
+
+      prismaMock.db.orm.public.LessonExercise.where.mockImplementation((filter: any) => ({
+        all: vi.fn().mockResolvedValue(
+          filter.lessonId === "les_stale" ? [{ id: "old_ex_1" }] : [{ id: "new_ex_1", order: 1 }]
+        ),
+        delete: deleteExerciseMock,
+      }));
+
+      vi.mocked(geminiServiceMock.generateLesson).mockResolvedValue(mockGenerated);
+
+      const result = await service.getLessonByTopicId("top_n1");
+
+      // Verifies old bogus lesson was deleted
+      expect(deleteLessonMock).toHaveBeenCalled();
+      expect(deleteExerciseMock).toHaveBeenCalled();
+
+      // Verifies Gemini was called with topic's actual context
+      expect(geminiServiceMock.generateLesson).toHaveBeenCalledWith({
+        title: "Classical Negative Nuance ざるを得ない",
+        level: "N1",
+        grammarKey: "zaru-wo-enai",
+        objective: "Master expressing unavoidable actions",
+      });
+
+      expect(prismaMock.db.orm.public.Lesson.create).toHaveBeenCalled();
+      expect(result.id).toBe("les_fresh_n1");
+      expect(result.theoryMarkdown).toContain("ざるを得ない");
+    });
+
     it("should throw NotFoundException if topic does not exist", async () => {
       prismaMock.db.orm.public.CurriculumTopic.where.mockReturnValue({
         first: vi.fn().mockResolvedValue(null),
