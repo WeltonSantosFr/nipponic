@@ -41,14 +41,17 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotes } from "@/contexts/NotesContext";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
+import { useTutor } from "@/contexts/TutorContext";
 import { Note, Deck, AuthMode, AppSidebarProps } from "@nipponic/shared";
 import { isCardDue } from "@/lib/srs";
 import Link from "next/link";
 import {
   BookOpen,
   Check,
+  CheckCircle2,
   DoorOpen,
   Globe,
+  GraduationCap,
   Heart,
   Layers,
   Loader2,
@@ -88,6 +91,14 @@ export function AppSidebar({
     setActiveSidebarView,
     addDeckToMyDecks,
   } = useFlashCards();
+
+  const {
+    curriculum,
+    selectedLevel,
+    setSelectedLevel,
+    selectedTopicId,
+    loadLesson,
+  } = useTutor();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [deckSearchQuery, setDeckSearchQuery] = useState("");
@@ -227,7 +238,7 @@ export function AppSidebar({
           </p>
         )}
 
-        {/* Feature Selector Slider */}
+        {/* Feature Selector Navigation */}
         <div className="flex p-1 bg-muted/60 rounded-lg border border-border/70 text-xs font-medium">
           <button
             type="button"
@@ -251,7 +262,19 @@ export function AppSidebar({
             }`}
           >
             <Layers size={14} />
-            <span>Flash Cards</span>
+            <span>Cards</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSidebarView("tutor")}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md transition-all cursor-pointer ${
+              activeSidebarView === "tutor"
+                ? "bg-background text-foreground shadow-xs font-semibold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <GraduationCap size={14} />
+            <span>Tutor</span>
           </button>
         </div>
 
@@ -295,7 +318,7 @@ export function AppSidebar({
               )}
             </div>
           </>
-        ) : (
+        ) : activeSidebarView === "flashcards" ? (
           <>
             {/* 3-Tab Deck Switcher */}
             {(() => {
@@ -394,6 +417,24 @@ export function AppSidebar({
               )}
             </div>
           </>
+        ) : (
+          /* Level Selector for Tutor */
+          <div className="flex p-0.5 bg-muted/60 rounded-lg border border-border/70 text-[11px] font-medium gap-0.5 w-full">
+            {(["N5", "N4", "N3", "N2", "N1"] as const).map((lvl) => (
+              <button
+                key={lvl}
+                type="button"
+                onClick={() => setSelectedLevel(lvl)}
+                className={`flex-1 py-1 px-1 rounded-md transition-all cursor-pointer text-center font-bold ${
+                  selectedLevel === lvl
+                    ? "bg-background text-foreground shadow-xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {lvl}
+              </button>
+            ))}
+          </div>
         )}
       </SidebarHeader>
 
@@ -448,7 +489,7 @@ export function AppSidebar({
               )}
             </>
           )
-        ) : (
+        ) : activeSidebarView === "flashcards" ? (
           /* Flash Cards Decks Area */
           <SidebarGroup>
             {activeDeckTab === "my" && (
@@ -706,6 +747,53 @@ export function AppSidebar({
                   })}
                 </SidebarMenu>
               )
+            )}
+          </SidebarGroup>
+        ) : (
+          /* Tutor Lessons Area */
+          <SidebarGroup>
+            <SidebarGroupLabel>
+              JLPT {selectedLevel} Lessons ({curriculum.length})
+            </SidebarGroupLabel>
+            {curriculum.length === 0 ? (
+              <div className="p-6 text-center text-xs text-muted-foreground">
+                No lessons loaded for JLPT {selectedLevel}.
+              </div>
+            ) : (
+              <SidebarMenu>
+                {curriculum.map((topic) => {
+                  const isSelected = selectedTopicId === topic.id;
+                  return (
+                    <SidebarMenuItem key={topic.id}>
+                      <SidebarMenuButton
+                        isActive={isSelected}
+                        onClick={() => {
+                          loadLesson(topic.id);
+                          if (isMobile) {
+                            setOpenMobile(false);
+                          }
+                        }}
+                        className="cursor-pointer"
+                        title={topic.title}
+                      >
+                        {topic.isCompleted ? (
+                          <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                        ) : (
+                          <BookOpen size={16} className="text-muted-foreground shrink-0" />
+                        )}
+                        <span className="truncate flex-1 text-left">
+                          {topic.lessonIndex}. {topic.title}
+                        </span>
+                        {topic.completedScore !== undefined && topic.completedScore > 0 && (
+                          <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1 py-0.5 rounded shrink-0">
+                            {topic.completedScore}%
+                          </span>
+                        )}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
             )}
           </SidebarGroup>
         )}

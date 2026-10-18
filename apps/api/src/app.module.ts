@@ -11,9 +11,10 @@ import { NotesModule } from "./notes/notes.module";
 import { CardsModule } from "./cards/cards.module";
 import { DecksModule } from "./decks/decks.module";
 import { SponsorsModule } from "./sponsors/sponsors.module";
+import { TutorModule } from "./tutor/tutor.module";
 
 @Module({
-  imports: [AuthModule, NotesModule, CardsModule, DecksModule, SponsorsModule],
+  imports: [AuthModule, NotesModule, CardsModule, DecksModule, SponsorsModule, TutorModule],
   controllers: [AppController, UsersController],
   providers: [PrismaService, UsersService],
 })

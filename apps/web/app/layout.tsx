@@ -9,6 +9,7 @@ import { jwtDecode } from "jwt-decode";
 import { AuthProvider, UserPayload } from "@/contexts/AuthContext";
 import { NotesProvider } from "@/contexts/NotesContext";
 import { FlashCardsProvider } from "@/contexts/FlashCardsContext";
+import { TutorProvider } from "@/contexts/TutorContext";
 import { ServerWakeupOverlay } from "@/components/server-wakeup-overlay";
 import { CapacitorProvider } from "@/components/capacitor-provider";
 
@@ -69,16 +70,18 @@ export default async function RootLayout({
         <AuthProvider initialUser={initialUser}>
           <NotesProvider>
             <FlashCardsProvider>
-              <ThemeProvider
-                attribute="class"
-                defaultTheme="dark"
-                enableSystem={false}
-              >
-                <CapacitorProvider>
-                  {children}
-                  <ServerWakeupOverlay />
-                </CapacitorProvider>
-              </ThemeProvider>
+              <TutorProvider>
+                <ThemeProvider
+                  attribute="class"
+                  defaultTheme="dark"
+                  enableSystem={false}
+                >
+                  <CapacitorProvider>
+                    {children}
+                    <ServerWakeupOverlay />
+                  </CapacitorProvider>
+                </ThemeProvider>
+              </TutorProvider>
             </FlashCardsProvider>
           </NotesProvider>
         </AuthProvider>

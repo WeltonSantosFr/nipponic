@@ -1,0 +1,179 @@
+import { Injectable, Logger } from "@nestjs/common";
+import {
+  type GenerateLessonPayload,
+  GenerateLessonPayloadSchema,
+} from "@nipponic/shared";
+
+interface TopicGenerationContext {
+  title: string;
+  level: string;
+  grammarKey: string;
+  objective: string;
+}
+
+@Injectable()
+export class GeminiService {
+  private readonly logger = new Logger(GeminiService.name);
+  private readonly apiKey = process.env.GEMINI_API_KEY;
+
+  async generateLesson(
+    context: TopicGenerationContext
+  ): Promise<GenerateLessonPayload> {
+    if (!this.apiKey) {
+      this.logger.warn(
+        `GEMINI_API_KEY not configured. Generating high-quality deterministic fallback lesson for "${context.title}".`
+      );
+      return this.generateFallbackLesson(context);
+    }
+
+    try {
+      const prompt = `
+You are an expert Japanese language tutor creating a structured daily micro-lesson for JLPT level ${context.level}.
+Topic: ${context.title}
+Grammar Key: ${context.grammarKey}
+Objective: ${context.objective}
+
+Return ONLY valid JSON adhering strictly to this schema:
+{
+  "title": string (Lesson title in English),
+  "theoryMarkdown": string (Concise, engaging explanation of the grammar rule with formulas like "[Noun] + です", examples with romaji/furigana, and cultural or usage tips),
+  "dialogue": [
+    { "speaker": string, "jpText": string, "enText": string }
+  ] (4 to 6 natural conversation lines between two speakers applying this grammar point),
+  "vocabulary": [
+    { "jpText": string, "reading": string, "enText": string }
+  ] (4 to 6 key vocabulary words from the lesson),
+  "exercises": [
+    {
+      "order": number (1, 2, 3...),
+      "type": "multiple_choice" | "fill_blank" | "reorder",
+      "prompt": string (The exercise question/instruction in English),
+      "options": string[] (Array of choices if multiple_choice or word chunks if reorder, omitted for fill_blank),
+      "correctAnswer": string,
+      "explanation": string (Clear explanation of why this answer is correct)
+    }
+  ] (3 to 4 exercises testing the grammar)
+}
+
+All instructions, theory, and question prompts MUST be in English.
+Japanese text should use appropriate Kanji with kana readings provided in vocabulary.
+`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              responseMimeType: "application/json",
+              temperature: 0.3,
+            },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.logger.error(
+          `Gemini API request failed (${response.status}): ${errorText}`
+        );
+        return this.generateFallbackLesson(context);
+      }
+
+      const data = await response.json();
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!rawText) {
+        throw new Error("No text content returned from Gemini API");
+      }
+
+      const parsedJson = JSON.parse(rawText);
+      return GenerateLessonPayloadSchema.parse(parsedJson);
+    } catch (error) {
+      this.logger.error(
+        `Error generating lesson with Gemini API: ${error instanceof Error ? error.message : String(error)}`
+      );
+      return this.generateFallbackLesson(context);
+    }
+  }
+
+  generateFallbackLesson(
+    context: TopicGenerationContext
+  ): GenerateLessonPayload {
+    return {
+      title: context.title,
+      theoryMarkdown: `### ${context.title}\n\n${context.objective}\n\n#### Key Formula\n\`[Noun / Phrase] + です\`\n\n#### Usage Notes\nIn polite Japanese (*Teineigo*), this pattern is used in everyday conversation to create natural and polite statements. Remember to match particle usage carefully.`,
+      dialogue: [
+        {
+          speaker: "田中 (Tanaka)",
+          jpText: "はじめまして、田中です。よろしくお願いします。",
+          enText: "Nice to meet you, I am Tanaka. Please treat me well.",
+        },
+        {
+          speaker: "スミス (Smith)",
+          jpText: "はじめまして、スミスです。こちらこそよろしくお願いします。",
+          enText: "Nice to meet you, I am Smith. Likewise, please treat me well.",
+        },
+        {
+          speaker: "田中 (Tanaka)",
+          jpText: "スミスさんは学生ですか。",
+          enText: "Smith-san, are you a student?",
+        },
+        {
+          speaker: "スミス (Smith)",
+          jpText: "はい、学生です。",
+          enText: "Yes, I am a student.",
+        },
+      ],
+      vocabulary: [
+        {
+          jpText: "はじめまして",
+          reading: "はじめまして",
+          enText: "Nice to meet you",
+        },
+        {
+          jpText: "学生",
+          reading: "がくせい",
+          enText: "Student",
+        },
+        {
+          jpText: "はい",
+          reading: "はい",
+          enText: "Yes",
+        },
+        {
+          jpText: "よろしく",
+          reading: "よろしく",
+          enText: "Best regards / Please treat me well",
+        },
+      ],
+      exercises: [
+        {
+          order: 1,
+          type: "multiple_choice",
+          prompt: "Select the polite copula used to say 'I am Tanaka':",
+          options: ["です", "ます", "でした", "ません"],
+          correctAnswer: "です",
+          explanation: "です (desu) is the polite copula equivalent to 'to be' in English.",
+        },
+        {
+          order: 2,
+          type: "fill_blank",
+          prompt: "Complete the sentence: 'はい、学生____' (Yes, I am a student).",
+          correctAnswer: "です",
+          explanation: "です completes the sentence politely.",
+        },
+        {
+          order: 3,
+          type: "reorder",
+          prompt: "Arrange the words to form: 'Nice to meet you, I am Smith.'",
+          options: ["はじめまして、", "スミス", "です。"],
+          correctAnswer: "はじめまして、 スミス です。",
+          explanation: "Natural polite introduction order.",
+        },
+      ],
+    };
+  }
+}
