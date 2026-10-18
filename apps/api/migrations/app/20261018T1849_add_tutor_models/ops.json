@@ -1,0 +1,689 @@
+[
+  {
+    "id": "table.curriculumTopic",
+    "label": "Create table \"curriculumTopic\"",
+    "summary": "Creates table \"curriculumTopic\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "curriculumTopic"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"curriculumTopic\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"curriculumTopic\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"curriculumTopic\"",
+        "sql": "CREATE TABLE \"public\".\"curriculumTopic\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"grammarKey\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"lessonIndex\" int4 NOT NULL,\n  \"level\" text NOT NULL,\n  \"objective\" text NOT NULL,\n  \"title\" text NOT NULL,\n  \"unitIndex\" int4 NOT NULL,\n  \"unitTitle\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"curriculumTopic\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"curriculumTopic\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.lesson",
+    "label": "Create table \"lesson\"",
+    "summary": "Creates table \"lesson\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "lesson"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"lesson\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"lesson\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"lesson\"",
+        "sql": "CREATE TABLE \"public\".\"lesson\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"dialogueJson\" json NOT NULL,\n  \"id\" text NOT NULL,\n  \"level\" text DEFAULT 'N5' NOT NULL,\n  \"theoryMarkdown\" text NOT NULL,\n  \"title\" text NOT NULL,\n  \"topicId\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"vocabularyJson\" json NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"lesson\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"lesson\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.lessonExercise",
+    "label": "Create table \"lessonExercise\"",
+    "summary": "Creates table \"lessonExercise\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "lessonExercise"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"lessonExercise\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"lessonExercise\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"lessonExercise\"",
+        "sql": "CREATE TABLE \"public\".\"lessonExercise\" (\n  \"correctAnswer\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"explanation\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"lessonId\" text NOT NULL,\n  \"optionsJson\" json,\n  \"order\" int4 NOT NULL,\n  \"prompt\" text NOT NULL,\n  \"type\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"lessonExercise\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"lessonExercise\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.lessonFeedback",
+    "label": "Create table \"lessonFeedback\"",
+    "summary": "Creates table \"lessonFeedback\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "lessonFeedback"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"lessonFeedback\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"lessonFeedback\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"lessonFeedback\"",
+        "sql": "CREATE TABLE \"public\".\"lessonFeedback\" (\n  \"comment\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"lessonId\" text NOT NULL,\n  \"rating\" text NOT NULL,\n  \"userId\" text,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"lessonFeedback\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"lessonFeedback\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.userLessonProgress",
+    "label": "Create table \"userLessonProgress\"",
+    "summary": "Creates table \"userLessonProgress\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "userLessonProgress"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"userLessonProgress\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"userLessonProgress\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"userLessonProgress\"",
+        "sql": "CREATE TABLE \"public\".\"userLessonProgress\" (\n  \"completedAt\" timestamptz,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"lessonId\" text NOT NULL,\n  \"score\" int4 DEFAULT 0 NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"userLessonProgress\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"userLessonProgress\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.curriculumTopic.curriculumTopic_level_unitIndex_lessonIndex_key",
+    "label": "Add unique constraint on \"curriculumTopic\" (level, unitIndex, lessonIndex)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "curriculumTopic_level_unitIndex_lessonIndex_key",
+        "table": "curriculumTopic"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"curriculumTopic_level_unitIndex_lessonIndex_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "curriculumTopic_level_unitIndex_lessonIndex_key",
+          "public",
+          "\"public\".\"curriculumTopic\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"curriculumTopic_level_unitIndex_lessonIndex_key\"",
+        "sql": "ALTER TABLE \"public\".\"curriculumTopic\" ADD CONSTRAINT \"curriculumTopic_level_unitIndex_lessonIndex_key\" UNIQUE (\"level\", \"unitIndex\", \"lessonIndex\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"curriculumTopic_level_unitIndex_lessonIndex_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "curriculumTopic_level_unitIndex_lessonIndex_key",
+          "public",
+          "\"public\".\"curriculumTopic\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.lesson.lesson_topicId_key",
+    "label": "Add unique constraint on \"lesson\" (topicId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "lesson_topicId_key",
+        "table": "lesson"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"lesson_topicId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "lesson_topicId_key",
+          "public",
+          "\"public\".\"lesson\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"lesson_topicId_key\"",
+        "sql": "ALTER TABLE \"public\".\"lesson\" ADD CONSTRAINT \"lesson_topicId_key\" UNIQUE (\"topicId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"lesson_topicId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "lesson_topicId_key",
+          "public",
+          "\"public\".\"lesson\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.userLessonProgress.userLessonProgress_userId_lessonId_key",
+    "label": "Add unique constraint on \"userLessonProgress\" (userId, lessonId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "userLessonProgress_userId_lessonId_key",
+        "table": "userLessonProgress"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"userLessonProgress_userId_lessonId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "userLessonProgress_userId_lessonId_key",
+          "public",
+          "\"public\".\"userLessonProgress\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"userLessonProgress_userId_lessonId_key\"",
+        "sql": "ALTER TABLE \"public\".\"userLessonProgress\" ADD CONSTRAINT \"userLessonProgress_userId_lessonId_key\" UNIQUE (\"userId\", \"lessonId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"userLessonProgress_userId_lessonId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "userLessonProgress_userId_lessonId_key",
+          "public",
+          "\"public\".\"userLessonProgress\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.lessonExercise.lessonExercise_lessonId_idx_e358970d",
+    "label": "Create index \"lessonExercise_lessonId_idx_e358970d\" on \"lessonExercise\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "lessonExercise_lessonId_idx_e358970d",
+        "table": "lessonExercise"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"lessonExercise_lessonId_idx_e358970d\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"lessonExercise_lessonId_idx_e358970d\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"lessonExercise_lessonId_idx_e358970d\"",
+        "sql": "CREATE INDEX \"lessonExercise_lessonId_idx_e358970d\" ON \"public\".\"lessonExercise\" (\"lessonId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"lessonExercise_lessonId_idx_e358970d\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"lessonExercise_lessonId_idx_e358970d\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.lessonFeedback.lessonFeedback_lessonId_idx_e358970d",
+    "label": "Create index \"lessonFeedback_lessonId_idx_e358970d\" on \"lessonFeedback\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "lessonFeedback_lessonId_idx_e358970d",
+        "table": "lessonFeedback"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"lessonFeedback_lessonId_idx_e358970d\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"lessonFeedback_lessonId_idx_e358970d\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"lessonFeedback_lessonId_idx_e358970d\"",
+        "sql": "CREATE INDEX \"lessonFeedback_lessonId_idx_e358970d\" ON \"public\".\"lessonFeedback\" (\"lessonId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"lessonFeedback_lessonId_idx_e358970d\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"lessonFeedback_lessonId_idx_e358970d\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.userLessonProgress.userLessonProgress_lessonId_idx_e358970d",
+    "label": "Create index \"userLessonProgress_lessonId_idx_e358970d\" on \"userLessonProgress\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "userLessonProgress_lessonId_idx_e358970d",
+        "table": "userLessonProgress"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"userLessonProgress_lessonId_idx_e358970d\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"userLessonProgress_lessonId_idx_e358970d\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"userLessonProgress_lessonId_idx_e358970d\"",
+        "sql": "CREATE INDEX \"userLessonProgress_lessonId_idx_e358970d\" ON \"public\".\"userLessonProgress\" (\"lessonId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"userLessonProgress_lessonId_idx_e358970d\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"userLessonProgress_lessonId_idx_e358970d\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.userLessonProgress.userLessonProgress_userId_idx_a489d58a",
+    "label": "Create index \"userLessonProgress_userId_idx_a489d58a\" on \"userLessonProgress\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "userLessonProgress_userId_idx_a489d58a",
+        "table": "userLessonProgress"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"userLessonProgress_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"userLessonProgress_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"userLessonProgress_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"userLessonProgress_userId_idx_a489d58a\" ON \"public\".\"userLessonProgress\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"userLessonProgress_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"userLessonProgress_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.lesson.lesson_topicId_fkey",
+    "label": "Add foreign key \"lesson_topicId_fkey\" on \"lesson\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "lesson_topicId_fkey",
+        "table": "lesson"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"lesson_topicId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "lesson_topicId_fkey",
+          "public",
+          "\"public\".\"lesson\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"lesson_topicId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"lesson\"\nADD CONSTRAINT \"lesson_topicId_fkey\"\nFOREIGN KEY (\"topicId\")\nREFERENCES \"public\".\"curriculumTopic\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"lesson_topicId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "lesson_topicId_fkey",
+          "public",
+          "\"public\".\"lesson\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.lessonExercise.lessonExercise_lessonId_fkey",
+    "label": "Add foreign key \"lessonExercise_lessonId_fkey\" on \"lessonExercise\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "lessonExercise_lessonId_fkey",
+        "table": "lessonExercise"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"lessonExercise_lessonId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "lessonExercise_lessonId_fkey",
+          "public",
+          "\"public\".\"lessonExercise\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"lessonExercise_lessonId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"lessonExercise\"\nADD CONSTRAINT \"lessonExercise_lessonId_fkey\"\nFOREIGN KEY (\"lessonId\")\nREFERENCES \"public\".\"lesson\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"lessonExercise_lessonId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "lessonExercise_lessonId_fkey",
+          "public",
+          "\"public\".\"lessonExercise\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.lessonFeedback.lessonFeedback_lessonId_fkey",
+    "label": "Add foreign key \"lessonFeedback_lessonId_fkey\" on \"lessonFeedback\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "lessonFeedback_lessonId_fkey",
+        "table": "lessonFeedback"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"lessonFeedback_lessonId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "lessonFeedback_lessonId_fkey",
+          "public",
+          "\"public\".\"lessonFeedback\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"lessonFeedback_lessonId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"lessonFeedback\"\nADD CONSTRAINT \"lessonFeedback_lessonId_fkey\"\nFOREIGN KEY (\"lessonId\")\nREFERENCES \"public\".\"lesson\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"lessonFeedback_lessonId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "lessonFeedback_lessonId_fkey",
+          "public",
+          "\"public\".\"lessonFeedback\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.userLessonProgress.userLessonProgress_userId_fkey",
+    "label": "Add foreign key \"userLessonProgress_userId_fkey\" on \"userLessonProgress\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "userLessonProgress_userId_fkey",
+        "table": "userLessonProgress"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"userLessonProgress_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "userLessonProgress_userId_fkey",
+          "public",
+          "\"public\".\"userLessonProgress\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"userLessonProgress_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"userLessonProgress\"\nADD CONSTRAINT \"userLessonProgress_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"userLessonProgress_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "userLessonProgress_userId_fkey",
+          "public",
+          "\"public\".\"userLessonProgress\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.userLessonProgress.userLessonProgress_lessonId_fkey",
+    "label": "Add foreign key \"userLessonProgress_lessonId_fkey\" on \"userLessonProgress\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "userLessonProgress_lessonId_fkey",
+        "table": "userLessonProgress"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"userLessonProgress_lessonId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "userLessonProgress_lessonId_fkey",
+          "public",
+          "\"public\".\"userLessonProgress\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"userLessonProgress_lessonId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"userLessonProgress\"\nADD CONSTRAINT \"userLessonProgress_lessonId_fkey\"\nFOREIGN KEY (\"lessonId\")\nREFERENCES \"public\".\"lesson\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"userLessonProgress_lessonId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "userLessonProgress_lessonId_fkey",
+          "public",
+          "\"public\".\"userLessonProgress\""
+        ]
+      }
+    ]
+  }
+]
