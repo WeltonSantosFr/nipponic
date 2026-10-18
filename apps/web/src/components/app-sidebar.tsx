@@ -99,6 +99,7 @@ export function AppSidebar({
     setSelectedLevel,
     selectedTopicId,
     loadLesson,
+    isLoadingCurriculum,
     isGeneratingUnit,
     generateNextUnit,
   } = useTutor();
@@ -757,14 +758,14 @@ export function AppSidebar({
           <SidebarGroup>
             <div className="flex items-center justify-between px-2 py-1">
               <SidebarGroupLabel className="p-0">
-                JLPT {selectedLevel} Lessons ({curriculum.length})
+                JLPT {selectedLevel} Lessons {!isLoadingCurriculum && `(${curriculum.length})`}
               </SidebarGroupLabel>
               <button
                 type="button"
                 onClick={() => generateNextUnit()}
-                disabled={isGeneratingUnit}
+                disabled={isGeneratingUnit || isLoadingCurriculum}
                 title="Generate next unit with AI"
-                className="text-[11px] text-muted-foreground hover:text-primary flex items-center gap-1 cursor-pointer transition-colors"
+                className="text-[11px] text-muted-foreground hover:text-primary flex items-center gap-1 cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {isGeneratingUnit ? (
                   <Loader2 size={12} className="animate-spin text-primary" />
@@ -774,7 +775,23 @@ export function AppSidebar({
                 <span>+ Unit</span>
               </button>
             </div>
-            {curriculum.length === 0 ? (
+            {isLoadingCurriculum ? (
+              <div className="px-2 py-3 space-y-2">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground animate-pulse mb-2">
+                  <Loader2 size={13} className="animate-spin text-primary shrink-0" />
+                  <span className="truncate">Loading JLPT {selectedLevel} lessons...</span>
+                </div>
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div
+                    key={i}
+                    className="h-8 rounded-lg bg-muted/60 animate-pulse w-full flex items-center px-2 gap-2"
+                  >
+                    <div className="w-4 h-4 rounded-full bg-muted-foreground/20 shrink-0" />
+                    <div className="h-3 rounded bg-muted-foreground/20 w-3/4" />
+                  </div>
+                ))}
+              </div>
+            ) : curriculum.length === 0 ? (
               <div className="p-6 text-center space-y-3">
                 <p className="text-xs text-muted-foreground">
                   No lessons loaded for JLPT {selectedLevel}.

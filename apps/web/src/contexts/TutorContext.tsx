@@ -34,6 +34,7 @@ export interface TutorContextData {
   isLoadingLesson: boolean;
   isGeneratingUnit: boolean;
   error: string | null;
+  clearError: () => void;
   loadLesson: (topicId: string) => Promise<Lesson | null>;
   generateNextUnit: (level?: CurriculumLevel) => Promise<boolean>;
   submitProgress: (score: number) => Promise<boolean>;
@@ -101,6 +102,10 @@ export function TutorProvider({ children }: { children: ReactNode }) {
   const [isGeneratingUnit, setIsGeneratingUnit] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
   // Fetch curriculum for selected level with optional silent background revalidation
   const loadCurriculum = useCallback(
     async (level: CurriculumLevel, isSilent: boolean = false) => {
@@ -150,6 +155,7 @@ export function TutorProvider({ children }: { children: ReactNode }) {
       setSelectedLevelState(level);
       setSelectedTopicId(null);
       setCurrentLesson(null);
+      setError(null);
 
       const cached = curriculumCache[level];
       if (cached && cached.length > 0) {
@@ -157,7 +163,9 @@ export function TutorProvider({ children }: { children: ReactNode }) {
         // Silent background sync
         loadCurriculum(level, true);
       } else {
-        // First time load with visible spinner
+        // Clear previous level's curriculum immediately to prevent displaying wrong level's topics
+        setCurriculum([]);
+        setIsLoadingCurriculum(true);
         loadCurriculum(level, false);
       }
     },
@@ -222,11 +230,17 @@ export function TutorProvider({ children }: { children: ReactNode }) {
 
       try {
         const lesson = await getLessonAction(topicId);
+        if (!lesson) {
+          setError("Failed to generate or load this lesson. Please check your network and try again.");
+          setCurrentLesson(null);
+          return null;
+        }
         setCurrentLesson(lesson);
         return lesson;
       } catch (err) {
         console.error(`Failed to load lesson for topic ${topicId}:`, err);
         setError("Failed to generate or load lesson. Please try again.");
+        setCurrentLesson(null);
         return null;
       } finally {
         setIsLoadingLesson(false);
@@ -347,6 +361,7 @@ export function TutorProvider({ children }: { children: ReactNode }) {
         isLoadingLesson,
         isGeneratingUnit,
         error,
+        clearError,
         loadLesson,
         generateNextUnit,
         submitProgress,

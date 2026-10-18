@@ -1,4 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
+import fs from "node:fs";
+import path from "node:path";
+import dotenv from "dotenv";
 import {
   type GenerateLessonPayload,
   GenerateLessonPayloadSchema,
@@ -16,20 +19,47 @@ interface TopicGenerationContext {
 @Injectable()
 export class GeminiService {
   private readonly logger = new Logger(GeminiService.name);
-  private readonly apiKey = process.env.GEMINI_API_KEY;
+
+  private getApiKey(): string | undefined {
+    let raw = process.env.GEMINI_API_KEY;
+    if (!raw) {
+      const candidates = [
+        path.resolve(process.cwd(), "apps/api/.env"),
+        path.resolve(process.cwd(), ".env"),
+        "/app/apps/api/.env",
+      ];
+      for (const c of candidates) {
+        try {
+          if (fs.existsSync(c)) {
+            const parsed = dotenv.parse(fs.readFileSync(c));
+            if (parsed.GEMINI_API_KEY) {
+              raw = parsed.GEMINI_API_KEY;
+              break;
+            }
+          }
+        } catch {}
+      }
+    }
+    if (!raw) return undefined;
+    return raw.replace(/^["']|["']$/g, "").trim();
+  }
 
   async generateLesson(
     context: TopicGenerationContext
   ): Promise<GenerateLessonPayload> {
-    if (!this.apiKey) {
+    const apiKey = this.getApiKey();
+    if (!apiKey) {
       this.logger.warn(
         `GEMINI_API_KEY not configured. Generating high-quality deterministic fallback lesson for "${context.title}".`
       );
       return this.generateFallbackLesson(context);
     }
 
-    try {
-      const prompt = `
+    const models = ["gemini-2.5-flash", "gemini-1.5-flash"];
+
+    for (const model of models) {
+      try {
+        const prompt = `
 You are an expert Japanese language tutor creating a structured daily micro-lesson for JLPT level ${context.level}.
 Topic: ${context.title}
 Grammar Key: ${context.grammarKey}
@@ -61,44 +91,51 @@ All instructions, theory, and question prompts MUST be in English.
 Japanese text should use appropriate Kanji with kana readings provided in vocabulary.
 `;
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              responseMimeType: "application/json",
-              temperature: 0.3,
-            },
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        this.logger.error(
-          `Gemini API request failed (${response.status}): ${errorText}`
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                responseMimeType: "application/json",
+                temperature: 0.3,
+              },
+            }),
+          }
         );
-        return this.generateFallbackLesson(context);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          this.logger.warn(
+            `Gemini API request failed for model ${model} (${response.status}): ${errorText}`
+          );
+          if (response.status === 400 || response.status === 401 || response.status === 403) {
+            // Invalid API key or permission error, don't keep failing on other models
+            break;
+          }
+          continue;
+        }
+
+        const data = await response.json();
+        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!rawText) {
+          continue;
+        }
+
+        const parsedJson = JSON.parse(rawText);
+        return GenerateLessonPayloadSchema.parse(parsedJson);
+      } catch (error) {
+        this.logger.warn(
+          `Error generating lesson with Gemini model ${model}: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
-
-      const data = await response.json();
-      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (!rawText) {
-        throw new Error("No text content returned from Gemini API");
-      }
-
-      const parsedJson = JSON.parse(rawText);
-      return GenerateLessonPayloadSchema.parse(parsedJson);
-    } catch (error) {
-      this.logger.error(
-        `Error generating lesson with Gemini API: ${error instanceof Error ? error.message : String(error)}`
-      );
-      return this.generateFallbackLesson(context);
     }
+
+    this.logger.log(`Using high-quality deterministic fallback lesson for "${context.title}".`);
+    return this.generateFallbackLesson(context);
   }
 
   generateFallbackLesson(
@@ -184,15 +221,19 @@ Japanese text should use appropriate Kanji with kana readings provided in vocabu
     unitIndex: number,
     startingLessonIndex: number
   ): Promise<GenerateUnitPayload> {
-    if (!this.apiKey) {
+    const apiKey = this.getApiKey();
+    if (!apiKey) {
       this.logger.warn(
         `GEMINI_API_KEY not configured. Generating high-quality deterministic fallback unit for JLPT ${level} Unit ${unitIndex}.`
       );
       return this.generateFallbackUnit(level, unitIndex, startingLessonIndex);
     }
 
-    try {
-      const prompt = `
+    const models = ["gemini-2.5-flash", "gemini-1.5-flash"];
+
+    for (const model of models) {
+      try {
+        const prompt = `
 You are an expert Japanese curriculum designer creating a structured study unit for JLPT level ${level}.
 Unit Index: ${unitIndex}
 Starting Lesson Index: ${startingLessonIndex}
@@ -215,45 +256,52 @@ Return ONLY valid JSON adhering strictly to this schema:
 All unitTitle, title, and objective fields MUST be in English.
 `;
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              responseMimeType: "application/json",
-              temperature: 0.4,
-            },
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        this.logger.error(
-          `Gemini API request failed for curriculum unit (${response.status}): ${errorText}`
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                responseMimeType: "application/json",
+                temperature: 0.4,
+              },
+            }),
+          }
         );
-        return this.generateFallbackUnit(level, unitIndex, startingLessonIndex);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          this.logger.warn(
+            `Gemini API request failed for curriculum unit with model ${model} (${response.status}): ${errorText}`
+          );
+          if (response.status === 400 || response.status === 401 || response.status === 403) {
+            // Invalid API key or permission error, don't keep failing on other models
+            break;
+          }
+          continue;
+        }
+
+        const data = await response.json();
+        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!rawText) {
+          continue;
+        }
+
+        const parsedJson = JSON.parse(rawText);
+        return GenerateUnitPayloadSchema.parse(parsedJson);
+      } catch (error) {
+        this.logger.warn(
+          `Error generating curriculum unit with Gemini model ${model}: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
-
-      const data = await response.json();
-      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (!rawText) {
-        throw new Error("No text content returned from Gemini API");
-      }
-
-      const parsedJson = JSON.parse(rawText);
-      return GenerateUnitPayloadSchema.parse(parsedJson);
-    } catch (error) {
-      this.logger.error(
-        `Error generating curriculum unit with Gemini API: ${error instanceof Error ? error.message : String(error)}`
-      );
-      return this.generateFallbackUnit(level, unitIndex, startingLessonIndex);
     }
+
+    return this.generateFallbackUnit(level, unitIndex, startingLessonIndex);
   }
+
 
   generateFallbackUnit(
     level: string,

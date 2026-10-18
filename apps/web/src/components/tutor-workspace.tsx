@@ -23,6 +23,7 @@ import {
   RotateCcw,
   Loader2,
   Award,
+  AlertCircle,
 } from "lucide-react";
 
 type LessonStep = "theory" | "dialogue" | "exercises" | "vocabulary";
@@ -41,6 +42,8 @@ export function TutorWorkspace() {
     submitFeedback,
     addVocabularyToDeck,
     setSelectedTopicId,
+    error,
+    clearError,
   } = useTutor();
 
   const { speak, isPlaying } = useSpeech();
@@ -154,6 +157,24 @@ export function TutorWorkspace() {
   if (!currentLesson) {
     return (
       <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 max-w-5xl mx-auto">
+        {/* Error Notification Banner */}
+        {error && (
+          <div className="flex items-center justify-between gap-3 p-4 rounded-xl border border-destructive/40 bg-destructive/10 text-destructive text-sm shadow-xs animate-in fade-in">
+            <div className="flex items-center gap-2.5">
+              <AlertCircle className="h-5 w-5 shrink-0" />
+              <span className="font-medium">{error}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2.5 text-xs text-destructive hover:bg-destructive/20 hover:text-destructive cursor-pointer"
+              onClick={() => clearError()}
+            >
+              Dismiss
+            </Button>
+          </div>
+        )}
+
         {/* Banner Section */}
         <div className="rounded-2xl border border-border/80 bg-linear-to-r from-primary/10 via-primary/5 to-transparent p-6 sm:p-8 shadow-xs">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
@@ -425,6 +446,24 @@ export function TutorWorkspace() {
           </button>
         </div>
       </div>
+
+      {/* Error Notification Banner */}
+      {error && (
+        <div className="mx-4 mt-4 flex items-center justify-between gap-3 p-3.5 rounded-xl border border-destructive/40 bg-destructive/10 text-destructive text-sm shadow-xs animate-in fade-in">
+          <div className="flex items-center gap-2.5">
+            <AlertCircle className="h-5 w-5 shrink-0" />
+            <span className="font-medium">{error}</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs text-destructive hover:bg-destructive/20 hover:text-destructive cursor-pointer"
+            onClick={() => clearError()}
+          >
+            Dismiss
+          </Button>
+        </div>
+      )}
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-4xl mx-auto w-full space-y-6">

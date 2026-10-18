@@ -15,6 +15,8 @@ import type {
   LessonExercise,
   DialogueLine,
   VocabularyItem,
+  GenerateLessonPayload,
+  GenerateUnitPayload,
 } from "@nipponic/shared";
 
 @Injectable()
@@ -23,7 +25,7 @@ export class TutorService implements OnModuleInit {
 
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    private readonly geminiService: GeminiService
+    @Inject(GeminiService) private readonly geminiService: GeminiService
   ) {}
 
   async onModuleInit() {
@@ -156,12 +158,25 @@ export class TutorService implements OnModuleInit {
         `Lesson for topic "${topic.title}" (${topic.id}) not found in DB. Triggering JIT generation with Gemini...`
       );
 
-      const generated = await this.geminiService.generateLesson({
-        title: topic.title,
-        level: topic.level,
-        grammarKey: topic.grammarKey,
-        objective: topic.objective,
-      });
+      let generated: GenerateLessonPayload;
+      try {
+        generated = await this.geminiService.generateLesson({
+          title: topic.title,
+          level: topic.level,
+          grammarKey: topic.grammarKey,
+          objective: topic.objective,
+        });
+      } catch (genError) {
+        this.logger.error(
+          `Gemini lesson generation failed for "${topic.title}", using deterministic fallback: ${genError}`
+        );
+        generated = this.geminiService.generateFallbackLesson({
+          title: topic.title,
+          level: topic.level,
+          grammarKey: topic.grammarKey,
+          objective: topic.objective,
+        });
+      }
 
       lesson = await this.prisma.db.orm.public.Lesson.create({
         topicId: topic.id,
@@ -341,15 +356,23 @@ export class TutorService implements OnModuleInit {
       : 0;
     const startingLessonIndex = maxLesson + 1;
 
-    this.logger.log(
-      `Generating unit ${nextUnitIndex} for JLPT ${level} starting at lesson ${startingLessonIndex} with AI...`
-    );
-
-    const generatedUnit = await this.geminiService.generateCurriculumUnit(
-      level,
-      nextUnitIndex,
-      startingLessonIndex
-    );
+    let generatedUnit: GenerateUnitPayload;
+    try {
+      generatedUnit = await this.geminiService.generateCurriculumUnit(
+        level,
+        nextUnitIndex,
+        startingLessonIndex
+      );
+    } catch (genError) {
+      this.logger.error(
+        `Gemini unit generation failed for JLPT ${level}, using deterministic fallback: ${genError}`
+      );
+      generatedUnit = this.geminiService.generateFallbackUnit(
+        level,
+        nextUnitIndex,
+        startingLessonIndex
+      );
+    }
 
     for (const topic of generatedUnit.topics) {
       await this.prisma.db.orm.public.CurriculumTopic.create({
