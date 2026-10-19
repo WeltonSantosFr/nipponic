@@ -26,15 +26,26 @@ describe("TutorService", () => {
             },
             LessonExercise: {
               create: vi.fn(),
-              where: vi.fn(),
+              where: vi.fn().mockReturnValue({
+                all: vi.fn().mockResolvedValue([]),
+                delete: vi.fn().mockResolvedValue({}),
+              }),
             },
             UserLessonProgress: {
               first: vi.fn(),
               create: vi.fn(),
-              where: vi.fn(),
+              where: vi.fn().mockReturnValue({
+                first: vi.fn().mockResolvedValue(null),
+                all: vi.fn().mockResolvedValue([]),
+                delete: vi.fn().mockResolvedValue({}),
+              }),
             },
             LessonFeedback: {
               create: vi.fn(),
+              where: vi.fn().mockReturnValue({
+                all: vi.fn().mockResolvedValue([]),
+                delete: vi.fn().mockResolvedValue({}),
+              }),
             },
           },
         },
@@ -44,6 +55,7 @@ describe("TutorService", () => {
     geminiServiceMock = {
       generateLesson: vi.fn(),
       generateCurriculumUnit: vi.fn(),
+      generateFallbackLesson: vi.fn(),
     } as unknown as GeminiService;
 
     service = new TutorService(
@@ -426,6 +438,201 @@ describe("TutorService", () => {
       expect(deleteExerciseMock).toHaveBeenCalled();
       expect(result.id).toBe("les_fresh_kiwamar");
       expect(result.theoryMarkdown).toContain("極まりない");
+    });
+
+    it("FEEDBACK THRESHOLD: should NOT regenerate if total feedbacks < 3 even if 100% are confusing", async () => {
+      const mockTopic = {
+        id: "top_fb_1",
+        level: "N3",
+        title: "Expression わけだ",
+        grammarKey: "wakeda",
+        objective: "Understand natural conclusions",
+      };
+
+      const mockLesson = {
+        id: "les_fb_1",
+        topicId: "top_fb_1",
+        title: "Expression わけだ",
+        level: "N3",
+        theoryMarkdown: "### わけだ Theory",
+        dialogueJson: [],
+        vocabularyJson: [],
+        createdAt: new Date(),
+      };
+
+      prismaMock.db.orm.public.CurriculumTopic.where.mockReturnValue({
+        first: vi.fn().mockResolvedValue(mockTopic),
+      });
+
+      prismaMock.db.orm.public.Lesson.where.mockReturnValue({
+        first: vi.fn().mockResolvedValue(mockLesson),
+      });
+
+      // 2 reviews, both confusing (100% confusing, but total < 3)
+      prismaMock.db.orm.public.LessonFeedback.where.mockReturnValue({
+        all: vi.fn().mockResolvedValue([
+          { id: "fb_1", rating: "confusing" },
+          { id: "fb_2", rating: "confusing" },
+        ]),
+      });
+
+      prismaMock.db.orm.public.LessonExercise.where.mockReturnValue({
+        all: vi.fn().mockResolvedValue([{ id: "ex_1", order: 1 }]),
+      });
+
+      const result = await service.getLessonByTopicId("top_fb_1");
+
+      expect(result.id).toBe("les_fb_1");
+      expect(geminiServiceMock.generateLesson).not.toHaveBeenCalled();
+    });
+
+    it("FEEDBACK THRESHOLD: should NOT regenerate if total feedbacks >= 3 but confusing ratio < 60%", async () => {
+      const mockTopic = {
+        id: "top_fb_2",
+        level: "N3",
+        title: "Expression はずだ",
+        grammarKey: "hazuda",
+        objective: "Expectations with reasonable certainty",
+      };
+
+      const mockLesson = {
+        id: "les_fb_2",
+        topicId: "top_fb_2",
+        title: "Expression はずだ",
+        level: "N3",
+        theoryMarkdown: "### はずだ Theory",
+        dialogueJson: [],
+        vocabularyJson: [],
+        createdAt: new Date(),
+      };
+
+      prismaMock.db.orm.public.CurriculumTopic.where.mockReturnValue({
+        first: vi.fn().mockResolvedValue(mockTopic),
+      });
+
+      prismaMock.db.orm.public.Lesson.where.mockReturnValue({
+        first: vi.fn().mockResolvedValue(mockLesson),
+      });
+
+      // 3 reviews: 1 confusing, 2 helpful = 33.3% confusing (< 60%)
+      prismaMock.db.orm.public.LessonFeedback.where.mockReturnValue({
+        all: vi.fn().mockResolvedValue([
+          { id: "fb_1", rating: "confusing" },
+          { id: "fb_2", rating: "helpful" },
+          { id: "fb_3", rating: "helpful" },
+        ]),
+      });
+
+      prismaMock.db.orm.public.LessonExercise.where.mockReturnValue({
+        all: vi.fn().mockResolvedValue([{ id: "ex_1", order: 1 }]),
+      });
+
+      const result = await service.getLessonByTopicId("top_fb_2");
+
+      expect(result.id).toBe("les_fb_2");
+      expect(geminiServiceMock.generateLesson).not.toHaveBeenCalled();
+    });
+
+    it("FEEDBACK THRESHOLD: should trigger regeneration when feedbacks >= 3 and confusing ratio >= 60%", async () => {
+      const mockTopic = {
+        id: "top_fb_3",
+        level: "N1",
+        title: "Formal Nuance たるもの",
+        grammarKey: "tarumono",
+        objective: "Express conduct befitting a status",
+      };
+
+      const mockStaleLesson = {
+        id: "les_stale_fb",
+        topicId: "top_fb_3",
+        title: "Formal Nuance たるもの",
+        level: "N1",
+        theoryMarkdown: "### Brief theory",
+        dialogueJson: [],
+        vocabularyJson: [],
+        createdAt: new Date(),
+      };
+
+      const deleteLessonMock = vi.fn().mockResolvedValue({});
+      const deleteExerciseMock = vi.fn().mockResolvedValue({});
+      const deleteFeedbackMock = vi.fn().mockResolvedValue({});
+
+      prismaMock.db.orm.public.CurriculumTopic.where.mockReturnValue({
+        first: vi.fn().mockResolvedValue(mockTopic),
+      });
+
+      prismaMock.db.orm.public.Lesson.where.mockReturnValue({
+        first: vi.fn().mockResolvedValue(mockStaleLesson),
+        delete: deleteLessonMock,
+      });
+
+      // 3 reviews: 2 confusing, 1 helpful = 66.7% confusing (>= 60%)
+      prismaMock.db.orm.public.LessonFeedback.where.mockReturnValue({
+        all: vi.fn().mockResolvedValue([
+          { id: "fb_1", rating: "confusing", comment: "Examples were too abstract" },
+          { id: "fb_2", rating: "confusing", comment: "Needs better conjugation explanation" },
+          { id: "fb_3", rating: "helpful", comment: null },
+        ]),
+        delete: deleteFeedbackMock,
+      });
+
+      const mockUpgradedGenerated = {
+        title: "Upgraded Formal Nuance たるもの",
+        theoryMarkdown: "### Enhanced Step-by-Step Theory for たるもの",
+        dialogue: [{ speaker: "社長", jpText: "指導者たるもの、模範を示さねばならない。", enText: "As a leader..." }],
+        vocabulary: [{ jpText: "たるもの", reading: "たるもの", enText: "Befitting" }],
+        exercises: [
+          {
+            order: 1,
+            type: "multiple_choice" as const,
+            prompt: "Select correct usage",
+            options: ["たるもの", "ごとき"],
+            correctAnswer: "たるもの",
+            explanation: "Befitting status",
+          },
+        ],
+      };
+
+      prismaMock.db.orm.public.Lesson.create.mockResolvedValue({
+        id: "les_upgraded_fb",
+        topicId: "top_fb_3",
+        title: mockUpgradedGenerated.title,
+        level: "N1",
+        theoryMarkdown: mockUpgradedGenerated.theoryMarkdown,
+        dialogueJson: mockUpgradedGenerated.dialogue,
+        vocabularyJson: mockUpgradedGenerated.vocabulary,
+        createdAt: new Date(),
+      });
+
+      prismaMock.db.orm.public.LessonExercise.where.mockImplementation((filter: any) => ({
+        all: vi.fn().mockResolvedValue(
+          filter.lessonId === "les_stale_fb" ? [{ id: "old_ex_fb" }] : [{ id: "new_ex_fb", order: 1 }]
+        ),
+        delete: deleteExerciseMock,
+      }));
+
+      vi.mocked(geminiServiceMock.generateLesson).mockResolvedValue(mockUpgradedGenerated);
+
+      const result = await service.getLessonByTopicId("top_fb_3");
+
+      expect(deleteLessonMock).toHaveBeenCalled();
+      expect(deleteExerciseMock).toHaveBeenCalled();
+      expect(deleteFeedbackMock).toHaveBeenCalled();
+      expect(geminiServiceMock.generateLesson).toHaveBeenCalledWith({
+        title: "Formal Nuance たるもの",
+        level: "N1",
+        grammarKey: "tarumono",
+        objective: "Express conduct befitting a status",
+        isRegeneration: true,
+        regenerationReason: expect.stringContaining("67% confusing ratings (2/3 reviews)"),
+        previousFeedbackComments: [
+          "Examples were too abstract",
+          "Needs better conjugation explanation",
+        ],
+      });
+
+      expect(result.id).toBe("les_upgraded_fb");
+      expect(result.theoryMarkdown).toContain("Enhanced Step-by-Step Theory");
     });
 
     it("should throw NotFoundException if topic does not exist", async () => {

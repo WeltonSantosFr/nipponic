@@ -9,12 +9,43 @@ import {
   GenerateUnitPayloadSchema,
 } from "@nipponic/shared";
 
-interface TopicGenerationContext {
+export interface TopicGenerationContext {
   title: string;
   level: string;
   grammarKey: string;
   objective: string;
+  isRegeneration?: boolean;
+  regenerationReason?: string;
+  previousFeedbackComments?: string[];
 }
+
+export const JLPT_LEVEL_CALIBRATION: Record<string, string> = {
+  N5: `JLPT N5 PEDAGOGICAL SPECIFICATIONS (ABSOLUTE BEGINNER):
+- Vocabulary & Grammar Scope: Fundamental polite Japanese (です/ます form). Basic particles (は, が, を, に, で, へ, と, も, から, まで). Simple [Noun] は [Noun] です and basic verbs.
+- Kanji & Furigana: Use ONLY introductory elementary kanji (~100 kanji like 日, 月, 人, 本). You MUST provide ruby Furigana for 100% of all kanji used.
+- Sentence Structure: Very short, simple clause sentences. Never use complex subordinate clauses or advanced idioms.
+- Tone & Explanations: Extremely clear, friendly, welcoming English. Zero intimidating linguistic jargon. Focus on foundational everyday basics.`,
+
+  N4: `JLPT N4 PEDAGOGICAL SPECIFICATIONS (ELEMENTARY / UPPER BEGINNER):
+- Vocabulary & Grammar Scope: Plain forms (辞書形, ない形, た形), basic compound sentences, foundational conditionals (〜たら, 〜なら, 〜ば), basic potential (〜られる), volitional (〜よう), basic giving/receiving (〜てあげる/もらう/くれる).
+- Kanji & Furigana: Elementary kanji (~300 kanji). You MUST provide ruby Furigana for all kanji.
+- Tone & Explanations: Clearly contrast polite (丁寧語) and casual (普通形) registers. Break down conjugation mechanics step-by-step.`,
+
+  N3: `JLPT N3 PEDAGOGICAL SPECIFICATIONS (INTERMEDIATE - BRIDGE LEVEL):
+- Vocabulary & Grammar Scope: Natural conversational Japanese, intermediate conjunctions, and nuanced distinctions between similar grammar forms (e.g. わけだ vs はずだ, ようにする vs ことにする, compound auxiliary verbs).
+- Kanji & Furigana: Intermediate kanji (~650 kanji). Provide ruby Furigana on compound kanji words (熟語).
+- Tone & Explanations: Emphasize pragmatic context, speaker intentionality, social situations (in-group vs out-group, situational appropriateness), and common student confusion points.`,
+
+  N2: `JLPT N2 PEDAGOGICAL SPECIFICATIONS (UPPER INTERMEDIATE / BUSINESS & ACADEMIC):
+- Vocabulary & Grammar Scope: Formal, business, written, news, and academic expressions (e.g. にあたって, に際して, を契機に, にともなって, ざるを得ない).
+- Kanji & Furigana: Advanced kanji (~1000 kanji). Provide ruby Furigana for non-standard readings, formal compounds, and literary kanji.
+- Tone & Explanations: Clarify rigid formal constraints, written versus spoken registers, and precise semantic differences between similar high-level markers.`,
+
+  N1: `JLPT N1 PEDAGOGICAL SPECIFICATIONS (ADVANCED / NEAR-NATIVE PROFICIENCY):
+- Vocabulary & Grammar Scope: Highly sophisticated, literary, classical, rhetorical, and idiomatic Japanese (e.g. 極まりない, ごとき, であれ, ずくめ, たるもの, んばかり).
+- Kanji & Furigana: Advanced, rare, and literary kanji compounds. You MUST provide ruby Furigana so advanced learners can read the kanji immediately without needing external audio or dictionary lookups.
+- Tone & Explanations: Deep exploration of subtle emotional nuance (deep indignation, extreme inevitability, profound solemnity, archaic dignity) and contextual collocations in realistic high-register settings (editorial, executive business, or classical/formal speech).`,
+};
 
 @Injectable()
 export class GeminiService {
@@ -64,27 +95,45 @@ export class GeminiService {
     return raw.replace(/^["']|["']$/g, "").trim();
   }
 
-  async generateLesson(
-    context: TopicGenerationContext
-  ): Promise<GenerateLessonPayload> {
-    const apiKey = this.getApiKey();
-    if (!apiKey) {
-      this.logger.warn(
-        `GEMINI_API_KEY not configured. Generating high-quality deterministic fallback lesson for "${context.title}".`
-      );
-      return this.generateFallbackLesson(context);
+  buildLessonPrompt(context: TopicGenerationContext): string {
+    const levelKey = (context.level || "N5").toUpperCase();
+    const levelCalibration = JLPT_LEVEL_CALIBRATION[levelKey] || JLPT_LEVEL_CALIBRATION.N5;
+
+    let refinementDirective = "";
+    if (context.isRegeneration) {
+      const commentsSnippet = context.previousFeedbackComments?.length
+        ? `\nLEARNER COMPLAINTS & SPECIFIC FEEDBACK TO RESOLVE:\n${context.previousFeedbackComments
+            .map((c, i) => `  ${i + 1}. "${c}"`)
+            .join("\n")}`
+        : "";
+
+      refinementDirective = `
+REFINEMENT DIRECTIVE (CRITICAL - PEDAGOGICAL UPGRADE):
+The previous version of this lesson was marked as "confusing / needs improvement" by learners.
+Trigger Reason: ${context.regenerationReason || "Learners struggled to follow the explanation or apply the grammar pattern."}${commentsSnippet}
+
+You MUST significantly upgrade this regenerated version with the following enhancements:
+1. STEP-BY-STEP FORMULA & CONJUGATION BREAKDOWN:
+   - Provide an explicit structural breakdown (e.g. "Verb [Dictionary form] + Pattern", "Na-adjective [Stem + な] + Pattern").
+   - Explicitly highlight conjugation traps where students commonly make mistakes.
+2. CONTRASTIVE ANALYSIS & NUANCE ("When to use vs When NOT to use"):
+   - Add a dedicated section explaining: How is this expression different from similar or simpler patterns? Why choose this over other options?
+3. SITUATIONALLY ENRICHED DIALOGUE:
+   - Provide clear situational framing in the dialogue demonstrating WHY this grammar point was chosen in context (e.g. formal business negotiation, deep emotional confession, friendly debate).
+4. TARGETED REINFORCING EXERCISES:
+   - Include at least one exercise that directly tests the nuance or conjugation trap highlighted in the theory.
+   - Explanations for correct answers must clearly explain not only why the correct answer is right, but why the distractor options are incorrect or unnatural.
+`;
     }
 
-    const models = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-1.5-flash"];
-
-    for (const model of models) {
-      try {
-        const prompt = `
-You are an expert Japanese language tutor creating a structured daily micro-lesson for JLPT level ${context.level}.
+    return `
+You are an expert Japanese language tutor creating a structured daily micro-lesson calibrated specifically for JLPT level ${context.level}.
 Topic: ${context.title}
 Grammar Slug: ${context.grammarKey}
 Objective: ${context.objective}
 
+${levelCalibration}
+${refinementDirective}
 CRITICAL LINGUISTIC & FORMATTING RULES:
 1. NEVER output Romaji or English slug identifiers (such as "${context.grammarKey}", "kiwamarinai-extreme", or hyphenated text) in any Japanese field ("jpText", "reading", "dialogue", options, or exercise answers).
 2. The grammar slug "${context.grammarKey}" is an internal code identifier. You MUST identify the real Japanese grammar pattern (e.g. from the topic "${context.title}") and write it using authentic Japanese Kanji and Kana.
@@ -130,6 +179,24 @@ Return ONLY valid JSON adhering strictly to this schema:
 All instructions, theory explanation, and question prompts MUST be in English.
 All Japanese content MUST use authentic Kanji and Kana. NEVER USE ROMAJI.
 `;
+  }
+
+  async generateLesson(
+    context: TopicGenerationContext
+  ): Promise<GenerateLessonPayload> {
+    const apiKey = this.getApiKey();
+    if (!apiKey) {
+      this.logger.warn(
+        `GEMINI_API_KEY not configured. Generating high-quality deterministic fallback lesson for "${context.title}".`
+      );
+      return this.generateFallbackLesson(context);
+    }
+
+    const models = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-1.5-flash"];
+
+    for (const model of models) {
+      try {
+        const prompt = this.buildLessonPrompt(context);
 
         const response = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
@@ -140,7 +207,7 @@ All Japanese content MUST use authentic Kanji and Kana. NEVER USE ROMAJI.
               contents: [{ parts: [{ text: prompt }] }],
               generationConfig: {
                 responseMimeType: "application/json",
-                temperature: 0.3,
+                temperature: context.isRegeneration ? 0.35 : 0.3,
               },
             }),
           }

@@ -6,7 +6,7 @@ import {
   type OnModuleInit,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
-import { GeminiService } from "./gemini.service";
+import { GeminiService, type TopicGenerationContext } from "./gemini.service";
 import { ALL_SEED_CURRICULA } from "./curriculum.seed";
 import type {
   CurriculumLevel,
@@ -183,10 +183,35 @@ export class TutorService implements OnModuleInit {
       )
     );
 
-    if (!lesson || isStaleBogusFallback) {
-      if (isStaleBogusFallback && lesson) {
+    let isRejectedByFeedback = false;
+    let feedbackComments: string[] = [];
+    let regenerationReason = "";
+
+    if (lesson && !isStaleBogusFallback) {
+      const feedbacks = await this.prisma.db.orm.public.LessonFeedback
+        .where({ lessonId: lesson.id })
+        .all();
+
+      const totalFeedbacks = feedbacks.length;
+      const confusingFeedbacks = feedbacks.filter((f) => f.rating === "confusing");
+      const confusingRatio = totalFeedbacks > 0 ? confusingFeedbacks.length / totalFeedbacks : 0;
+
+      // Threshold: >= 3 total reviews and >= 60% negative ("confusing") feedback
+      if (totalFeedbacks >= 3 && confusingRatio >= 0.6) {
+        isRejectedByFeedback = true;
+        regenerationReason = `Community feedback threshold reached: ${Math.round(confusingRatio * 100)}% confusing ratings (${confusingFeedbacks.length}/${totalFeedbacks} reviews).`;
+        feedbackComments = confusingFeedbacks
+          .map((f) => f.comment)
+          .filter((c): c is string => typeof c === "string" && c.trim().length > 0);
+      }
+    }
+
+    if (!lesson || isStaleBogusFallback || isRejectedByFeedback) {
+      if ((isStaleBogusFallback || isRejectedByFeedback) && lesson) {
         this.logger.log(
-          `Replacing stale bogus fallback lesson for topic "${topic.title}" (${topic.id}) with fresh Gemini generation...`
+          isRejectedByFeedback
+            ? `Regenerating lesson for topic "${topic.title}" (${topic.id}) due to negative feedback: ${regenerationReason}`
+            : `Replacing stale bogus fallback lesson for topic "${topic.title}" (${topic.id}) with fresh Gemini generation...`
         );
         const oldExercises = await this.prisma.db.orm.public.LessonExercise
           .where({ lessonId: lesson.id })
@@ -194,22 +219,46 @@ export class TutorService implements OnModuleInit {
         for (const ex of oldExercises) {
           await this.prisma.db.orm.public.LessonExercise.where({ id: ex.id }).delete();
         }
+        const oldFeedbacks = await this.prisma.db.orm.public.LessonFeedback
+          .where({ lessonId: lesson.id })
+          .all();
+        for (const fb of oldFeedbacks) {
+          await this.prisma.db.orm.public.LessonFeedback.where({ id: fb.id }).delete();
+        }
+        const oldProgress = await this.prisma.db.orm.public.UserLessonProgress
+          .where({ lessonId: lesson.id })
+          .all();
+        for (const p of oldProgress) {
+          await this.prisma.db.orm.public.UserLessonProgress.where({ id: p.id }).delete();
+        }
         await this.prisma.db.orm.public.Lesson.where({ id: lesson.id }).delete();
         lesson = null;
       }
 
       this.logger.log(
-        `Lesson for topic "${topic.title}" (${topic.id}) not found in DB. Triggering JIT generation with Gemini...`
+        isRejectedByFeedback
+          ? `Triggering improved lesson re-generation with Gemini for "${topic.title}" (${topic.id})...`
+          : `Lesson for topic "${topic.title}" (${topic.id}) not found in DB. Triggering JIT generation with Gemini...`
       );
 
       let generated: GenerateLessonPayload;
       try {
-        generated = await this.geminiService.generateLesson({
+        const generationContext: TopicGenerationContext = {
           title: topic.title,
           level: topic.level,
           grammarKey: topic.grammarKey,
           objective: topic.objective,
-        });
+          ...(isRejectedByFeedback
+            ? {
+                isRegeneration: true,
+                regenerationReason,
+                previousFeedbackComments: feedbackComments.length
+                  ? feedbackComments
+                  : undefined,
+              }
+            : {}),
+        };
+        generated = await this.geminiService.generateLesson(generationContext);
       } catch (genError) {
         this.logger.error(
           `Gemini lesson generation failed for "${topic.title}", using deterministic fallback: ${genError}`
