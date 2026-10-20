@@ -20,11 +20,11 @@ RUN pnpm install --frozen-lockfile
 COPY --from=builder /app/out/full/ .
 
 FROM installer AS dev
-WORKDIR /app
+WORKDIR /app/apps/api
 ENV NODE_ENV=development
 ENV PORT=3001
 EXPOSE 3001
-CMD ["pnpm", "--filter", "api", "dev"]
+CMD ["node_modules/.bin/tsx", "watch", "src/main.ts"]
 
 FROM installer AS builder-prod
 RUN pnpm turbo run build --filter=api
