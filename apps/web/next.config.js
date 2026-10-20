@@ -5,7 +5,14 @@ const nextConfig = {
   // causing 'ENOENT: no such file or directory, open .../next-server.js.nft.json'.
   ...(process.env.VERCEL ? {} : { output: "standalone" }),
   experimental: {
-    optimizePackageImports: ["lucide-react", "canvas-confetti", "@base-ui/react", "@nipponic/shared"],
+    optimizePackageImports: [
+      "lucide-react",
+      "canvas-confetti",
+      "@base-ui/react",
+      "@nipponic/shared",
+      "clsx",
+      "tailwind-merge",
+    ],
   },
   async headers() {
     return [

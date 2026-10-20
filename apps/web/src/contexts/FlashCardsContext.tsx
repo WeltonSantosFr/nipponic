@@ -252,437 +252,470 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const createCard = async (
-    data: CreateCardInput,
-    deckId?: string
-  ): Promise<Card | null> => {
-    const tempId = `temp-card-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    const optimisticCard: Card = {
-      id: tempId,
-      jpText: data.jpText,
-      enText: data.enText,
-      interval: data.interval ?? 0,
-      easeFactor: data.easeFactor ?? 2.5,
-      repetitions: data.repetitions ?? 0,
-      lapses: data.lapses ?? 0,
-      nextReviewAt: data.nextReviewAt ?? new Date().toISOString(),
-      lastReviewedAt: data.lastReviewedAt ?? null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+  const createCard = useCallback(
+    async (
+      data: CreateCardInput,
+      deckId?: string
+    ): Promise<Card | null> => {
+      const tempId = `temp-card-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const optimisticCard: Card = {
+        id: tempId,
+        jpText: data.jpText,
+        enText: data.enText,
+        interval: data.interval ?? 0,
+        easeFactor: data.easeFactor ?? 2.5,
+        repetitions: data.repetitions ?? 0,
+        lapses: data.lapses ?? 0,
+        nextReviewAt: data.nextReviewAt ?? new Date().toISOString(),
+        lastReviewedAt: data.lastReviewedAt ?? null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
 
-    setCards((prev) => [optimisticCard, ...prev]);
+      setCards((prev) => [optimisticCard, ...prev]);
 
-    if (deckId) {
-      setDecks((prevDecks) =>
-        prevDecks.map((d) =>
-          d.id === deckId ? { ...d, cards: [optimisticCard, ...d.cards] } : d
+      if (deckId) {
+        setDecks((prevDecks) =>
+          prevDecks.map((d) =>
+            d.id === deckId ? { ...d, cards: [optimisticCard, ...d.cards] } : d
+          )
+        );
+      }
+
+      if (!isAuthenticated) return optimisticCard;
+
+      try {
+        const created = await createCardAction(data);
+        if (created && created.id) {
+          setCards((prev) =>
+            prev.map((c) => (c.id === tempId ? created : c))
+          );
+
+          if (deckId) {
+            setDecks((prevDecks) =>
+              prevDecks.map((d) =>
+                d.id === deckId
+                  ? {
+                      ...d,
+                      cards: d.cards.map((c) => (c.id === tempId ? created : c)),
+                    }
+                  : d
+              )
+            );
+            if (!deckId.startsWith("temp-")) {
+              await addCardsToDeckAction(deckId, [created.id]);
+            }
+          }
+          return created;
+        }
+        return optimisticCard;
+      } catch (err) {
+        console.error("Error creating card:", err);
+        return null;
+      }
+    },
+    [isAuthenticated]
+  );
+
+  const updateCard = useCallback(
+    async (
+      id: string,
+      data: Partial<Card>
+    ): Promise<Card | null> => {
+      setCards((prev) =>
+        prev.map((c) =>
+          c.id === id
+            ? {
+                ...c,
+                ...data,
+                updatedAt: new Date().toISOString(),
+              }
+            : c
         )
       );
-    }
 
-    if (!isAuthenticated) return optimisticCard;
+      // Also update any deck that contains this card in frontend state
+      setDecks((prevDecks) =>
+        prevDecks.map((d) => ({
+          ...d,
+          cards: d.cards.map((c) => (c.id === id ? { ...c, ...data } : c)),
+        }))
+      );
 
-    try {
-      const created = await createCardAction(data);
-      if (created && created.id) {
-        setCards((prev) =>
-          prev.map((c) => (c.id === tempId ? created : c))
-        );
+      if (!isAuthenticated || id.startsWith("temp-")) return null;
 
-        if (deckId) {
-          setDecks((prevDecks) =>
-            prevDecks.map((d) =>
-              d.id === deckId
-                ? {
-                    ...d,
-                    cards: d.cards.map((c) => (c.id === tempId ? created : c)),
-                  }
-                : d
-            )
-          );
-          if (!deckId.startsWith("temp-")) {
-            await addCardsToDeckAction(deckId, [created.id]);
+      try {
+        const updated = await updateCardAction(id, data);
+        return updated;
+      } catch (err) {
+        console.error("Error updating card:", err);
+        return null;
+      }
+    },
+    [isAuthenticated]
+  );
+
+  const reviewCard = useCallback(
+    async (
+      cardId: string,
+      rating: ReviewRating
+    ): Promise<Card | null> => {
+      let card = cardsRef.current.find((c) => c.id === cardId);
+      if (!card) {
+        for (const d of decksRef.current) {
+          const found = d.cards.find((c) => c.id === cardId);
+          if (found) {
+            card = found;
+            break;
           }
         }
-        return created;
       }
-      return optimisticCard;
-    } catch (err) {
-      console.error("Error creating card:", err);
-      return null;
-    }
-  };
-
-  const updateCard = async (
-    id: string,
-    data: Partial<Card>
-  ): Promise<Card | null> => {
-    setCards((prev) =>
-      prev.map((c) =>
-        c.id === id
-          ? {
-              ...c,
-              ...data,
-              updatedAt: new Date().toISOString(),
-            }
-          : c
-      )
-    );
-
-    // Also update any deck that contains this card in frontend state
-    setDecks((prevDecks) =>
-      prevDecks.map((d) => ({
-        ...d,
-        cards: d.cards.map((c) => (c.id === id ? { ...c, ...data } : c)),
-      }))
-    );
-
-    if (!isAuthenticated || id.startsWith("temp-")) return null;
-
-    try {
-      const updated = await updateCardAction(id, data);
-      return updated;
-    } catch (err) {
-      console.error("Error updating card:", err);
-      return null;
-    }
-  };
-
-  const reviewCard = async (
-    cardId: string,
-    rating: ReviewRating
-  ): Promise<Card | null> => {
-    let card = cardsRef.current.find((c) => c.id === cardId);
-    if (!card) {
-      for (const d of decksRef.current) {
-        const found = d.cards.find((c) => c.id === cardId);
-        if (found) {
-          card = found;
-          break;
+      if (!card) {
+        for (const d of appDecks) {
+          const found = d.cards.find((c) => c.id === cardId);
+          if (found) {
+            card = found;
+            break;
+          }
         }
       }
-    }
-    if (!card) {
-      for (const d of appDecks) {
-        const found = d.cards.find((c) => c.id === cardId);
-        if (found) {
-          card = found;
-          break;
-        }
-      }
-    }
-    if (!card) return null;
+      if (!card) return null;
 
-    const srsData = calculateNextReview(card, rating);
-    const updatedCard: Card = {
-      ...card,
-      ...srsData,
-      updatedAt: new Date().toISOString(),
-    };
-
-    // Optimistically update cards list
-    setCards((prev) =>
-      prev.map((c) => (c.id === cardId ? updatedCard : c))
-    );
-
-    // Optimistically update decks list
-    setDecks((prevDecks) =>
-      prevDecks.map((d) => ({
-        ...d,
-        cards: d.cards.map((c) => (c.id === cardId ? updatedCard : c)),
-      }))
-    );
-
-    // Optimistically update playingDeck if currently playing
-    setPlayingDeck((prevPlaying) => {
-      if (!prevPlaying) return null;
-      return {
-        ...prevPlaying,
-        cards: prevPlaying.cards.map((c) => (c.id === cardId ? updatedCard : c)),
+      const srsData = calculateNextReview(card, rating);
+      const updatedCard: Card = {
+        ...card,
+        ...srsData,
+        updatedAt: new Date().toISOString(),
       };
-    });
 
-    if (!isAuthenticated || cardId.startsWith("temp-") || cardId.startsWith("app-card-")) {
-      return updatedCard;
-    }
+      // Optimistically update cards list
+      setCards((prev) =>
+        prev.map((c) => (c.id === cardId ? updatedCard : c))
+      );
 
-    const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
-    if (!isOnline) {
-      const nextCards = cardsRef.current.map((c) => (c.id === cardId ? updatedCard : c));
-      saveCachedCards(nextCards).catch(() => {});
-      const nextDecks = decksRef.current.map((d) => ({
-        ...d,
-        cards: d.cards.map((c) => (c.id === cardId ? updatedCard : c)),
-      }));
-      saveCachedDecks(nextDecks).catch(() => {});
+      // Optimistically update decks list
+      setDecks((prevDecks) =>
+        prevDecks.map((d) => ({
+          ...d,
+          cards: d.cards.map((c) => (c.id === cardId ? updatedCard : c)),
+        }))
+      );
 
-      await enqueueReview(cardId, rating);
-      await refreshPendingCount();
-      return updatedCard;
-    }
+      // Optimistically update playingDeck if currently playing
+      setPlayingDeck((prevPlaying) => {
+        if (!prevPlaying) return null;
+        return {
+          ...prevPlaying,
+          cards: prevPlaying.cards.map((c) => (c.id === cardId ? updatedCard : c)),
+        };
+      });
 
-    try {
-      const persisted = await reviewCardAction(cardId, rating);
-      if (persisted) {
-        setCards((prev) => {
-          const next = prev.map((c) => (c.id === cardId ? persisted : c));
-          saveCachedCards(next).catch(() => {});
-          return next;
-        });
-        setDecks((prevDecks) => {
-          const next = prevDecks.map((d) => ({
-            ...d,
-            cards: d.cards.map((c) => (c.id === cardId ? persisted : c)),
-          }));
-          saveCachedDecks(next).catch(() => {});
-          return next;
-        });
-        setPlayingDeck((prevPlaying) => {
-          if (!prevPlaying) return null;
-          return {
-            ...prevPlaying,
-            cards: prevPlaying.cards.map((c) => (c.id === cardId ? persisted : c)),
-          };
-        });
-        return persisted;
+      if (!isAuthenticated || cardId.startsWith("temp-") || cardId.startsWith("app-card-")) {
+        return updatedCard;
       }
-      // If server returned null, enqueue review to sync later
-      await enqueueReview(cardId, rating);
-      await refreshPendingCount();
-      return updatedCard;
-    } catch (err) {
-      console.error("Error reviewing card, queueing for offline sync:", err);
-      await enqueueReview(cardId, rating);
-      await refreshPendingCount();
-      return updatedCard;
-    }
-  };
 
-  const deleteCard = async (id: string): Promise<boolean> => {
-    setCards((prev) => prev.filter((c) => c.id !== id));
-    // Remove from decks state
-    setDecks((prevDecks) =>
-      prevDecks.map((d) => ({
-        ...d,
-        cards: d.cards.filter((c) => c.id !== id),
-      }))
-    );
+      const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
+      if (!isOnline) {
+        const nextCards = cardsRef.current.map((c) => (c.id === cardId ? updatedCard : c));
+        saveCachedCards(nextCards).catch(() => {});
+        const nextDecks = decksRef.current.map((d) => ({
+          ...d,
+          cards: d.cards.map((c) => (c.id === cardId ? updatedCard : c)),
+        }));
+        saveCachedDecks(nextDecks).catch(() => {});
 
-    if (!isAuthenticated || id.startsWith("temp-")) return true;
-
-    try {
-      return await deleteCardAction(id);
-    } catch (err) {
-      console.error("Error deleting card:", err);
-      return false;
-    }
-  };
-
-  const createDeck = async (
-    name = "New Deck",
-    cardIds: string[] = [],
-    preloadedCards?: Card[]
-  ): Promise<Deck | null> => {
-    const tempId = `temp-deck-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    const selectedCards =
-      preloadedCards && preloadedCards.length > 0
-        ? preloadedCards
-        : cardsRef.current.filter((c) => cardIds.includes(c.id));
-
-    const optimisticDeck: Deck = {
-      id: tempId,
-      name,
-      isPublic: false,
-      cards: selectedCards,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    setDecks((prev) => [optimisticDeck, ...prev]);
-    setSelectedDeckId(tempId);
-    setActiveDeckTab("my");
-
-    if (!isAuthenticated) return optimisticDeck;
-
-    try {
-      const created = await createDeckAction({ name, isPublic: false, cardIds });
-      if (created && created.id) {
-        setDecks((prev) =>
-          prev.map((d) => (d.id === tempId ? created : d))
-        );
-        setSelectedDeckId((prevId) => (prevId === tempId ? created.id : prevId));
-        return created;
+        await enqueueReview(cardId, rating);
+        await refreshPendingCount();
+        return updatedCard;
       }
-      return optimisticDeck;
-    } catch (err) {
-      console.error("Error creating deck:", err);
-      return null;
-    }
-  };
 
-  const addDeckToMyDecks = async (sourceDeck: Deck): Promise<Deck | null> => {
-    const createdCards: Card[] = [];
-    const createdCardIds: string[] = [];
-
-    const createPromises = sourceDeck.cards.map((card) =>
-      createCard({
-        jpText: card.jpText,
-        enText: card.enText,
-      })
-    );
-
-    const results = await Promise.all(createPromises);
-
-    for (const created of results) {
-      if (created) {
-        createdCards.push(created);
-        createdCardIds.push(created.id);
+      try {
+        const persisted = await reviewCardAction(cardId, rating);
+        if (persisted) {
+          setCards((prev) => {
+            const next = prev.map((c) => (c.id === cardId ? persisted : c));
+            saveCachedCards(next).catch(() => {});
+            return next;
+          });
+          setDecks((prevDecks) => {
+            const next = prevDecks.map((d) => ({
+              ...d,
+              cards: d.cards.map((c) => (c.id === cardId ? persisted : c)),
+            }));
+            saveCachedDecks(next).catch(() => {});
+            return next;
+          });
+          setPlayingDeck((prevPlaying) => {
+            if (!prevPlaying) return null;
+            return {
+              ...prevPlaying,
+              cards: prevPlaying.cards.map((c) => (c.id === cardId ? persisted : c)),
+            };
+          });
+          return persisted;
+        }
+        // If server returned null, enqueue review to sync later
+        await enqueueReview(cardId, rating);
+        await refreshPendingCount();
+        return updatedCard;
+      } catch (err) {
+        console.error("Error reviewing card, queueing for offline sync:", err);
+        await enqueueReview(cardId, rating);
+        await refreshPendingCount();
+        return updatedCard;
       }
-    }
+    },
+    [isAuthenticated, appDecks]
+  );
 
-    const createdDeck = await createDeck(
-      sourceDeck.name,
-      createdCardIds,
-      createdCards
-    );
+  const deleteCard = useCallback(
+    async (id: string): Promise<boolean> => {
+      setCards((prev) => prev.filter((c) => c.id !== id));
+      // Remove from decks state
+      setDecks((prevDecks) =>
+        prevDecks.map((d) => ({
+          ...d,
+          cards: d.cards.filter((c) => c.id !== id),
+        }))
+      );
 
-    if (createdDeck) {
+      if (!isAuthenticated || id.startsWith("temp-")) return true;
+
+      try {
+        return await deleteCardAction(id);
+      } catch (err) {
+        console.error("Error deleting card:", err);
+        return false;
+      }
+    },
+    [isAuthenticated]
+  );
+
+  const createDeck = useCallback(
+    async (
+      name = "New Deck",
+      cardIds: string[] = [],
+      preloadedCards?: Card[]
+    ): Promise<Deck | null> => {
+      const tempId = `temp-deck-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const selectedCards =
+        preloadedCards && preloadedCards.length > 0
+          ? preloadedCards
+          : cardsRef.current.filter((c) => cardIds.includes(c.id));
+
+      const optimisticDeck: Deck = {
+        id: tempId,
+        name,
+        isPublic: false,
+        cards: selectedCards,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      setDecks((prev) => [optimisticDeck, ...prev]);
+      setSelectedDeckId(tempId);
       setActiveDeckTab("my");
-      setSelectedDeckId(createdDeck.id);
-    }
 
-    return createdDeck;
-  };
+      if (!isAuthenticated) return optimisticDeck;
 
-  const updateDeck = async (
-    id: string,
-    data: UpdateDeckInput
-  ): Promise<Deck | null> => {
-    setDecks((prev) =>
-      prev.map((d) =>
-        d.id === id
-          ? {
-              ...d,
-              ...data,
-              updatedAt: new Date().toISOString(),
-            }
-          : d
-      )
-    );
-
-    if (!isAuthenticated || id.startsWith("temp-")) return null;
-
-    try {
-      const updated = await updateDeckAction(id, data);
-      return updated;
-    } catch (err) {
-      console.error("Error updating deck:", err);
-      return null;
-    }
-  };
-
-  const deleteDeck = async (id: string): Promise<boolean> => {
-    setDecks((prev) => prev.filter((d) => d.id !== id));
-    if (selectedDeckId === id) {
-      setSelectedDeckId(null);
-    }
-    if (playingDeck?.id === id) {
-      setPlayingDeck(null);
-    }
-
-    if (!isAuthenticated || id.startsWith("temp-")) return true;
-
-    try {
-      return await deleteDeckAction(id);
-    } catch (err) {
-      console.error("Error deleting deck:", err);
-      return false;
-    }
-  };
-
-  const addCardsToDeck = async (deckId: string, cardIds: string[]) => {
-    const cardsToAdd = cardsRef.current.filter((c) => cardIds.includes(c.id));
-    setDecks((prevDecks) =>
-      prevDecks.map((d) => {
-        if (d.id !== deckId) return d;
-        const existingIds = new Set(d.cards.map((c) => c.id));
-        const newCards = cardsToAdd.filter((c) => !existingIds.has(c.id));
-        return {
-          ...d,
-          cards: [...d.cards, ...newCards],
-        };
-      })
-    );
-
-    if (!isAuthenticated || deckId.startsWith("temp-")) return;
-
-    try {
-      const updated = await addCardsToDeckAction(deckId, cardIds);
-      if (updated) {
-        setDecks((prev) =>
-          prev.map((d) => (d.id === deckId ? updated : d))
-        );
+      try {
+        const created = await createDeckAction({ name, isPublic: false, cardIds });
+        if (created && created.id) {
+          setDecks((prev) =>
+            prev.map((d) => (d.id === tempId ? created : d))
+          );
+          setSelectedDeckId((prevId) => (prevId === tempId ? created.id : prevId));
+          return created;
+        }
+        return optimisticDeck;
+      } catch (err) {
+        console.error("Error creating deck:", err);
+        return null;
       }
-    } catch (err) {
-      console.error("Error adding cards to deck:", err);
-    }
-  };
+    },
+    [isAuthenticated]
+  );
 
-  const removeCardFromDeck = async (deckId: string, cardId: string) => {
-    setDecks((prevDecks) =>
-      prevDecks.map((d) =>
-        d.id === deckId
-          ? {
-              ...d,
-              cards: d.cards.filter((c) => c.id !== cardId),
-            }
-          : d
-      )
-    );
+  const addDeckToMyDecks = useCallback(
+    async (sourceDeck: Deck): Promise<Deck | null> => {
+      const createdCards: Card[] = [];
+      const createdCardIds: string[] = [];
 
-    if (!isAuthenticated || deckId.startsWith("temp-")) return;
+      const createPromises = sourceDeck.cards.map((card) =>
+        createCard({
+          jpText: card.jpText,
+          enText: card.enText,
+        })
+      );
 
-    try {
-      const updated = await removeCardFromDeckAction(deckId, cardId);
-      if (updated) {
-        setDecks((prev) =>
-          prev.map((d) => (d.id === deckId ? updated : d))
-        );
+      const results = await Promise.all(createPromises);
+
+      for (const created of results) {
+        if (created) {
+          createdCards.push(created);
+          createdCardIds.push(created.id);
+        }
       }
-    } catch (err) {
-      console.error("Error removing card from deck:", err);
-    }
-  };
 
-  const reorderDeckCards = async (deckId: string, cardIds: string[]) => {
-    setDecks((prevDecks) =>
-      prevDecks.map((d) => {
-        if (d.id !== deckId) return d;
-        const cardMap = new Map(d.cards.map((c) => [c.id, c]));
-        const reordered = cardIds
-          .map((id) => cardMap.get(id))
-          .filter((c): c is Card => !!c);
-        return {
-          ...d,
-          cards: reordered,
-        };
-      })
-    );
+      const createdDeck = await createDeck(
+        sourceDeck.name,
+        createdCardIds,
+        createdCards
+      );
 
-    if (!isAuthenticated || deckId.startsWith("temp-")) return;
-
-    try {
-      const updated = await reorderDeckCardsAction(deckId, cardIds);
-      if (updated) {
-        setDecks((prev) =>
-          prev.map((d) => (d.id === deckId ? updated : d))
-        );
+      if (createdDeck) {
+        setActiveDeckTab("my");
+        setSelectedDeckId(createdDeck.id);
       }
-    } catch (err) {
-      console.error("Error reordering cards:", err);
-    }
-  };
+
+      return createdDeck;
+    },
+    [createCard, createDeck]
+  );
+
+  const updateDeck = useCallback(
+    async (
+      id: string,
+      data: UpdateDeckInput
+    ): Promise<Deck | null> => {
+      setDecks((prev) =>
+        prev.map((d) =>
+          d.id === id
+            ? {
+                ...d,
+                ...data,
+                updatedAt: new Date().toISOString(),
+              }
+            : d
+        )
+      );
+
+      if (!isAuthenticated || id.startsWith("temp-")) return null;
+
+      try {
+        const updated = await updateDeckAction(id, data);
+        return updated;
+      } catch (err) {
+        console.error("Error updating deck:", err);
+        return null;
+      }
+    },
+    [isAuthenticated]
+  );
+
+  const deleteDeck = useCallback(
+    async (id: string): Promise<boolean> => {
+      setDecks((prev) => prev.filter((d) => d.id !== id));
+      if (selectedDeckId === id) {
+        setSelectedDeckId(null);
+      }
+      if (playingDeck?.id === id) {
+        setPlayingDeck(null);
+      }
+
+      if (!isAuthenticated || id.startsWith("temp-")) return true;
+
+      try {
+        return await deleteDeckAction(id);
+      } catch (err) {
+        console.error("Error deleting deck:", err);
+        return false;
+      }
+    },
+    [isAuthenticated, selectedDeckId, playingDeck?.id]
+  );
+
+  const addCardsToDeck = useCallback(
+    async (deckId: string, cardIds: string[]) => {
+      const cardsToAdd = cardsRef.current.filter((c) => cardIds.includes(c.id));
+      setDecks((prevDecks) =>
+        prevDecks.map((d) => {
+          if (d.id !== deckId) return d;
+          const existingIds = new Set(d.cards.map((c) => c.id));
+          const newCards = cardsToAdd.filter((c) => !existingIds.has(c.id));
+          return {
+            ...d,
+            cards: [...d.cards, ...newCards],
+          };
+        })
+      );
+
+      if (!isAuthenticated || deckId.startsWith("temp-")) return;
+
+      try {
+        const updated = await addCardsToDeckAction(deckId, cardIds);
+        if (updated) {
+          setDecks((prev) =>
+            prev.map((d) => (d.id === deckId ? updated : d))
+          );
+        }
+      } catch (err) {
+        console.error("Error adding cards to deck:", err);
+      }
+    },
+    [isAuthenticated]
+  );
+
+  const removeCardFromDeck = useCallback(
+    async (deckId: string, cardId: string) => {
+      setDecks((prevDecks) =>
+        prevDecks.map((d) =>
+          d.id === deckId
+            ? {
+                ...d,
+                cards: d.cards.filter((c) => c.id !== cardId),
+              }
+            : d
+        )
+      );
+
+      if (!isAuthenticated || deckId.startsWith("temp-")) return;
+
+      try {
+        const updated = await removeCardFromDeckAction(deckId, cardId);
+        if (updated) {
+          setDecks((prev) =>
+            prev.map((d) => (d.id === deckId ? updated : d))
+          );
+        }
+      } catch (err) {
+        console.error("Error removing card from deck:", err);
+      }
+    },
+    [isAuthenticated]
+  );
+
+  const reorderDeckCards = useCallback(
+    async (deckId: string, cardIds: string[]) => {
+      setDecks((prevDecks) =>
+        prevDecks.map((d) => {
+          if (d.id !== deckId) return d;
+          const cardMap = new Map(d.cards.map((c) => [c.id, c]));
+          const reordered = cardIds
+            .map((id) => cardMap.get(id))
+            .filter((c): c is Card => !!c);
+          return {
+            ...d,
+            cards: reordered,
+          };
+        })
+      );
+
+      if (!isAuthenticated || deckId.startsWith("temp-")) return;
+
+      try {
+        const updated = await reorderDeckCardsAction(deckId, cardIds);
+        if (updated) {
+          setDecks((prev) =>
+            prev.map((d) => (d.id === deckId ? updated : d))
+          );
+        }
+      } catch (err) {
+        console.error("Error reordering cards:", err);
+      }
+    },
+    [isAuthenticated]
+  );
 
   const contextValue = useMemo(
     () => ({
