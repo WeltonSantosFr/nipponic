@@ -10,8 +10,15 @@ import { AuthProvider, UserPayload } from "@/contexts/AuthContext";
 import { NotesProvider } from "@/contexts/NotesContext";
 import { FlashCardsProvider } from "@/contexts/FlashCardsContext";
 import { TutorProvider } from "@/contexts/TutorContext";
-import { ServerWakeupOverlay } from "@/components/server-wakeup-overlay";
+import dynamic from "next/dynamic";
 import { CapacitorProvider } from "@/components/capacitor-provider";
+
+const ServerWakeupOverlay = dynamic(
+  () =>
+    import("@/components/server-wakeup-overlay").then(
+      (mod) => mod.ServerWakeupOverlay
+    )
+);
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],

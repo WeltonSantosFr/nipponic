@@ -21,10 +21,21 @@ import {
 import dynamic from "next/dynamic";
 import { AppSidebar } from "@/components/app-sidebar";
 import { BookOpen, GraduationCap, Layers, Loader2 } from "lucide-react";
-import { TextEditor } from "@/components/text-editor";
 import { useNotes } from "@/contexts/NotesContext";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
 import { getGlossaryRules } from "@/services/glossary";
+
+const TextEditor = dynamic(
+  () => import("@/components/text-editor").then((mod) => mod.TextEditor),
+  {
+    loading: () => (
+      <div className="flex-1 flex items-center justify-center p-8">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    ),
+    ssr: false,
+  }
+);
 
 const DeckWorkspace = dynamic(
   () => import("@/components/deck-workspace").then((mod) => mod.DeckWorkspace),

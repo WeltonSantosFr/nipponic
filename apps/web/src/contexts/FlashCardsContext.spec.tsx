@@ -352,5 +352,37 @@ describe("FlashCardsContext - addDeckToMyDecks", () => {
     });
     expect((created as Deck | null)?.id).toBe("deck_partial_success");
   });
+
+  it("maintains stable references for context callbacks across provider re-renders", () => {
+    const { result, rerender } = renderHook(() => useFlashCards(), {
+      wrapper: ({ children }) => (
+        <FlashCardsProvider>{children}</FlashCardsProvider>
+      ),
+    });
+
+    const initialCreateCard = result.current.createCard;
+    const initialUpdateCard = result.current.updateCard;
+    const initialDeleteCard = result.current.deleteCard;
+    const initialCreateDeck = result.current.createDeck;
+    const initialAddDeckToMyDecks = result.current.addDeckToMyDecks;
+    const initialUpdateDeck = result.current.updateDeck;
+    const initialAddCardsToDeck = result.current.addCardsToDeck;
+    const initialRemoveCardFromDeck = result.current.removeCardFromDeck;
+    const initialReorderDeckCards = result.current.reorderDeckCards;
+    const initialGetDueCards = result.current.getDueCards;
+
+    rerender();
+
+    expect(result.current.createCard).toBe(initialCreateCard);
+    expect(result.current.updateCard).toBe(initialUpdateCard);
+    expect(result.current.deleteCard).toBe(initialDeleteCard);
+    expect(result.current.createDeck).toBe(initialCreateDeck);
+    expect(result.current.addDeckToMyDecks).toBe(initialAddDeckToMyDecks);
+    expect(result.current.updateDeck).toBe(initialUpdateDeck);
+    expect(result.current.addCardsToDeck).toBe(initialAddCardsToDeck);
+    expect(result.current.removeCardFromDeck).toBe(initialRemoveCardFromDeck);
+    expect(result.current.reorderDeckCards).toBe(initialReorderDeckCards);
+    expect(result.current.getDueCards).toBe(initialGetDueCards);
+  });
 });
 
