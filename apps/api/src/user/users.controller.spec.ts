@@ -136,9 +136,14 @@ describe('UsersController', () => {
     expect(usersServiceMock.delete).toHaveBeenCalledWith(mockUser.sub);
   });
 
-  it('findOne - should call usersService.findOne with param id', async () => {
+  it('findOne - should call usersService.findOne with param id when authenticated user matches param id', async () => {
     // Arrange
     const userId = 'usr_target_123';
+    const mockUser: JwtPayload = {
+      sub: userId,
+      email: 'target@example.com',
+      username: 'targetuser',
+    };
     const expectedUser = {
       id: userId,
       email: 'target@example.com',
@@ -147,12 +152,13 @@ describe('UsersController', () => {
     usersServiceMock.findOne.mockResolvedValue(expectedUser);
 
     // Act
-    const result = await controller.findOne(userId);
+    const result = await controller.findOne(userId, mockUser);
 
     // Assert
     expect(result).toEqual(expectedUser);
     expect(usersServiceMock.findOne).toHaveBeenCalledWith(userId);
   });
+
 
   it('update - should call usersService.update with param id and body when authenticated user matches param id', async () => {
     // Arrange
@@ -232,4 +238,27 @@ describe('UsersController', () => {
     ).rejects.toThrow(ForbiddenException);
     expect(usersServiceMock.delete).not.toHaveBeenCalled();
   });
+
+  it('findOne - should throw ForbiddenException when user attempts to view another user account (IDOR prevention)', async () => {
+    // Arrange
+    const currentAuthUser: JwtPayload = {
+      sub: 'usr_authenticated_1',
+      email: 'auth@example.com',
+      username: 'authuser',
+    };
+    const targetUserId = 'usr_victim_2';
+    const expectedUser = {
+      id: targetUserId,
+      email: 'victim@example.com',
+      username: 'victimuser',
+    };
+    usersServiceMock.findOne.mockResolvedValue(expectedUser);
+
+    // Act & Assert
+    await expect(
+      Promise.resolve().then(() => controller.findOne(targetUserId, currentAuthUser))
+    ).rejects.toThrow(ForbiddenException);
+    expect(usersServiceMock.findOne).not.toHaveBeenCalled();
+  });
 });
+

@@ -54,7 +54,10 @@ export class UsersController {
 
   @Get(":id")
   @UseGuards(AuthGuard)
-  findOne(@Param("id") id: string) {
+  findOne(@Param("id") id: string, @CurrentUser() user: JwtPayload) {
+    if (id !== user.sub) {
+      throw new ForbiddenException("You can only view your own profile.");
+    }
     return this.usersService.findOne(id);
   }
 
