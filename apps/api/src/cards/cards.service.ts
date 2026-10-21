@@ -26,7 +26,11 @@ export class CardsService {
   }
 
   async findOne(userId: string, id: string) {
-    return await this.prisma.db.orm.public.Card.where({ id, userId }).first();
+    const card = await this.prisma.db.orm.public.Card.where({ id, userId }).first();
+    if (!card) {
+      throw new NotFoundException(`Card with ID "${id}" not found`);
+    }
+    return card;
   }
 
   async update(userId: string, id: string, card: UpdateCardDto) {
