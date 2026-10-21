@@ -141,6 +141,21 @@ describe('CardsService', () => {
     expect(firstMock).toHaveBeenCalledTimes(1);
   });
 
+  it('findOne - should throw NotFoundException when card does not exist', async () => {
+    // Arrange
+    const userId = 'usr_123';
+    const cardId = 'crd_nonexistent';
+    const firstMock = vi.fn().mockResolvedValue(null);
+    prismaMock.db.orm.public.Card.where.mockReturnValue({ first: firstMock });
+
+    // Act & Assert
+    await expect(service.findOne(userId, cardId)).rejects.toThrow(
+      new NotFoundException(`Card with ID "${cardId}" not found`),
+    );
+    expect(prismaMock.db.orm.public.Card.where).toHaveBeenCalledWith({ id: cardId, userId });
+    expect(firstMock).toHaveBeenCalledTimes(1);
+  });
+
   it('update - should update card fields including parsed review dates', async () => {
     // Arrange
     const userId = 'usr_123';

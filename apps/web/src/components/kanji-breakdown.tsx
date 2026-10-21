@@ -9,13 +9,52 @@ import type { KanjiInfo, KanjiBreakdownProps } from "@nipponic/shared";
 
 export type { KanjiInfo, KanjiBreakdownProps };
 
+const kanjiMemoryCache = new Map<string, KanjiInfo>();
+const kanjiInFlightRequests = new Map<string, Promise<KanjiInfo | null>>();
+
+async function fetchKanjiWithCache(char: string): Promise<KanjiInfo | null> {
+  if (kanjiMemoryCache.has(char)) {
+    return kanjiMemoryCache.get(char)!;
+  }
+
+  if (kanjiInFlightRequests.has(char)) {
+    return kanjiInFlightRequests.get(char)!;
+  }
+
+  const fetchPromise = fetch(`/api/kanji?char=${encodeURIComponent(char)}`)
+    .then(async (res) => {
+      if (!res.ok) throw new Error("Not found");
+      const data: KanjiInfo = await res.json();
+      kanjiMemoryCache.set(char, data);
+      return data;
+    })
+    .catch((err) => {
+      console.error("Failed to load kanji data:", err);
+      return null;
+    })
+    .finally(() => {
+      kanjiInFlightRequests.delete(char);
+    });
+
+  kanjiInFlightRequests.set(char, fetchPromise);
+  return fetchPromise;
+}
+
 export function KanjiBreakdown({ word }: KanjiBreakdownProps) {
   const kanjiList: string[] = useMemo(() => word.match(/[\u4e00-\u9faf]/g) || [], [word]);
   const [selectedKanji, setSelectedKanji] = useState<string>(
     kanjiList[0] || ""
   );
-  const [kanjiData, setKanjiData] = useState<Record<string, KanjiInfo>>({});
-  const [loading, setLoading] = useState<boolean>(false);
+  const [kanjiData, setKanjiData] = useState<Record<string, KanjiInfo>>(() => {
+    const initial: Record<string, KanjiInfo> = {};
+    if (kanjiList[0] && kanjiMemoryCache.has(kanjiList[0])) {
+      initial[kanjiList[0]] = kanjiMemoryCache.get(kanjiList[0])!;
+    }
+    return initial;
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    return !!(kanjiList[0] && !kanjiMemoryCache.has(kanjiList[0]));
+  });
   const [error, setError] = useState<boolean>(false);
   const { speak } = useSpeech();
 
@@ -27,35 +66,33 @@ export function KanjiBreakdown({ word }: KanjiBreakdownProps) {
 
   useEffect(() => {
     if (!selectedKanji) return;
-    if (kanjiData[selectedKanji]) return;
+    if (kanjiMemoryCache.has(selectedKanji)) {
+      const cached = kanjiMemoryCache.get(selectedKanji)!;
+      setKanjiData((prev) => (prev[selectedKanji] === cached ? prev : { ...prev, [selectedKanji]: cached }));
+      setLoading(false);
+      setError(false);
+      return;
+    }
 
     let isMounted = true;
     setLoading(true);
     setError(false);
 
-    fetch(`/api/kanji?char=${encodeURIComponent(selectedKanji)}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Not found");
-        return res.json();
-      })
-      .then((data: KanjiInfo) => {
-        if (isMounted) {
-          setKanjiData((prev) => ({ ...prev, [selectedKanji]: data }));
-          setLoading(false);
-        }
-      })
-      .catch((err) => {
-        if (isMounted) {
-          console.error("Failed to load kanji data:", err);
-          setError(true);
-          setLoading(false);
-        }
-      });
+    fetchKanjiWithCache(selectedKanji).then((data) => {
+      if (!isMounted) return;
+      if (data) {
+        setKanjiData((prev) => ({ ...prev, [selectedKanji]: data }));
+        setLoading(false);
+      } else {
+        setError(true);
+        setLoading(false);
+      }
+    });
 
     return () => {
       isMounted = false;
     };
-  }, [selectedKanji, kanjiData]);
+  }, [selectedKanji]);
 
   if (kanjiList.length === 0) {
     return (

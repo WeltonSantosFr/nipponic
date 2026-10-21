@@ -85,7 +85,7 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
     return deck.cards;
   }, [deck, filterMode, dueCards]);
 
-  const toggleRevealCard = (id: string) => {
+  const toggleRevealCard = useCallback((id: string) => {
     setRevealedCardIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -95,24 +95,35 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
       }
       return next;
     });
-  };
+  }, []);
 
-  const handleMoveCard = (currentIndex: number, direction: "left" | "right") => {
-    if (!deck || !isCurrentDeckOwner) return;
-    const targetIndex =
-      direction === "left" ? currentIndex - 1 : currentIndex + 1;
-    if (targetIndex < 0 || targetIndex >= deck.cards.length) return;
+  const handleMoveCard = useCallback(
+    (currentIndex: number, direction: "left" | "right") => {
+      if (!deck || !isCurrentDeckOwner) return;
+      const targetIndex =
+        direction === "left" ? currentIndex - 1 : currentIndex + 1;
+      if (targetIndex < 0 || targetIndex >= deck.cards.length) return;
 
-    const newCards = [...deck.cards];
-    const [movedCard] = newCards.splice(currentIndex, 1);
-    if (movedCard) {
-      newCards.splice(targetIndex, 0, movedCard);
-      reorderDeckCards(
-        deck.id,
-        newCards.map((c) => c.id)
-      );
-    }
-  };
+      const newCards = [...deck.cards];
+      const [movedCard] = newCards.splice(currentIndex, 1);
+      if (movedCard) {
+        newCards.splice(targetIndex, 0, movedCard);
+        reorderDeckCards(
+          deck.id,
+          newCards.map((c) => c.id)
+        );
+      }
+    },
+    [deck, isCurrentDeckOwner, reorderDeckCards]
+  );
+
+  const handleRemoveCard = useCallback(
+    (cardId: string) => {
+      if (!deck || !isCurrentDeckOwner) return;
+      removeCardFromDeck(deck.id, cardId);
+    },
+    [deck, isCurrentDeckOwner, removeCardFromDeck]
+  );
 
   const handlePlayDue = () => {
     if (!deck || dueCards.length === 0) return;
@@ -374,10 +385,9 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
                 isOwner={isCurrentDeckOwner}
                 isPlaying={isPlaying}
                 onSpeak={speak}
-                onToggleReveal={() => toggleRevealCard(card.id)}
-                onMoveLeft={() => handleMoveCard(index, "left")}
-                onMoveRight={() => handleMoveCard(index, "right")}
-                onRemove={() => removeCardFromDeck(deck.id, card.id)}
+                onToggleReveal={toggleRevealCard}
+                onMoveCard={handleMoveCard}
+                onRemoveCard={handleRemoveCard}
               />
             );
           })}
@@ -396,7 +406,7 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
   );
 }
 
-const DeckCardGridItem = memo(function DeckCardGridItem({
+export const DeckCardGridItem = memo(function DeckCardGridItem({
   card,
   index,
   total,
@@ -405,9 +415,8 @@ const DeckCardGridItem = memo(function DeckCardGridItem({
   isPlaying = false,
   onSpeak,
   onToggleReveal,
-  onMoveLeft,
-  onMoveRight,
-  onRemove,
+  onMoveCard,
+  onRemoveCard,
 }: {
   card: Card;
   index: number;
@@ -416,10 +425,9 @@ const DeckCardGridItem = memo(function DeckCardGridItem({
   isOwner?: boolean;
   isPlaying?: boolean;
   onSpeak: (text: string, lang: "en-US" | "ja-JP") => Promise<void> | void;
-  onToggleReveal: () => void;
-  onMoveLeft: () => void;
-  onMoveRight: () => void;
-  onRemove: () => void;
+  onToggleReveal: (id: string) => void;
+  onMoveCard: (index: number, direction: "left" | "right") => void;
+  onRemoveCard: (id: string) => void;
 }) {
   const isDue = isCardDue(card);
   const srsStage = getCardSRSStage(card);
@@ -455,7 +463,7 @@ const DeckCardGridItem = memo(function DeckCardGridItem({
             <button
               type="button"
               disabled={index === 0}
-              onClick={onMoveLeft}
+              onClick={() => onMoveCard(index, "left")}
               className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
               title="Move left/up"
             >
@@ -464,7 +472,7 @@ const DeckCardGridItem = memo(function DeckCardGridItem({
             <button
               type="button"
               disabled={index === total - 1}
-              onClick={onMoveRight}
+              onClick={() => onMoveCard(index, "right")}
               className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
               title="Move right/down"
             >
@@ -472,7 +480,7 @@ const DeckCardGridItem = memo(function DeckCardGridItem({
             </button>
             <button
               type="button"
-              onClick={onRemove}
+              onClick={() => onRemoveCard(card.id)}
               className="p-1 rounded hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors cursor-pointer ml-1"
               title="Remove from deck"
             >
@@ -515,7 +523,7 @@ const DeckCardGridItem = memo(function DeckCardGridItem({
       <div className="flex items-center justify-between border-t border-border/40 pt-2 text-[11px] text-muted-foreground">
         <button
           type="button"
-          onClick={onToggleReveal}
+          onClick={() => onToggleReveal(card.id)}
           className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         >
           {isRevealed ? (

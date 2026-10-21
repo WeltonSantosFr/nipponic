@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { TokenizedText } from "@/components/tokenized-text";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +24,18 @@ import {
   Sparkles,
 } from "lucide-react";
 import dynamic from "next/dynamic";
+
+const TokenizedText = dynamic(
+  () => import("@/components/tokenized-text").then((mod) => mod.TokenizedText),
+  {
+    ssr: false,
+    loading: () => (
+      <p className="text-base font-sans whitespace-pre-wrap text-muted-foreground animate-pulse">
+        Loading analyzer...
+      </p>
+    ),
+  }
+);
 
 const GlossaryModal = dynamic(
   () => import("@/components/glossary-modal").then((mod) => mod.GlossaryModal),

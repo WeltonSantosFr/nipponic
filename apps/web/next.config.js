@@ -14,6 +14,7 @@ const nextConfig = {
       "tailwind-merge",
     ],
   },
+  poweredByHeader: false,
   async headers() {
     return [
       {
@@ -30,6 +31,24 @@ const nextConfig = {
           {
             key: "Service-Worker-Allowed",
             value: "/",
+          },
+        ],
+      },
+      {
+        source: "/dict/:all*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/fonts/:all*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
           },
         ],
       },
