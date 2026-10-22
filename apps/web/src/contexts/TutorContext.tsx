@@ -221,7 +221,7 @@ export function TutorProvider({ children }: { children: ReactNode }) {
   // Initial load
   useEffect(() => {
     loadCurriculum(selectedLevel, false);
-  }, [loadCurriculum, isAuthenticated]);
+  }, [loadCurriculum, isAuthenticated, selectedLevel]);
 
   const loadLesson = useCallback(
     async (topicId: string): Promise<Lesson | null> => {

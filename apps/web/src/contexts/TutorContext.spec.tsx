@@ -4,7 +4,6 @@ import { TutorProvider, useTutor } from "./TutorContext";
 import {
   getCurriculumAction,
   getLessonAction,
-  generateNextUnitAction,
 } from "@/actions/tutor";
 import type { CurriculumTopic, Lesson } from "@nipponic/shared";
 

@@ -21,7 +21,6 @@ import {
   Sparkles,
   ArrowRight,
   Play,
-  RotateCcw,
   Loader2,
   Award,
   AlertCircle,
@@ -45,7 +44,6 @@ export function TutorWorkspace() {
     submitProgress,
     submitFeedback,
     addVocabularyToDeck,
-    setSelectedTopicId,
     error,
     clearError,
   } = useTutor();
@@ -78,7 +76,9 @@ export function TutorWorkspace() {
       if (typeof window !== "undefined") {
         try {
           localStorage.setItem("nipponic_tutor_furigana", String(next));
-        } catch {}
+        } catch {
+          // Ignore storage errors
+        }
       }
       return next;
     });
@@ -283,7 +283,7 @@ export function TutorWorkspace() {
                   className="w-full gap-2 cursor-pointer shadow-xs font-semibold"
                 >
                   <Play size={15} />
-                  Start Today's Lesson
+                  Start Today&apos;s Lesson
                 </Button>
               </div>
             )}
