@@ -23,6 +23,12 @@ export class NotesController {
     return this.notesService.findAll(user.sub)
   }
 
+  @Get(":id")
+  @UseGuards(AuthGuard)
+  findOne(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.notesService.findOne(user.sub, id);
+  }
+
   @Patch(":id")
   @UseGuards(AuthGuard)
   update(@CurrentUser() user: JwtPayload, @Param('id') id:string, @Body() note: UpdateNoteDto) {
