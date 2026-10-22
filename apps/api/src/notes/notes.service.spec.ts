@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { NotFoundException } from '@nestjs/common';
 import { NotesService } from './notes.service';
 import { PrismaService } from '../prisma.service';
 
@@ -58,6 +59,44 @@ describe('NotesService', () => {
     expect(result).toEqual(mockNotes);
     expect(prismaMock.db.orm.public.Note.where).toHaveBeenCalledWith({ userId: 'usr_123' });
     expect(allMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('findOne - should return a note by id for the authenticated user', async () => {
+    // Arrange
+    const userId = 'usr_123';
+    const noteId = 'note_456';
+    const mockNote = {
+      id: noteId,
+      title: 'Grammar Notes',
+      enText: 'Sample text',
+      jpText: 'サンプルテキスト',
+      userId,
+    };
+    const firstMock = vi.fn().mockResolvedValue(mockNote);
+    prismaMock.db.orm.public.Note.where.mockReturnValue({ first: firstMock });
+
+    // Act
+    const result = await service.findOne(userId, noteId);
+
+    // Assert
+    expect(result).toEqual(mockNote);
+    expect(prismaMock.db.orm.public.Note.where).toHaveBeenCalledWith({ id: noteId, userId });
+    expect(firstMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('findOne - should throw NotFoundException when note does not exist', async () => {
+    // Arrange
+    const userId = 'usr_123';
+    const noteId = 'note_nonexistent';
+    const firstMock = vi.fn().mockResolvedValue(null);
+    prismaMock.db.orm.public.Note.where.mockReturnValue({ first: firstMock });
+
+    // Act & Assert
+    await expect(service.findOne(userId, noteId)).rejects.toThrow(
+      new NotFoundException(`Note with ID "${noteId}" not found`),
+    );
+    expect(prismaMock.db.orm.public.Note.where).toHaveBeenCalledWith({ id: noteId, userId });
+    expect(firstMock).toHaveBeenCalledTimes(1);
   });
 
   it('update - should update a note', async () => {

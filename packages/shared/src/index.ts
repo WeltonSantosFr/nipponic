@@ -283,6 +283,20 @@ export const DeckSchema = z.object({
 });
 export type Deck = z.infer<typeof DeckSchema>;
 
+/**
+ * Normalizes deck names for case-insensitive, accent-insensitive, and legacy alias comparison.
+ */
+export function normalizeDeckName(name: string): string {
+  if (!name) return "";
+  return name
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\bbasico\b/g, "basic")
+    .replace(/\bavancado\b/g, "advanced");
+}
+
 export const CreateDeckSchema = z.object({
   name: z.string().min(1, "Deck name is required"),
   isPublic: z.boolean().optional().default(false),

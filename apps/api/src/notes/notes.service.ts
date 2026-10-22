@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
 import type { CreateNoteDto, UpdateNoteDto } from "./notes.dto";
 
@@ -12,6 +12,14 @@ export class NotesService {
 
   async findAll(userId: string) {
     return await this.prisma.db.orm.public.Note.where({userId}).all();
+  }
+
+  async findOne(userId: string, id: string) {
+    const note = await this.prisma.db.orm.public.Note.where({ id, userId }).first();
+    if (!note) {
+      throw new NotFoundException(`Note with ID "${id}" not found`);
+    }
+    return note;
   }
 
   async update(userId:string, id:string, note:UpdateNoteDto) {

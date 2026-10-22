@@ -8,6 +8,7 @@ describe('NotesController', () => {
   let notesServiceMock: {
     create: ReturnType<typeof vi.fn>;
     findAll: ReturnType<typeof vi.fn>;
+    findOne: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
     delete: ReturnType<typeof vi.fn>;
   };
@@ -22,6 +23,7 @@ describe('NotesController', () => {
     notesServiceMock = {
       create: vi.fn(),
       findAll: vi.fn(),
+      findOne: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
     };
@@ -64,6 +66,25 @@ describe('NotesController', () => {
     // Assert
     expect(result).toEqual(expectedNotes);
     expect(notesServiceMock.findAll).toHaveBeenCalledWith(mockUser.sub);
+  });
+
+  it('findOne - should call notesService.findOne with user id and note id', async () => {
+    // Arrange
+    const noteId = 'note_123';
+    const expectedNote = {
+      id: noteId,
+      title: 'Grammar Note',
+      content: 'Some note content',
+      userId: mockUser.sub,
+    };
+    notesServiceMock.findOne.mockResolvedValue(expectedNote);
+
+    // Act
+    const result = await controller.findOne(mockUser, noteId);
+
+    // Assert
+    expect(result).toEqual(expectedNote);
+    expect(notesServiceMock.findOne).toHaveBeenCalledWith(mockUser.sub, noteId);
   });
 
   it('update - should call notesService.update with user id, note id, and update payload', async () => {

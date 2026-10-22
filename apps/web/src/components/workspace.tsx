@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import type { WorkspaceProps } from "@nipponic/shared";
 
 export type { WorkspaceProps };
@@ -86,7 +86,7 @@ export function Workspace(props: WorkspaceProps = {}) {
 
   const [isTranslating, setIstranslating] = useState<boolean>(false);
 
-  const handleTranslate = async () => {
+  const handleTranslate = useCallback(async () => {
     if (!selectedNote) return;
     const sourceLang = selectedNote.sourceLang || "EN";
     const textToTranslate =
@@ -129,13 +129,73 @@ export function Workspace(props: WorkspaceProps = {}) {
     } finally {
       setIstranslating(false);
     }
-  };
+  }, [selectedNote, updateNoteContent, saveNote]);
+
+  const handleSelectNote = useCallback(
+    (id: string) => setSelectedNoteId(id),
+    [setSelectedNoteId]
+  );
+
+  const handleTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (selectedNote) {
+        updateNoteContent(selectedNote.id, { title: e.target.value });
+      }
+    },
+    [selectedNote, updateNoteContent]
+  );
+
+  const handleTitleBlur = useCallback(() => {
+    if (selectedNote) {
+      saveNote(selectedNote.id);
+    }
+  }, [selectedNote, saveNote]);
+
+  const handleChangeContent = useCallback(
+    (newContent: string) => {
+      if (selectedNote) {
+        updateNoteContent(selectedNote.id, { enText: newContent });
+      }
+    },
+    [selectedNote, updateNoteContent]
+  );
+
+  const handleBlurContent = useCallback(() => {
+    if (selectedNote) {
+      saveNote(selectedNote.id);
+    }
+  }, [selectedNote, saveNote]);
+
+  const handleChangeJpContent = useCallback(
+    (newJpContent: string) => {
+      if (selectedNote) {
+        updateNoteContent(selectedNote.id, { jpText: newJpContent });
+      }
+    },
+    [selectedNote, updateNoteContent]
+  );
+
+  const handleBlurJpContent = useCallback(() => {
+    if (selectedNote) {
+      saveNote(selectedNote.id);
+    }
+  }, [selectedNote, saveNote]);
+
+  const handleChangeSourceLang = useCallback(
+    (newLang: "EN" | "JA") => {
+      if (selectedNote) {
+        updateNoteContent(selectedNote.id, { sourceLang: newLang });
+        saveNote(selectedNote.id, { sourceLang: newLang });
+      }
+    },
+    [selectedNote, updateNoteContent, saveNote]
+  );
 
   return (
     <SidebarProvider>
       <AppSidebar
         selectedNoteId={selectedNoteId}
-        onSelectNote={(id) => setSelectedNoteId(id)}
+        onSelectNote={handleSelectNote}
       />
 
       <SidebarInset className="flex flex-col min-h-screen min-w-0 max-w-full overflow-x-hidden">
@@ -189,12 +249,8 @@ export function Workspace(props: WorkspaceProps = {}) {
                 <input
                   type="text"
                   value={selectedNote.title}
-                  onChange={(e) => {
-                    updateNoteContent(selectedNote.id, { title: e.target.value });
-                  }}
-                  onBlur={() => {
-                    saveNote(selectedNote.id);
-                  }}
+                  onChange={handleTitleChange}
+                  onBlur={handleTitleBlur}
                   className="text-2xl sm:text-3xl font-bold bg-transparent outline-none tracking-tight text-foreground border-b border-transparent focus:border-border pb-1 w-full"
                   placeholder="Note title..."
                 />
@@ -203,22 +259,11 @@ export function Workspace(props: WorkspaceProps = {}) {
 
                 <TextEditor
                   selectedNote={selectedNote}
-                  onChangeContent={(newContent) => {
-                    updateNoteContent(selectedNote.id, { enText: newContent });
-                  }}
-                  onBlurContent={() => {
-                    saveNote(selectedNote.id);
-                  }}
-                  onChangeJpContent={(newJpContent) => {
-                    updateNoteContent(selectedNote.id, { jpText: newJpContent });
-                  }}
-                  onBlurJpContent={() => {
-                    saveNote(selectedNote.id);
-                  }}
-                  onChangeSourceLang={(newLang) => {
-                    updateNoteContent(selectedNote.id, { sourceLang: newLang });
-                    saveNote(selectedNote.id, { sourceLang: newLang });
-                  }}
+                  onChangeContent={handleChangeContent}
+                  onBlurContent={handleBlurContent}
+                  onChangeJpContent={handleChangeJpContent}
+                  onBlurJpContent={handleBlurJpContent}
+                  onChangeSourceLang={handleChangeSourceLang}
                   isTranslating={isTranslating}
                   onTranslate={handleTranslate}
                 />
