@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     const translator = getTranslator();
     if (!translator) {
       return NextResponse.json(
-        { error: "Serviço de tradução não configurado (DEEPL_AUTH_KEY ausente)." },
+        { error: "Translation service not configured (DEEPL_AUTH_KEY missing)." },
         { status: 503 }
       );
     }

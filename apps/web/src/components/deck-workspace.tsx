@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect, memo, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { Deck, Card, DeckCardFilterMode, DeckWorkspaceProps } from "@nipponic/shared";
+import { Deck, Card, DeckCardFilterMode, DeckWorkspaceProps, normalizeDeckName } from "@nipponic/shared";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
 import { isCardDue, getCardSRSStage, formatDueTime } from "@/lib/srs";
 import { Button } from "@/components/ui/button";
@@ -62,16 +62,8 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
 
   const isAlreadyAdded = useMemo(() => {
     if (isCurrentDeckOwner || !deck) return false;
-    const normalize = (n: string) =>
-      n
-        .trim()
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/\bbasico\b/g, "basic")
-        .replace(/\bavancado\b/g, "advanced");
-    const target = normalize(deck.name);
-    return decks.some((myDeck) => normalize(myDeck.name) === target);
+    const target = normalizeDeckName(deck.name);
+    return decks.some((myDeck) => normalizeDeckName(myDeck.name) === target);
   }, [isCurrentDeckOwner, deck, decks]);
 
   const dueCards = useMemo(() => {
