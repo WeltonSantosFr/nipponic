@@ -12,6 +12,7 @@ const nextConfig = {
       "@nipponic/shared",
       "clsx",
       "tailwind-merge",
+      "class-variance-authority",
     ],
   },
   poweredByHeader: false,
