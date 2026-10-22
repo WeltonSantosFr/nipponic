@@ -41,14 +41,17 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotes } from "@/contexts/NotesContext";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
+import { useTutor } from "@/contexts/TutorContext";
 import { Note, Deck, AuthMode, AppSidebarProps, normalizeDeckName } from "@nipponic/shared";
 import { isCardDue } from "@/lib/srs";
 import Link from "next/link";
 import {
   BookOpen,
   Check,
+  CheckCircle2,
   DoorOpen,
   Globe,
+  GraduationCap,
   Heart,
   Layers,
   Loader2,
@@ -56,6 +59,7 @@ import {
   Plus,
   Search,
   Settings,
+  Sparkles,
   Trash2,
   UserPlus,
   UserRound,
@@ -290,6 +294,17 @@ export function AppSidebar({
     addDeckToMyDecks,
   } = useFlashCards();
 
+  const {
+    curriculum,
+    selectedLevel,
+    setSelectedLevel,
+    selectedTopicId,
+    loadLesson,
+    isLoadingCurriculum,
+    isGeneratingUnit,
+    generateNextUnit,
+  } = useTutor();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [deckSearchQuery, setDeckSearchQuery] = useState("");
   const [cloningDeckId, setCloningDeckId] = useState<string | null>(null);
@@ -468,7 +483,7 @@ export function AppSidebar({
           </p>
         )}
 
-        {/* Feature Selector Slider */}
+        {/* Feature Selector Navigation */}
         <div className="flex p-1 bg-muted/60 rounded-lg border border-border/70 text-xs font-medium">
           <button
             type="button"
@@ -492,7 +507,19 @@ export function AppSidebar({
             }`}
           >
             <Layers size={14} />
-            <span>Flash Cards</span>
+            <span>Cards</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSidebarView("tutor")}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md transition-all cursor-pointer ${
+              activeSidebarView === "tutor"
+                ? "bg-background text-foreground shadow-xs font-semibold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <GraduationCap size={14} />
+            <span>Tutor</span>
           </button>
         </div>
 
@@ -536,7 +563,7 @@ export function AppSidebar({
               )}
             </div>
           </>
-        ) : (
+        ) : activeSidebarView === "flashcards" ? (
           <>
             {/* 3-Tab Deck Switcher */}
             <div className="flex p-0.5 bg-muted/60 rounded-lg border border-border/70 text-[11px] font-medium gap-0.5 w-full">
@@ -627,6 +654,24 @@ export function AppSidebar({
               )}
             </div>
           </>
+        ) : (
+          /* Level Selector for Tutor */
+          <div className="flex p-0.5 bg-muted/60 rounded-lg border border-border/70 text-[11px] font-medium gap-0.5 w-full">
+            {(["N5", "N4", "N3", "N2", "N1"] as const).map((lvl) => (
+              <button
+                key={lvl}
+                type="button"
+                onClick={() => setSelectedLevel(lvl)}
+                className={`flex-1 py-1 px-1 rounded-md transition-all cursor-pointer text-center font-bold ${
+                  selectedLevel === lvl
+                    ? "bg-background text-foreground shadow-xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {lvl}
+              </button>
+            ))}
+          </div>
         )}
       </SidebarHeader>
 
@@ -681,7 +726,7 @@ export function AppSidebar({
               )}
             </>
           )
-        ) : (
+        ) : activeSidebarView === "flashcards" ? (
           /* Flash Cards Decks Area */
           <SidebarGroup>
             {activeDeckTab === "my" && (
@@ -759,7 +804,103 @@ export function AppSidebar({
               )
             )}
           </SidebarGroup>
+        ) : (
+          /* Tutor Lessons Area */
+          <SidebarGroup>
+            <div className="flex items-center justify-between px-2 py-1">
+              <SidebarGroupLabel className="p-0">
+                JLPT {selectedLevel} Lessons {!isLoadingCurriculum && `(${curriculum.length})`}
+              </SidebarGroupLabel>
+              <button
+                type="button"
+                onClick={() => generateNextUnit()}
+                disabled={isGeneratingUnit || isLoadingCurriculum}
+                title="Generate next unit with AI"
+                className="text-[11px] text-muted-foreground hover:text-primary flex items-center gap-1 cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {isGeneratingUnit ? (
+                  <Loader2 size={12} className="animate-spin text-primary" />
+                ) : (
+                  <Sparkles size={12} className="text-primary" />
+                )}
+                <span>+ Unit</span>
+              </button>
+            </div>
+            {isLoadingCurriculum ? (
+              <div className="px-2 py-3 space-y-2">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground animate-pulse mb-2">
+                  <Loader2 size={13} className="animate-spin text-primary shrink-0" />
+                  <span className="truncate">Loading JLPT {selectedLevel} lessons...</span>
+                </div>
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div
+                    key={i}
+                    className="h-8 rounded-lg bg-muted/60 animate-pulse w-full flex items-center px-2 gap-2"
+                  >
+                    <div className="w-4 h-4 rounded-full bg-muted-foreground/20 shrink-0" />
+                    <div className="h-3 rounded bg-muted-foreground/20 w-3/4" />
+                  </div>
+                ))}
+              </div>
+            ) : curriculum.length === 0 ? (
+              <div className="p-6 text-center space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  No lessons loaded for JLPT {selectedLevel}.
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => generateNextUnit()}
+                  disabled={isGeneratingUnit}
+                  className="w-full text-xs gap-1.5 cursor-pointer font-medium"
+                >
+                  {isGeneratingUnit ? (
+                    <Loader2 size={13} className="animate-spin text-primary" />
+                  ) : (
+                    <Sparkles size={13} className="text-primary" />
+                  )}
+                  Generate with AI
+                </Button>
+              </div>
+            ) : (
+              <SidebarMenu>
+                {curriculum.map((topic) => {
+                  const isSelected = selectedTopicId === topic.id;
+                  return (
+                    <SidebarMenuItem key={topic.id}>
+                      <SidebarMenuButton
+                        isActive={isSelected}
+                        onClick={() => {
+                          loadLesson(topic.id);
+                          if (isMobile) {
+                            setOpenMobile(false);
+                          }
+                        }}
+                        className="cursor-pointer"
+                        title={topic.title}
+                      >
+                        {topic.isCompleted ? (
+                          <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                        ) : (
+                          <BookOpen size={16} className="text-muted-foreground shrink-0" />
+                        )}
+                        <span className="truncate flex-1 text-left">
+                          {topic.lessonIndex}. {topic.title}
+                        </span>
+                        {topic.completedScore !== undefined && topic.completedScore > 0 && (
+                          <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1 py-0.5 rounded shrink-0">
+                            {topic.completedScore}%
+                          </span>
+                        )}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            )}
+          </SidebarGroup>
         )}
+
       </SidebarContent>
 
       <SidebarFooter>

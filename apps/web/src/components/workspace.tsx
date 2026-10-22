@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/sidebar";
 import dynamic from "next/dynamic";
 import { AppSidebar } from "@/components/app-sidebar";
-import { BookOpen, Layers, Loader2 } from "lucide-react";
+import { BookOpen, GraduationCap, Layers, Loader2 } from "lucide-react";
 import { useNotes } from "@/contexts/NotesContext";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
 import { getGlossaryRules } from "@/services/glossary";
@@ -39,6 +39,18 @@ const TextEditor = dynamic(
 
 const DeckWorkspace = dynamic(
   () => import("@/components/deck-workspace").then((mod) => mod.DeckWorkspace),
+  {
+    loading: () => (
+      <div className="flex-1 flex items-center justify-center p-8">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    ),
+    ssr: false,
+  }
+);
+
+const TutorWorkspace = dynamic(
+  () => import("@/components/tutor-workspace").then((mod) => mod.TutorWorkspace),
   {
     loading: () => (
       <div className="flex-1 flex items-center justify-center p-8">
@@ -196,13 +208,18 @@ export function Workspace(props: WorkspaceProps = {}) {
                   {selectedNote.title}
                 </span>
               )
-            ) : (
+            ) : activeSidebarView === "flashcards" ? (
               selectedDeck && (
                 <span className="text-sm font-medium text-muted-foreground truncate max-w-[180px] sm:max-w-sm flex items-center gap-1.5">
                   <Layers size={15} className="text-primary shrink-0" />
                   <span className="truncate">{selectedDeck.name}</span>
                 </span>
               )
+            ) : (
+              <span className="text-sm font-medium text-muted-foreground truncate max-w-[180px] sm:max-w-sm flex items-center gap-1.5">
+                <GraduationCap size={15} className="text-primary shrink-0" />
+                <span>AI Tutor</span>
+              </span>
             )}
           </div>
         </header>
@@ -253,9 +270,13 @@ export function Workspace(props: WorkspaceProps = {}) {
               </div>
             )}
           </div>
-        ) : (
+        ) : activeSidebarView === "flashcards" ? (
           <div className="flex-1 flex flex-col items-center justify-start w-full min-w-0 max-w-full">
             <DeckWorkspace deck={selectedDeck} />
+          </div>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-start w-full min-w-0 max-w-full">
+            <TutorWorkspace />
           </div>
         )}
       </SidebarInset>

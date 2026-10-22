@@ -328,7 +328,7 @@ export type AddCardsDto = AddCardsToDeckInput;
 export type AddCardsToDeckDto = AddCardsToDeckInput;
 
 export type DeckTabMode = "my" | "app" | "public";
-export type SidebarViewMode = "notes" | "flashcards";
+export type SidebarViewMode = "notes" | "flashcards" | "tutor";
 
 export const DeckCardFilterModeSchema = z.enum(["all", "due"]);
 export type DeckCardFilterMode = z.infer<typeof DeckCardFilterModeSchema>;
@@ -713,3 +713,126 @@ export const MockSponsorshipInputSchema = z.object({
   isActive: z.boolean().default(true),
 });
 export type MockSponsorshipInput = z.infer<typeof MockSponsorshipInputSchema>;
+
+// ==========================================
+// AI Tutor & Daily Lessons Contracts
+// ==========================================
+
+export const CurriculumLevelSchema = z.enum(["N5", "N4", "N3", "N2", "N1"]);
+export type CurriculumLevel = z.infer<typeof CurriculumLevelSchema>;
+
+export const DialogueLineSchema = z.object({
+  speaker: z.string(),
+  jpText: z.string(),
+  enText: z.string(),
+});
+export type DialogueLine = z.infer<typeof DialogueLineSchema>;
+
+export const VocabularyItemSchema = z.object({
+  jpText: z.string(),
+  reading: z.string(),
+  enText: z.string(),
+});
+export type VocabularyItem = z.infer<typeof VocabularyItemSchema>;
+
+export const ExerciseTypeSchema = z.enum([
+  "multiple_choice",
+  "fill_blank",
+  "reorder",
+]);
+export type ExerciseType = z.infer<typeof ExerciseTypeSchema>;
+
+export const LessonExerciseSchema = z.object({
+  id: z.string().optional(),
+  order: z.number(),
+  type: ExerciseTypeSchema,
+  prompt: z.string(),
+  options: z.array(z.string()).optional(),
+  correctAnswer: z.string(),
+  explanation: z.string(),
+});
+export type LessonExercise = z.infer<typeof LessonExerciseSchema>;
+
+export const CurriculumTopicSchema = z.object({
+  id: z.string(),
+  level: CurriculumLevelSchema,
+  unitIndex: z.number(),
+  unitTitle: z.string(),
+  lessonIndex: z.number(),
+  title: z.string(),
+  grammarKey: z.string(),
+  objective: z.string(),
+  hasLesson: z.boolean().optional(),
+  isCompleted: z.boolean().optional(),
+  completedScore: z.number().optional(),
+});
+export type CurriculumTopic = z.infer<typeof CurriculumTopicSchema>;
+
+export const LessonSchema = z.object({
+  id: z.string(),
+  topicId: z.string(),
+  title: z.string(),
+  level: CurriculumLevelSchema,
+  theoryMarkdown: z.string(),
+  dialogue: z.array(DialogueLineSchema),
+  vocabulary: z.array(VocabularyItemSchema),
+  exercises: z.array(LessonExerciseSchema),
+  isCompleted: z.boolean().optional(),
+  score: z.number().optional(),
+  createdAt: z.union([z.string(), z.date()]).optional(),
+});
+export type Lesson = z.infer<typeof LessonSchema>;
+
+export const UserLessonProgressSchema = z.object({
+  id: z.string().optional(),
+  userId: z.string(),
+  lessonId: z.string(),
+  completedAt: z.union([z.string(), z.date()]).nullable(),
+  score: z.number().default(0),
+});
+export type UserLessonProgress = z.infer<typeof UserLessonProgressSchema>;
+
+export const SubmitLessonProgressSchema = z.object({
+  score: z.number().min(0).max(100),
+});
+export type SubmitLessonProgressInput = z.infer<typeof SubmitLessonProgressSchema>;
+export type SubmitLessonProgressDto = SubmitLessonProgressInput;
+
+export const SubmitLessonFeedbackSchema = z.object({
+  rating: z.enum(["helpful", "confusing"]),
+  comment: z.string().optional(),
+});
+export type SubmitLessonFeedbackInput = z.infer<typeof SubmitLessonFeedbackSchema>;
+export type SubmitLessonFeedbackDto = SubmitLessonFeedbackInput;
+
+export const GenerateLessonPayloadSchema = z.object({
+  title: z.string(),
+  theoryMarkdown: z.string(),
+  dialogue: z.array(DialogueLineSchema),
+  vocabulary: z.array(VocabularyItemSchema),
+  exercises: z.array(
+    z.object({
+      order: z.number(),
+      type: ExerciseTypeSchema,
+      prompt: z.string(),
+      options: z.array(z.string()).optional(),
+      correctAnswer: z.string(),
+      explanation: z.string(),
+    })
+  ),
+});
+export type GenerateLessonPayload = z.infer<typeof GenerateLessonPayloadSchema>;
+
+export const GeneratedTopicSchema = z.object({
+  lessonIndex: z.number(),
+  title: z.string(),
+  grammarKey: z.string(),
+  objective: z.string(),
+});
+export type GeneratedTopic = z.infer<typeof GeneratedTopicSchema>;
+
+export const GenerateUnitPayloadSchema = z.object({
+  unitTitle: z.string(),
+  topics: z.array(GeneratedTopicSchema),
+});
+export type GenerateUnitPayload = z.infer<typeof GenerateUnitPayloadSchema>;

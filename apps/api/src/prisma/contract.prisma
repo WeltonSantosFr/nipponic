@@ -11,6 +11,7 @@ model User {
   cards          Card[]
   decks          Deck[]
   sponsorships   Sponsor[]
+  lessonProgress UserLessonProgress[]
   
   createdAt      DateTime @default(now())
   updatedAt      temporal.updatedAt()
@@ -93,4 +94,82 @@ model Sponsor {
   
   createdAt           DateTime @default(now())
   updatedAt           temporal.updatedAt()
+}
+
+model CurriculumTopic {
+  id          String   @id @default(uuid())
+  level       String
+  unitIndex   Int
+  unitTitle   String
+  lessonIndex Int
+  title       String
+  grammarKey  String
+  objective   String
+
+  lesson      Lesson?
+
+  createdAt   DateTime @default(now())
+  updatedAt   temporal.updatedAt()
+
+  @@unique([level, unitIndex, lessonIndex])
+}
+
+model Lesson {
+  id             String          @id @default(uuid())
+  topicId        String          @unique
+  topic          CurriculumTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  
+  title          String
+  level          String          @default("N5")
+  theoryMarkdown String
+  dialogueJson   Json
+  vocabularyJson Json
+  
+  exercises      LessonExercise[]
+  progress       UserLessonProgress[]
+  feedbacks      LessonFeedback[]
+  
+  createdAt      DateTime        @default(now())
+  updatedAt      temporal.updatedAt()
+}
+
+model LessonExercise {
+  id            String   @id @default(uuid())
+  lessonId      String
+  lesson        Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  
+  order         Int
+  type          String
+  prompt        String
+  optionsJson   Json?
+  correctAnswer String
+  explanation   String
+
+  createdAt     DateTime @default(now())
+}
+
+model UserLessonProgress {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId    String
+  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  
+  completedAt DateTime?
+  score       Int       @default(0)
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   temporal.updatedAt()
+
+  @@unique([userId, lessonId])
+}
+
+model LessonFeedback {
+  id        String   @id @default(uuid())
+  lessonId  String
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  userId    String?
+  rating    String
+  comment   String?
+  createdAt DateTime @default(now())
 }
