@@ -234,8 +234,9 @@ describe('CardsService', () => {
     const userId = 'usr_123';
     const cardId = 'crd_456';
     const deletedCard = { id: cardId, jpText: '桜', enText: 'cherry blossom', userId };
+    const firstMock = vi.fn().mockResolvedValue(deletedCard);
     const deleteMock = vi.fn().mockResolvedValue(deletedCard);
-    prismaMock.db.orm.public.Card.where.mockReturnValue({ delete: deleteMock });
+    prismaMock.db.orm.public.Card.where.mockReturnValue({ first: firstMock, delete: deleteMock });
 
     // Act
     const result = await service.delete(userId, cardId);
@@ -243,7 +244,23 @@ describe('CardsService', () => {
     // Assert
     expect(result).toEqual(deletedCard);
     expect(prismaMock.db.orm.public.Card.where).toHaveBeenCalledWith({ id: cardId, userId });
+    expect(firstMock).toHaveBeenCalledTimes(1);
     expect(deleteMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('delete - should throw NotFoundException when card does not exist', async () => {
+    // Arrange
+    const userId = 'usr_123';
+    const cardId = 'crd_nonexistent';
+    const firstMock = vi.fn().mockResolvedValue(null);
+    prismaMock.db.orm.public.Card.where.mockReturnValue({ first: firstMock });
+
+    // Act & Assert
+    await expect(service.delete(userId, cardId)).rejects.toThrow(
+      new NotFoundException(`Card with ID "${cardId}" not found`),
+    );
+    expect(prismaMock.db.orm.public.Card.where).toHaveBeenCalledWith({ id: cardId, userId });
+    expect(firstMock).toHaveBeenCalledTimes(1);
   });
 
   it('review - should throw NotFoundException when card does not exist', async () => {
