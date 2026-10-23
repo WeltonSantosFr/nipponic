@@ -2,20 +2,22 @@ import { describe, it, expect, vi } from "vitest";
 import { render } from "@testing-library/react";
 import { FuriganaText } from "./furigana-text";
 
-// Mock useKuromoji so we can test automated kana ruby rendering
+const tokenizeSpy = vi.fn((text: string) => {
+  if (text === "極まりない") {
+    return [
+      {
+        surface_form: "極まりない",
+        reading: "キワマリナイ",
+      },
+    ];
+  }
+  return [{ surface_form: text, reading: "" }];
+});
+
+// Mock useKuromoji so we can test automated kana ruby rendering and caching
 vi.mock("@/hooks/use-kuromoji", () => ({
   useKuromoji: () => ({
-    tokenize: (text: string) => {
-      if (text === "極まりない") {
-        return [
-          {
-            surface_form: "極まりない",
-            reading: "キワマリナイ",
-          },
-        ];
-      }
-      return [{ surface_form: text, reading: "" }];
-    },
+    tokenize: tokenizeSpy,
   }),
 }));
 
@@ -66,5 +68,16 @@ describe("FuriganaText", () => {
     expect(ruby).not.toBeNull();
     expect(ruby).toHaveTextContent("きわまりない");
     expect(ruby).toHaveTextContent("極まりない");
+  });
+
+  it("uses cached tokenization on repeated renders with the same plain kanji text", () => {
+    tokenizeSpy.mockClear();
+    render(<FuriganaText text="新しい単語" showFurigana={true} />);
+    const callsAfterFirstRender = tokenizeSpy.mock.calls.length;
+    expect(callsAfterFirstRender).toBeGreaterThanOrEqual(1);
+
+    // Re-rendering or rendering another instance with identical text should hit the cache
+    render(<FuriganaText text="新しい単語" showFurigana={true} />);
+    expect(tokenizeSpy.mock.calls.length).toBe(callsAfterFirstRender);
   });
 });

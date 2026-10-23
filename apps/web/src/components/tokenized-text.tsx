@@ -652,7 +652,7 @@ const TokenItem = memo(TokenItemBase, (prev, next) => {
   );
 });
 
-export function TokenizedText({
+export const TokenizedText = memo(function TokenizedText({
   text,
   showFurigana = false,
   enContext = "",
@@ -742,4 +742,4 @@ export function TokenizedText({
       })}
     </p>
   );
-}
+});

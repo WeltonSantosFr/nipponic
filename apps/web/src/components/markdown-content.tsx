@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { memo, useMemo } from "react";
 
 import { FuriganaText } from "@/components/furigana-text";
 
@@ -230,7 +230,22 @@ function parseMarkdownBlocks(text: string): Block[] {
   return blocks;
 }
 
-export function MarkdownContent({
+const inlineTokenCache = new Map<string, InlineToken[]>();
+const MAX_INLINE_CACHE = 500;
+
+function parseInlineTokensCached(text: string): InlineToken[] {
+  const cached = inlineTokenCache.get(text);
+  if (cached) return cached;
+  const tokens = parseInlineTokens(text);
+  if (inlineTokenCache.size >= MAX_INLINE_CACHE) {
+    const firstKey = inlineTokenCache.keys().next().value;
+    if (firstKey) inlineTokenCache.delete(firstKey);
+  }
+  inlineTokenCache.set(text, tokens);
+  return tokens;
+}
+
+export const MarkdownContent = memo(function MarkdownContent({
   content,
   className = "",
   showFurigana = true,
@@ -246,7 +261,7 @@ export function MarkdownContent({
       {blocks.map((block, index) => renderBlock(block, index, showFurigana))}
     </div>
   );
-}
+});
 
 function renderInline(text: string, showFurigana: boolean = true): React.ReactNode {
   const lines = text.split("\n");
@@ -262,7 +277,7 @@ function renderInline(text: string, showFurigana: boolean = true): React.ReactNo
 }
 
 function renderInlineSingleLine(text: string, showFurigana: boolean = true): React.ReactNode {
-  const tokens = parseInlineTokens(text);
+  const tokens = parseInlineTokensCached(text);
   return tokens.map((token, index) => {
     switch (token.type) {
       case "code":

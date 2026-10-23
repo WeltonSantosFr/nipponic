@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { memo, useMemo } from "react";
 import { useKuromoji } from "@/hooks/use-kuromoji";
 import { toHiragana } from "@/components/tokenized-text";
 
@@ -15,6 +15,33 @@ interface Segment {
   kanji?: string;
   reading?: string;
   text?: string;
+}
+
+interface TokenFeatures {
+  surface_form: string;
+  reading?: string;
+}
+
+const plainTokenCache = new Map<string, TokenFeatures[]>();
+const MAX_CACHE_SIZE = 500;
+
+function getCachedTokens(
+  tokenizer: { tokenize: (text: string) => { surface_form: string; reading?: string }[] },
+  text: string
+): TokenFeatures[] {
+  const cached = plainTokenCache.get(text);
+  if (cached) return cached;
+  const rawTokens = tokenizer.tokenize(text);
+  const tokens: TokenFeatures[] = rawTokens.map((t) => ({
+    surface_form: t.surface_form,
+    reading: t.reading,
+  }));
+  if (plainTokenCache.size >= MAX_CACHE_SIZE) {
+    const firstKey = plainTokenCache.keys().next().value;
+    if (firstKey) plainTokenCache.delete(firstKey);
+  }
+  plainTokenCache.set(text, tokens);
+  return tokens;
 }
 
 /**
@@ -76,7 +103,7 @@ function parseRubyMarkup(input: string): Segment[] {
   return segments;
 }
 
-export function FuriganaText({
+export const FuriganaText = memo(function FuriganaText({
   text,
   showFurigana = true,
   className = "",
@@ -114,8 +141,8 @@ export function FuriganaText({
           return <span key={idx}>{plainText}</span>;
         }
 
-        // Tokenize plain Japanese text to automatically supply furigana
-        const tokens = tokenizer.tokenize(plainText);
+        // Tokenize plain Japanese text using cached tokens to avoid repeated Viterbi lattice searches
+        const tokens = getCachedTokens(tokenizer, plainText);
         return (
           <React.Fragment key={idx}>
             {tokens.map((token, tIdx) => {
@@ -142,4 +169,4 @@ export function FuriganaText({
       })}
     </span>
   );
-}
+});
