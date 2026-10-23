@@ -51,7 +51,20 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
     addDeckToMyDecks,
   } = useFlashCards();
 
-  const { speak, isPlaying } = useSpeech();
+  const { speak } = useSpeech();
+  const [activeSpeechText, setActiveSpeechText] = useState<string | null>(null);
+
+  const handleSpeak = useCallback(
+    async (text: string, lang: "en-US" | "ja-JP") => {
+      setActiveSpeechText(text);
+      try {
+        await speak(text, lang);
+      } finally {
+        setActiveSpeechText((current) => (current === text ? null : current));
+      }
+    },
+    [speak]
+  );
 
   const [filterMode, setFilterMode] = useState<DeckCardFilterMode>("all");
   const [isAddCardsModalOpen, setIsAddCardsModalOpen] = useState(false);
@@ -375,8 +388,8 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
                 total={displayedCards.length}
                 isRevealed={isRevealed}
                 isOwner={isCurrentDeckOwner}
-                isPlaying={isPlaying}
-                onSpeak={speak}
+                isPlaying={activeSpeechText === card.jpText}
+                onSpeak={handleSpeak}
                 onToggleReveal={toggleRevealCard}
                 onMoveCard={handleMoveCard}
                 onRemoveCard={handleRemoveCard}

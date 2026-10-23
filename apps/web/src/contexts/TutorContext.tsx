@@ -6,6 +6,7 @@ import {
   useState,
   useEffect,
   useCallback,
+  useMemo,
   ReactNode,
 } from "react";
 import type {
@@ -354,28 +355,48 @@ export function TutorProvider({ children }: { children: ReactNode }) {
     setCurrentLesson(null);
   }, []);
 
+  const contextValue = useMemo(
+    () => ({
+      curriculum,
+      selectedLevel,
+      setSelectedLevel,
+      selectedTopicId,
+      setSelectedTopicId,
+      currentLesson,
+      isLoadingCurriculum,
+      isLoadingLesson,
+      isGeneratingUnit,
+      error,
+      clearError,
+      loadLesson,
+      closeLesson,
+      generateNextUnit,
+      submitProgress,
+      submitFeedback,
+      addVocabularyToDeck,
+    }),
+    [
+      curriculum,
+      selectedLevel,
+      setSelectedLevel,
+      selectedTopicId,
+      currentLesson,
+      isLoadingCurriculum,
+      isLoadingLesson,
+      isGeneratingUnit,
+      error,
+      clearError,
+      loadLesson,
+      closeLesson,
+      generateNextUnit,
+      submitProgress,
+      submitFeedback,
+      addVocabularyToDeck,
+    ]
+  );
+
   return (
-    <TutorContext.Provider
-      value={{
-        curriculum,
-        selectedLevel,
-        setSelectedLevel,
-        selectedTopicId,
-        setSelectedTopicId,
-        currentLesson,
-        isLoadingCurriculum,
-        isLoadingLesson,
-        isGeneratingUnit,
-        error,
-        clearError,
-        loadLesson,
-        closeLesson,
-        generateNextUnit,
-        submitProgress,
-        submitFeedback,
-        addVocabularyToDeck,
-      }}
-    >
+    <TutorContext.Provider value={contextValue}>
       {children}
     </TutorContext.Provider>
   );

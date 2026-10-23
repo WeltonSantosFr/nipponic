@@ -13,6 +13,7 @@ const nextConfig = {
       "clsx",
       "tailwind-merge",
       "class-variance-authority",
+      "next-themes",
     ],
   },
   poweredByHeader: false,

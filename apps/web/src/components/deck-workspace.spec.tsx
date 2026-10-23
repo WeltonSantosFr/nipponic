@@ -101,4 +101,48 @@ describe("DeckCardGridItem", () => {
     fireEvent.click(removeBtn);
     expect(handleRemoveCard).toHaveBeenCalledWith("card-123");
   });
+
+  it("handles audio playback triggering onSpeak and reflects isPlaying status", () => {
+    const handleSpeak = vi.fn();
+    const handleToggleReveal = vi.fn();
+    const handleMoveCard = vi.fn();
+    const handleRemoveCard = vi.fn();
+
+    const { rerender } = render(
+      <DeckCardGridItem
+        card={mockCard}
+        index={0}
+        total={1}
+        isRevealed={false}
+        isOwner={true}
+        isPlaying={false}
+        onSpeak={handleSpeak}
+        onToggleReveal={handleToggleReveal}
+        onMoveCard={handleMoveCard}
+        onRemoveCard={handleRemoveCard}
+      />
+    );
+
+    const playBtn = screen.getByTitle("Listen to pronunciation");
+    fireEvent.click(playBtn);
+    expect(handleSpeak).toHaveBeenCalledWith("猫", "ja-JP");
+
+    // When card is actively playing
+    rerender(
+      <DeckCardGridItem
+        card={mockCard}
+        index={0}
+        total={1}
+        isRevealed={false}
+        isOwner={true}
+        isPlaying={true}
+        onSpeak={handleSpeak}
+        onToggleReveal={handleToggleReveal}
+        onMoveCard={handleMoveCard}
+        onRemoveCard={handleRemoveCard}
+      />
+    );
+
+    expect(screen.getByTitle("Listen to pronunciation")).toBeDisabled();
+  });
 });

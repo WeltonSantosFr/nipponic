@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import type { LessonExercise } from "@nipponic/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ interface InteractiveExerciseProps {
   showFurigana?: boolean;
 }
 
-export function InteractiveExercise({
+export const InteractiveExercise = memo(function InteractiveExercise({
   exercise,
   onAnswer,
   isAnswered,
@@ -283,4 +283,4 @@ export function InteractiveExercise({
       )}
     </div>
   );
-}
+});
