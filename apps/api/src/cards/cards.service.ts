@@ -52,6 +52,10 @@ export class CardsService {
   }
 
   async delete(userId: string, id: string) {
+    const card = await this.prisma.db.orm.public.Card.where({ id, userId }).first();
+    if (!card) {
+      throw new NotFoundException(`Card with ID "${id}" not found`);
+    }
     return await this.prisma.db.orm.public.Card.where({ id, userId }).delete();
   }
 
