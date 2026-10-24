@@ -30,6 +30,8 @@ const INITIAL_NOTES: Note[] = [
 
 
 
+export const maxDuration = 60;
+
 export default function Home() {
   return <Workspace initialNotes={INITIAL_NOTES} />;
 }

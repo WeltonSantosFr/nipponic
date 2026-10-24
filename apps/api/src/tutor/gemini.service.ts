@@ -192,7 +192,7 @@ All Japanese content MUST use authentic Kanji and Kana. NEVER USE ROMAJI.
       return this.generateFallbackLesson(context);
     }
 
-    const models = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-1.5-flash"];
+    const models = ["gemini-2.5-flash", "gemini-1.5-flash"];
 
     for (const model of models) {
       try {
@@ -348,7 +348,7 @@ All Japanese content MUST use authentic Kanji and Kana. NEVER USE ROMAJI.
       return this.generateFallbackUnit(level, unitIndex, startingLessonIndex);
     }
 
-    const models = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-1.5-flash"];
+    const models = ["gemini-2.5-flash", "gemini-1.5-flash"];
 
     for (const model of models) {
       try {

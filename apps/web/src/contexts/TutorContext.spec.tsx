@@ -4,6 +4,7 @@ import { TutorProvider, useTutor } from "./TutorContext";
 import {
   getCurriculumAction,
   getLessonAction,
+  generateNextUnitAction,
 } from "@/actions/tutor";
 import type { CurriculumTopic, Lesson } from "@nipponic/shared";
 
@@ -33,6 +34,7 @@ vi.mock("./FlashCardsContext", () => ({
 describe("TutorContext Regression Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network offline")));
   });
 
   it("should clear curriculum immediately and set isLoadingCurriculum when switching to an uncached level", async () => {
@@ -266,5 +268,104 @@ describe("TutorContext Regression Tests", () => {
       value: originalOnLine,
       configurable: true,
     });
+  });
+
+  it("should successfully fallback to direct API when generateNextUnitAction times out or disconnects", async () => {
+    vi.mocked(getCurriculumAction).mockResolvedValue([]);
+    // Simulate Vercel Server Action timeout / net::ERR_INTERNET_DISCONNECTED
+    vi.mocked(generateNextUnitAction).mockRejectedValue(new TypeError("Failed to fetch"));
+
+    const generatedTopics: CurriculumTopic[] = [
+      {
+        id: "top_gen_1",
+        level: "N5",
+        unitIndex: 2,
+        unitTitle: "Unit 2: Daily Routines",
+        lessonIndex: 1,
+        title: "Morning Activities",
+        grammarKey: "time-particles",
+        objective: "Talk about daily morning habits",
+        hasLesson: true,
+        isCompleted: false,
+      },
+    ];
+
+    // Mock direct API fetch to succeed
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url: string) => {
+        if (url.includes("/tutor/curriculum/generate")) {
+          return {
+            ok: true,
+            json: async () => generatedTopics,
+          };
+        }
+        return { ok: false, status: 500 };
+      })
+    );
+
+    const { result } = renderHook(() => useTutor(), {
+      wrapper: ({ children }) => <TutorProvider>{children}</TutorProvider>,
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    let success = false;
+    await act(async () => {
+      success = await result.current.generateNextUnit("N5");
+    });
+
+    expect(success).toBe(true);
+    expect(result.current.curriculum).toEqual(generatedTopics);
+    expect(result.current.error).toBeNull();
+  });
+
+  it("should successfully fallback to direct API when getLessonAction times out or fails", async () => {
+    vi.mocked(getCurriculumAction).mockResolvedValue([]);
+    // Simulate Vercel Server Action timeout
+    vi.mocked(getLessonAction).mockRejectedValue(new TypeError("Failed to fetch"));
+
+    const directLesson: Lesson = {
+      id: "les_direct_1",
+      topicId: "top_gen_1",
+      title: "Direct API Lesson",
+      level: "N5",
+      theoryMarkdown: "# Direct Lesson",
+      dialogue: [],
+      vocabulary: [],
+      exercises: [],
+    };
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url: string) => {
+        if (url.includes("/tutor/topics/top_gen_1/lesson")) {
+          return {
+            ok: true,
+            json: async () => directLesson,
+          };
+        }
+        return { ok: false, status: 500 };
+      })
+    );
+
+    const { result } = renderHook(() => useTutor(), {
+      wrapper: ({ children }) => <TutorProvider>{children}</TutorProvider>,
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    let lesson: Lesson | null = null;
+    await act(async () => {
+      lesson = await result.current.loadLesson("top_gen_1");
+    });
+
+    expect(lesson).toEqual(directLesson);
+    expect(result.current.currentLesson).toEqual(directLesson);
+    expect(result.current.error).toBeNull();
   });
 });
