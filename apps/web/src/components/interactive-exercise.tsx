@@ -126,7 +126,7 @@ export const InteractiveExercise = memo(function InteractiveExercise({
             const isRightAnswer = option.trim() === exercise.correctAnswer.trim();
 
             let buttonClass =
-              "justify-start text-left h-auto py-2 sm:py-2.5 px-3 sm:px-3.5 border text-xs sm:text-sm font-medium transition-all cursor-pointer min-w-0 break-words w-full";
+              "justify-start text-left h-auto py-2 sm:py-2.5 px-3 sm:px-3.5 border text-xs sm:text-sm font-medium transition-all cursor-pointer min-w-0 break-words w-full whitespace-normal";
             if (!isAnswered) {
               buttonClass += isSelected
                 ? " border-primary bg-primary/10 text-primary"
@@ -179,7 +179,7 @@ export const InteractiveExercise = memo(function InteractiveExercise({
             type="submit"
             size="sm"
             disabled={isAnswered || !inputAnswer.trim()}
-            className="w-full sm:w-auto cursor-pointer font-medium shrink-0 justify-center"
+            className="w-full sm:w-auto cursor-pointer font-medium shrink-0 justify-center whitespace-normal break-words h-auto min-h-8 py-1.5 px-3 text-xs sm:text-sm"
           >
             Check Answer
           </Button>
@@ -202,7 +202,7 @@ export const InteractiveExercise = memo(function InteractiveExercise({
                   type="button"
                   disabled={isAnswered}
                   onClick={() => handleRemoveChip(chip, idx)}
-                  className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-md bg-primary text-primary-foreground text-xs sm:text-sm font-medium shadow-2xs hover:bg-primary/90 transition-all cursor-pointer break-words"
+                  className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-md bg-primary text-primary-foreground text-xs sm:text-sm font-medium shadow-2xs hover:bg-primary/90 transition-all cursor-pointer break-words max-w-full"
                   title="Click to remove"
                 >
                   <FuriganaText text={chip} showFurigana={showFurigana} />
@@ -220,7 +220,7 @@ export const InteractiveExercise = memo(function InteractiveExercise({
                   type="button"
                   disabled={isAnswered}
                   onClick={() => handleTapChip(chip, idx)}
-                  className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-md border border-border bg-card hover:bg-muted text-xs sm:text-sm font-medium transition-all cursor-pointer shadow-2xs break-words"
+                  className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-md border border-border bg-card hover:bg-muted text-xs sm:text-sm font-medium transition-all cursor-pointer shadow-2xs break-words max-w-full"
                 >
                   <FuriganaText text={chip} showFurigana={showFurigana} />
                 </button>
@@ -228,24 +228,24 @@ export const InteractiveExercise = memo(function InteractiveExercise({
             </div>
 
             {!isAnswered && (
-              <div className="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0">
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0 min-w-0">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={handleResetChips}
                   disabled={selectedChips.length === 0}
-                  className="flex-1 sm:flex-none justify-center h-8 gap-1 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                  className="flex-1 sm:flex-none justify-center h-auto min-h-8 py-1.5 px-2.5 gap-1 text-xs text-muted-foreground hover:text-foreground cursor-pointer whitespace-normal break-words"
                 >
-                  <RotateCcw size={13} />
-                  Reset
+                  <RotateCcw size={13} className="shrink-0" />
+                  <span>Reset</span>
                 </Button>
                 <Button
                   type="button"
                   size="sm"
                   onClick={handleCheckReorder}
                   disabled={selectedChips.length === 0}
-                  className="flex-1 sm:flex-none justify-center h-8 text-xs cursor-pointer"
+                  className="flex-1 sm:flex-none justify-center h-auto min-h-8 py-1.5 px-3 text-xs cursor-pointer whitespace-normal break-words"
                 >
                   Check Order
                 </Button>

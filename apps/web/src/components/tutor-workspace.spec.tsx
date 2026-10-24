@@ -569,5 +569,109 @@ describe("TutorWorkspace", () => {
     const actionBar = backBtn.parentElement as HTMLElement;
     expect(actionBar.className).toContain("flex-col-reverse sm:flex-row");
   });
+
+  it("strictly enforces 320px/425px mobile constraints on buttons and empty state containers", () => {
+    // Empty state testing
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [],
+      selectedLevel: "N5",
+      currentLesson: null,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+    } as any);
+
+    const { container, rerender } = render(<TutorWorkspace />);
+
+    // Empty state card must not have static p-10 (which overflows 320px)
+    const emptyStateCard = container.querySelector(".border-dashed") as HTMLElement;
+    expect(emptyStateCard).not.toBeNull();
+    expect(emptyStateCard.className).not.toContain("p-10");
+    expect(emptyStateCard.className).toContain("p-4 sm:p-6 md:p-8");
+    expect(emptyStateCard.className).toContain("w-full min-w-0 max-w-full overflow-hidden");
+
+    // Empty state generate button must have whitespace-normal and break-words to avoid single-line blowout
+    const emptyStateBtn = screen.getByRole("button", { name: /Generate JLPT N5 Topics with AI/i });
+    expect(emptyStateBtn.className).toContain("whitespace-normal");
+    expect(emptyStateBtn.className).toContain("break-words");
+    expect(emptyStateBtn.className).toContain("min-w-0 max-w-full");
+
+    // Active lesson button wrapping checks across steps
+    const mockLesson = {
+      id: "les_wrap",
+      topicId: "top_wrap",
+      title: "Test Lesson",
+      level: "N5",
+      theoryMarkdown: "# Test",
+      dialogue: [{ speaker: "A", jpText: "テスト", enText: "test" }],
+      vocabulary: [{ jpText: "単語", reading: "たんご", enText: "word" }],
+      exercises: [
+        {
+          order: 1,
+          type: "multiple_choice",
+          prompt: "Choose the correct answer",
+          options: ["Option A", "Option B"],
+          correctAnswer: "Option A",
+          explanation: "Explanation",
+        },
+      ],
+    };
+
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [],
+      selectedLevel: "N5",
+      currentLesson: mockLesson,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+    } as any);
+
+    rerender(<TutorWorkspace />);
+
+    // Theory step button
+    const theoryContinueBtn = screen.getByRole("button", { name: /Continue to Dialogue/i });
+    expect(theoryContinueBtn.className).toContain("whitespace-normal");
+    expect(theoryContinueBtn.className).toContain("break-words");
+    expect(theoryContinueBtn.className).toContain("min-w-0 max-w-full");
+
+    // Dialogue step buttons
+    fireEvent.click(screen.getByRole("button", { name: /2\.\s*Dialogue/i }));
+    const dialogueBackBtn = screen.getByRole("button", { name: /Back to Theory/i });
+    const dialogueContinueBtn = screen.getByRole("button", { name: /Continue to Exercises/i });
+    expect(dialogueBackBtn.className).toContain("whitespace-normal");
+    expect(dialogueBackBtn.className).toContain("break-words");
+    expect(dialogueContinueBtn.className).toContain("whitespace-normal");
+    expect(dialogueContinueBtn.className).toContain("break-words");
+
+    // Exercises step buttons
+    fireEvent.click(screen.getByRole("button", { name: /3\.\s*Practice/i }));
+    const exerciseBackBtn = screen.getByRole("button", { name: /Back to Dialogue/i });
+    const exerciseContinueBtn = screen.getByRole("button", { name: /Vocabulary & Cards/i });
+    expect(exerciseBackBtn.className).toContain("whitespace-normal");
+    expect(exerciseBackBtn.className).toContain("break-words");
+    expect(exerciseContinueBtn.className).toContain("whitespace-normal");
+    expect(exerciseContinueBtn.className).toContain("break-words");
+
+    // Vocabulary step buttons
+    fireEvent.click(screen.getByRole("button", { name: /4\.\s*Vocabulary/i }));
+    const vocabBackBtn = screen.getByRole("button", { name: /Back to Exercises/i });
+    const finishBtn = screen.getByRole("button", { name: /Finish & Return to Curriculum/i });
+    const addAllBtn = screen.getByRole("button", { name: /Add All Words to Flashcards/i });
+    expect(vocabBackBtn.className).toContain("whitespace-normal");
+    expect(vocabBackBtn.className).toContain("break-words");
+    expect(finishBtn.className).toContain("whitespace-normal");
+    expect(finishBtn.className).toContain("break-words");
+    expect(addAllBtn.className).toContain("whitespace-normal");
+    expect(addAllBtn.className).toContain("break-words");
+  });
 });
+
 

@@ -275,7 +275,7 @@ export function Workspace(props: WorkspaceProps = {}) {
             <DeckWorkspace deck={selectedDeck} />
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-start w-full min-w-0 max-w-full">
+          <div className="flex-1 flex flex-col items-stretch justify-start w-full min-w-0 max-w-full overflow-x-hidden">
             <TutorWorkspace />
           </div>
         )}
