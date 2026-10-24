@@ -754,6 +754,32 @@ describe("TutorService", () => {
       });
       expect(result).toBeDefined();
     });
+
+    it("should return fallback seed curriculum when database query throws an error", async () => {
+      prismaMock.db.orm.public.CurriculumTopic.where.mockReturnValue({
+        all: vi.fn().mockRejectedValue(new Error("relation does not exist")),
+      });
+
+      const result = await service.getCurriculum("N5");
+
+      expect(result).toBeDefined();
+      expect(result.length).toBeGreaterThan(0);
+      expect(result[0].id).toContain("seed-N5-");
+      expect(result[0].level).toBe("N5");
+    });
+
+    it("should execute ensureTablesExist without crashing", async () => {
+      const executeMock = vi.fn().mockResolvedValue({ affectedRows: 0 });
+      prismaMock.connect = vi.fn().mockResolvedValue(undefined);
+      prismaMock.db.runtime = vi.fn().mockReturnValue({
+        driver: {
+          execute: executeMock,
+        },
+      });
+
+      await expect(service.ensureTablesExist()).resolves.toBeUndefined();
+      expect(executeMock).toHaveBeenCalled();
+    });
   });
 });
 

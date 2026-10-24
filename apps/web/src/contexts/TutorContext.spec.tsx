@@ -196,4 +196,75 @@ describe("TutorContext Regression Tests", () => {
     expect(result.current.selectedTopicId).toBeNull();
     expect(result.current.currentLesson).toBeNull();
   });
+
+  it("should fallback to cached curriculum from localStorage when getCurriculumAction throws or returns empty", async () => {
+    const cachedTopics: CurriculumTopic[] = [
+      {
+        id: "top_cached_1",
+        level: "N5",
+        unitIndex: 1,
+        unitTitle: "Cached Unit",
+        lessonIndex: 1,
+        title: "Cached Topic 1",
+        grammarKey: "cached-key",
+        objective: "Study offline",
+        hasLesson: true,
+        isCompleted: false,
+      },
+    ];
+
+    localStorage.setItem(
+      "nipponic.tutor_curriculum_cache",
+      JSON.stringify({ N5: cachedTopics })
+    );
+
+    // Simulate network error / offline fetch failure
+    vi.mocked(getCurriculumAction).mockRejectedValue(new Error("Failed to fetch"));
+
+    const { result } = renderHook(() => useTutor(), {
+      wrapper: ({ children }) => <TutorProvider>{children}</TutorProvider>,
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(result.current.curriculum).toEqual(cachedTopics);
+    expect(result.current.error).toBeNull();
+  });
+
+  it("should block generateNextUnit and show an English warning when user is offline", async () => {
+    vi.mocked(getCurriculumAction).mockResolvedValue([]);
+
+    // Mock navigator.onLine = false
+    const originalOnLine = navigator.onLine;
+    Object.defineProperty(navigator, "onLine", {
+      value: false,
+      configurable: true,
+    });
+
+    const { result } = renderHook(() => useTutor(), {
+      wrapper: ({ children }) => <TutorProvider>{children}</TutorProvider>,
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    let success = true;
+    await act(async () => {
+      success = await result.current.generateNextUnit("N5");
+    });
+
+    expect(success).toBe(false);
+    expect(result.current.error).toBe(
+      "You are currently offline. Connect to the internet to generate new units with AI."
+    );
+
+    // Restore navigator.onLine
+    Object.defineProperty(navigator, "onLine", {
+      value: originalOnLine,
+      configurable: true,
+    });
+  });
 });

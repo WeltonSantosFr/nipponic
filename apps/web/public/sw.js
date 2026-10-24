@@ -164,7 +164,12 @@ if (isLocalhost) {
             }
             return networkResponse;
           })
-          .catch(() => cachedResponse);
+          .catch(() => {
+            return (
+              cachedResponse ||
+              new Response(null, { status: 404, statusText: "Not Found" })
+            );
+          });
 
         return cachedResponse || fetchPromise;
       })
@@ -185,7 +190,14 @@ if (isLocalhost) {
         return response;
       })
       .catch(async () => {
-        return caches.match(request);
+        const cached = await caches.match(request);
+        if (cached) {
+          return cached;
+        }
+        return new Response(null, {
+          status: 503,
+          statusText: "Offline",
+        });
       })
   );
 });
