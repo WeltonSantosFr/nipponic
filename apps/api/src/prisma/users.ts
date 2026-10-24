@@ -1,7 +1,7 @@
-import { db } from "./db.ts";
+import { db, connectDatabase } from "./db.ts";
 import { seed } from "./seed.ts";
 
-export { db };
+export { db, connectDatabase };
 
 export async function listUsers(limit = 10) {
   await seed();
