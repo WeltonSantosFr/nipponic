@@ -198,9 +198,9 @@ export function TutorWorkspace() {
   // If loading curriculum on first load with no cached items
   if (isLoadingCurriculum && curriculum.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-4">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-sm font-medium text-muted-foreground">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 space-y-3 sm:space-y-4 w-full min-w-0 max-w-full text-center">
+        <Loader2 className="h-7 w-7 sm:h-8 sm:w-8 animate-spin text-primary" />
+        <p className="text-xs sm:text-sm font-medium text-muted-foreground break-words">
           Loading JLPT {selectedLevel} curriculum...
         </p>
       </div>
@@ -210,17 +210,19 @@ export function TutorWorkspace() {
   // If a lesson is actively loading (JIT generation by Gemini)
   if (isLoadingLesson) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-4">
-        <div className="p-4 rounded-2xl bg-primary/10 text-primary animate-pulse">
-          <Sparkles size={36} />
+      <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 space-y-3 sm:space-y-4 w-full min-w-0 max-w-full text-center">
+        <div className="p-3 sm:p-4 rounded-2xl bg-primary/10 text-primary animate-pulse">
+          <Sparkles size={32} />
         </div>
-        <div className="text-center space-y-1.5">
-          <h3 className="text-lg font-bold">The AI Tutor is preparing your lesson...</h3>
-          <p className="text-sm text-muted-foreground max-w-sm">
+        <div className="text-center space-y-1.5 max-w-sm px-2">
+          <h3 className="text-base sm:text-lg font-bold break-words">
+            The AI Tutor is preparing your lesson...
+          </h3>
+          <p className="text-xs sm:text-sm text-muted-foreground break-words">
             Generating theory, natural dialogue, audio transcriptions, and interactive exercises.
           </p>
         </div>
-        <Loader2 className="h-6 w-6 animate-spin text-primary mt-2" />
+        <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin text-primary mt-1" />
       </div>
     );
   }
@@ -229,10 +231,10 @@ export function TutorWorkspace() {
   // Dashboard / Roadmap View when no lesson is active
   if (!currentLesson) {
     return (
-      <div className="flex-1 overflow-y-auto p-3 sm:p-6 md:p-8 space-y-5 sm:space-y-8 max-w-5xl mx-auto w-full min-w-0 max-w-full overflow-x-hidden pb-safe">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-6 md:p-8 space-y-4 sm:space-y-6 md:space-y-8 max-w-5xl mx-auto w-full min-w-0 max-w-full overflow-x-hidden pb-safe">
         {/* Error Notification Banner */}
         {error && (
-          <div className="flex items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xl border border-destructive/40 bg-destructive/10 text-destructive text-xs sm:text-sm shadow-xs animate-in fade-in">
+          <div className="flex items-center justify-between gap-2.5 sm:gap-3 p-3 sm:p-3.5 rounded-xl border border-destructive/40 bg-destructive/10 text-destructive text-xs sm:text-sm shadow-xs animate-in fade-in min-w-0 w-full max-w-full">
             <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
               <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
               <span className="font-medium break-words">{error}</span>
@@ -249,9 +251,9 @@ export function TutorWorkspace() {
         )}
 
         {/* Banner Section */}
-        <div className="rounded-xl sm:rounded-2xl border border-border/80 bg-linear-to-r from-primary/10 via-primary/5 to-transparent p-3.5 sm:p-6 md:p-8 shadow-xs min-w-0">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
-            <div className="space-y-1.5 sm:space-y-2 min-w-0">
+        <div className="rounded-xl sm:rounded-2xl border border-border/80 bg-linear-to-r from-primary/10 via-primary/5 to-transparent p-3 sm:p-5 md:p-8 shadow-xs min-w-0 w-full max-w-full overflow-hidden">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 sm:gap-6 w-full min-w-0">
+            <div className="space-y-1.5 sm:space-y-2 min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <span className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] sm:text-xs font-bold uppercase tracking-wider">
                   JLPT {selectedLevel}
@@ -260,40 +262,40 @@ export function TutorWorkspace() {
                   Structured Learning Path
                 </span>
               </div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-foreground break-words">
+              <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold tracking-tight text-foreground break-words">
                 Daily AI Tutor
               </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground max-w-md">
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-md break-words">
                 Master Japanese grammar, dialogue nuances, and vocabulary step-by-step with structured micro-lessons.
               </p>
             </div>
 
             {/* Quick Continue Card */}
             {nextRecommendedTopic && (
-              <div className="w-full sm:w-auto p-3.5 sm:p-4 rounded-xl border border-border/90 bg-card/90 shadow-xs space-y-2.5 sm:space-y-3 sm:min-w-[260px] min-w-0">
-                <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
-                  <span>Recommended Today</span>
-                  <span>Lesson {nextRecommendedTopic.lessonIndex}</span>
+              <div className="w-full sm:w-auto p-3 sm:p-4 rounded-xl border border-border/90 bg-card/90 shadow-xs space-y-2 sm:space-y-2.5 sm:min-w-[240px] min-w-0 max-w-full overflow-hidden">
+                <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground gap-2">
+                  <span className="truncate">Recommended Today</span>
+                  <span className="shrink-0">Lesson {nextRecommendedTopic.lessonIndex}</span>
                 </div>
-                <div className="font-bold text-sm text-foreground line-clamp-1">
+                <div className="font-bold text-xs sm:text-sm text-foreground truncate min-w-0">
                   {nextRecommendedTopic.title}
                 </div>
                 <Button
                   onClick={() => handleStartLesson(nextRecommendedTopic.id)}
-                  className="w-full gap-2 cursor-pointer shadow-xs font-semibold justify-center"
+                  className="w-full gap-2 cursor-pointer shadow-xs font-semibold justify-center min-w-0 max-w-full whitespace-normal break-words h-auto min-h-9 py-2 px-3 text-xs sm:text-sm text-center"
                 >
-                  <Play size={15} />
-                  Start Today&apos;s Lesson
+                  <Play size={14} className="shrink-0" />
+                  <span className="break-words">Start Today&apos;s Lesson</span>
                 </Button>
               </div>
             )}
           </div>
 
           {/* Progress Bar */}
-          <div className="mt-4 sm:mt-6 pt-4 sm:pt-5 border-t border-border/60 space-y-2">
-            <div className="flex justify-between text-[11px] sm:text-xs font-medium text-muted-foreground">
+          <div className="mt-3.5 sm:mt-5 pt-3.5 sm:pt-4 border-t border-border/60 space-y-1.5 sm:space-y-2 w-full min-w-0">
+            <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] sm:text-xs font-medium text-muted-foreground min-w-0 w-full">
               <span>Level Progress</span>
-              <span>
+              <span className="break-words">
                 {completedCount} of {curriculum.length} lessons completed ({completionPercent}%)
               </span>
             </div>
@@ -307,13 +309,13 @@ export function TutorWorkspace() {
         </div>
 
         {/* Units Roadmap */}
-        <div className="space-y-4 sm:space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <h2 className="text-base sm:text-lg font-bold tracking-tight text-foreground">
+        <div className="space-y-3.5 sm:space-y-5 w-full min-w-0 max-w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 w-full min-w-0">
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg font-bold tracking-tight text-foreground truncate">
                 Curriculum Roadmap
               </h2>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground break-words">
                 {curriculum.length} lesson{curriculum.length === 1 ? "" : "s"} across {units.length} unit{units.length === 1 ? "" : "s"}
               </p>
             </div>
@@ -322,75 +324,75 @@ export function TutorWorkspace() {
               size="sm"
               onClick={() => generateNextUnit()}
               disabled={isGeneratingUnit}
-              className="gap-2 cursor-pointer shadow-xs text-xs font-semibold w-full sm:w-auto justify-center"
+              className="gap-1.5 cursor-pointer shadow-xs text-xs font-semibold w-full sm:w-auto justify-center min-w-0 max-w-full whitespace-normal break-words h-auto min-h-8 py-2 px-3 text-center"
             >
               {isGeneratingUnit ? (
                 <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
-                  Generating Unit with AI...
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" />
+                  <span className="break-words">Generating Unit with AI...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles size={14} className="text-primary" />
-                  + Generate Next Unit (AI)
+                  <Sparkles size={13} className="text-primary shrink-0" />
+                  <span className="break-words">+ Generate Next Unit (AI)</span>
                 </>
               )}
             </Button>
           </div>
 
           {curriculum.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border p-10 text-center space-y-4 bg-card/40">
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary mx-auto flex items-center justify-center">
-                <Sparkles size={24} />
+            <div className="rounded-xl sm:rounded-2xl border border-dashed border-border p-4 sm:p-6 md:p-8 text-center space-y-3 sm:space-y-4 bg-card/40 w-full min-w-0 max-w-full overflow-hidden">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-primary/10 text-primary mx-auto flex items-center justify-center shrink-0">
+                <Sparkles size={20} />
               </div>
-              <div className="space-y-1.5 max-w-md mx-auto">
-                <h3 className="text-base font-bold text-foreground">
+              <div className="space-y-1.5 max-w-md mx-auto w-full min-w-0">
+                <h3 className="text-sm sm:text-base font-bold text-foreground break-words">
                   No lessons generated for JLPT {selectedLevel} yet
                 </h3>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground break-words">
                   The AI Tutor can generate a tailored study unit for JLPT {selectedLevel} with grammar explanations, natural dialogues, audio, and exercises.
                 </p>
               </div>
               <Button
                 onClick={() => generateNextUnit()}
                 disabled={isGeneratingUnit}
-                className="gap-2 cursor-pointer font-semibold shadow-xs"
+                className="gap-2 cursor-pointer font-semibold shadow-xs w-full sm:w-auto justify-center min-w-0 max-w-full whitespace-normal break-words h-auto min-h-10 py-2.5 px-4 text-xs sm:text-sm text-center"
               >
                 {isGeneratingUnit ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Generating JLPT {selectedLevel} Topics with AI...
+                    <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                    <span className="break-words">Generating JLPT {selectedLevel} Topics with AI...</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles size={16} />
-                    Generate JLPT {selectedLevel} Topics with AI
+                    <Sparkles size={15} className="shrink-0" />
+                    <span className="break-words">Generate JLPT {selectedLevel} Topics with AI</span>
                   </>
                 )}
               </Button>
             </div>
           ) : (
-            <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-3 sm:space-y-4 w-full min-w-0 max-w-full">
               {units.map(([unitIndex, unit]) => (
                 <div
                   key={unitIndex}
-                  className="rounded-xl border border-border/80 bg-card/60 p-3.5 sm:p-5 shadow-xs space-y-3 sm:space-y-4 min-w-0 max-w-full"
+                  className="rounded-xl border border-border/80 bg-card/60 p-3 sm:p-4 md:p-5 shadow-xs space-y-2.5 sm:space-y-3.5 min-w-0 max-w-full overflow-hidden"
                 >
-                  <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                  <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 w-full">
                     <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-muted text-muted-foreground text-xs font-bold flex items-center justify-center shrink-0">
                       {unitIndex}
                     </span>
-                    <h3 className="font-bold text-sm sm:text-base text-foreground truncate">
+                    <h3 className="font-bold text-xs sm:text-base text-foreground truncate min-w-0 flex-1">
                       Unit {unitIndex}: {unit.title}
                     </h3>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 w-full min-w-0">
                     {unit.topics.map((topic) => (
                       <div
                         key={topic.id}
                         onClick={() => handleStartLesson(topic.id)}
-                        className={`group p-3 sm:p-4 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-2.5 sm:gap-3 min-w-0 ${
+                        className={`group p-2.5 sm:p-3.5 md:p-4 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-2 sm:gap-3 min-w-0 w-full overflow-hidden ${
                           topic.isCompleted
                             ? "border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/50"
                             : topic.id === nextRecommendedTopic?.id
@@ -398,7 +400,7 @@ export function TutorWorkspace() {
                             : "border-border/70 hover:border-border hover:bg-muted/40"
                         }`}
                       >
-                        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1 overflow-hidden">
                           <div
                             className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
                               topic.isCompleted
@@ -414,18 +416,18 @@ export function TutorWorkspace() {
                               topic.lessonIndex
                             )}
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <h4 className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                          <div className="min-w-0 flex-1 overflow-hidden">
+                            <h4 className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate min-w-0">
                               {topic.title}
                             </h4>
-                            <p className="text-[11px] sm:text-xs text-muted-foreground line-clamp-1">
+                            <p className="text-[11px] sm:text-xs text-muted-foreground truncate min-w-0">
                               {topic.objective}
                             </p>
                           </div>
                         </div>
 
                         <ChevronRight
-                          size={16}
+                          size={15}
                           className="text-muted-foreground group-hover:text-foreground shrink-0 transition-transform group-hover:translate-x-0.5"
                         />
                       </div>
@@ -443,10 +445,10 @@ export function TutorWorkspace() {
 
   // Active Lesson View
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden">
+    <div className="flex-1 flex flex-col h-full w-full min-w-0 max-w-full overflow-hidden">
       {/* Lesson Header Navigation */}
       <div className="p-3 sm:p-4 border-b border-border/80 bg-card/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 shrink-0 min-w-0 max-w-full">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 w-full sm:w-auto">
           <Button
             variant="ghost"
             size="sm"
@@ -553,7 +555,7 @@ export function TutorWorkspace() {
 
       {/* Error Notification Banner */}
       {error && (
-        <div className="mx-3 sm:mx-4 mt-3 sm:mt-4 flex items-center justify-between gap-3 p-3 sm:p-3.5 rounded-xl border border-destructive/40 bg-destructive/10 text-destructive text-xs sm:text-sm shadow-xs animate-in fade-in min-w-0">
+        <div className="mx-3 sm:mx-4 mt-3 sm:mt-4 flex items-center justify-between gap-2.5 sm:gap-3 p-3 sm:p-3.5 rounded-xl border border-destructive/40 bg-destructive/10 text-destructive text-xs sm:text-sm shadow-xs animate-in fade-in min-w-0 max-w-full">
           <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
             <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
             <span className="font-medium break-words">{error}</span>
@@ -573,21 +575,21 @@ export function TutorWorkspace() {
       <div className="flex-1 overflow-y-auto p-3 sm:p-6 md:p-8 max-w-4xl mx-auto w-full min-w-0 max-w-full overflow-x-hidden space-y-4 sm:space-y-6 pb-safe">
         {/* Step 1: Theory */}
         {activeStep === "theory" && (
-          <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-200 min-w-0">
-            <div className="rounded-xl sm:rounded-2xl border border-border/80 bg-card p-3.5 sm:p-6 md:p-8 shadow-xs min-w-0 max-w-full">
+          <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-200 min-w-0 w-full max-w-full">
+            <div className="rounded-xl sm:rounded-2xl border border-border/80 bg-card p-3 sm:p-5 md:p-8 shadow-xs min-w-0 max-w-full overflow-hidden">
               <MarkdownContent
                 content={currentLesson.theoryMarkdown}
                 showFurigana={showFurigana}
               />
             </div>
 
-            <div className="flex justify-end w-full">
+            <div className="flex justify-end w-full min-w-0">
               <Button
                 onClick={() => setActiveStep("dialogue")}
-                className="w-full sm:w-auto gap-2 cursor-pointer font-semibold shadow-xs justify-center"
+                className="w-full sm:w-auto gap-2 cursor-pointer font-semibold shadow-xs justify-center min-w-0 max-w-full whitespace-normal break-words h-auto min-h-9 py-2 px-3 text-xs sm:text-sm text-center"
               >
-                <span>Continue to Dialogue</span>
-                <ArrowRight size={16} />
+                <span className="break-words">Continue to Dialogue</span>
+                <ArrowRight size={16} className="shrink-0" />
               </Button>
             </div>
           </div>
@@ -595,36 +597,36 @@ export function TutorWorkspace() {
 
         {/* Step 2: Dialogue */}
         {activeStep === "dialogue" && (
-          <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-200 min-w-0">
-            <div className="rounded-xl sm:rounded-2xl border border-border/80 bg-card p-3.5 sm:p-6 md:p-8 shadow-xs space-y-4 sm:space-y-6 min-w-0 max-w-full">
-              <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-border/60">
-                <div className="space-y-0.5 min-w-0">
+          <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-200 min-w-0 w-full max-w-full">
+            <div className="rounded-xl sm:rounded-2xl border border-border/80 bg-card p-3 sm:p-5 md:p-8 shadow-xs space-y-3.5 sm:space-y-6 min-w-0 max-w-full overflow-hidden">
+              <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-border/60 min-w-0 w-full">
+                <div className="space-y-0.5 min-w-0 flex-1">
                   <h3 className="text-sm sm:text-base font-bold text-foreground truncate">
                     Contextual Conversation
                   </h3>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground break-words">
                     Listen to natural pronunciation and observe the grammar in context.
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-2.5 sm:space-y-4 w-full min-w-0">
                 {currentLesson.dialogue.map((line, idx) => (
                   <div
                     key={idx}
-                    className="p-3 sm:p-4 rounded-xl border border-border/70 bg-muted/20 hover:bg-muted/40 transition-colors flex items-start justify-between gap-2.5 sm:gap-4 min-w-0"
+                    className="p-2.5 sm:p-4 rounded-xl border border-border/70 bg-muted/20 hover:bg-muted/40 transition-colors flex items-start justify-between gap-2 sm:gap-4 min-w-0 w-full overflow-hidden"
                   >
-                    <div className="space-y-1 sm:space-y-1.5 flex-1 min-w-0">
-                      <div className="text-xs font-bold text-primary">
+                    <div className="space-y-1 sm:space-y-1.5 flex-1 min-w-0 overflow-hidden">
+                      <div className="text-xs font-bold text-primary truncate">
                         {line.speaker}
                       </div>
-                      <div className="text-sm sm:text-base font-medium text-foreground tracking-wide leading-relaxed break-words">
+                      <div className="text-xs sm:text-base font-medium text-foreground tracking-wide leading-relaxed break-words min-w-0">
                         <TokenizedText
                           text={line.jpText}
                           showFurigana={showFurigana}
                         />
                       </div>
-                      <div className="text-xs text-muted-foreground pt-0.5 break-words">
+                      <div className="text-xs text-muted-foreground pt-0.5 break-words min-w-0">
                         {line.enText}
                       </div>
                     </div>
@@ -650,21 +652,21 @@ export function TutorWorkspace() {
               </div>
             </div>
 
-            <div className="flex flex-col-reverse sm:flex-row justify-between gap-2 sm:gap-3 w-full">
+            <div className="flex flex-col-reverse sm:flex-row justify-between gap-2 sm:gap-3 w-full min-w-0">
               <Button
                 variant="outline"
                 onClick={() => setActiveStep("theory")}
-                className="w-full sm:w-auto gap-1.5 cursor-pointer justify-center"
+                className="w-full sm:w-auto gap-1.5 cursor-pointer justify-center min-w-0 max-w-full whitespace-normal break-words h-auto min-h-9 py-2 px-3 text-xs sm:text-sm text-center"
               >
-                <ChevronLeft size={16} />
-                Back to Theory
+                <ChevronLeft size={16} className="shrink-0" />
+                <span className="break-words">Back to Theory</span>
               </Button>
               <Button
                 onClick={() => setActiveStep("exercises")}
-                className="w-full sm:w-auto gap-2 cursor-pointer font-semibold shadow-xs justify-center"
+                className="w-full sm:w-auto gap-2 cursor-pointer font-semibold shadow-xs justify-center min-w-0 max-w-full whitespace-normal break-words h-auto min-h-9 py-2 px-3 text-xs sm:text-sm text-center"
               >
-                <span>Continue to Exercises</span>
-                <ArrowRight size={16} />
+                <span className="break-words">Continue to Exercises</span>
+                <ArrowRight size={16} className="shrink-0" />
               </Button>
             </div>
           </div>
@@ -672,25 +674,25 @@ export function TutorWorkspace() {
 
         {/* Step 3: Interactive Practice */}
         {activeStep === "exercises" && (
-          <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-200 min-w-0">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 pb-2 min-w-0">
-              <div className="min-w-0">
-                <h3 className="text-sm sm:text-base font-bold text-foreground">
+          <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-200 min-w-0 w-full max-w-full">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 pb-2 min-w-0 w-full">
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm sm:text-base font-bold text-foreground truncate">
                   Interactive Exercises
                 </h3>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground break-words">
                   Test your understanding. Exercises are validated instantly with zero token consumption.
                 </p>
               </div>
 
               {/* Progress Count */}
-              <div className="text-xs font-semibold text-muted-foreground shrink-0">
+              <div className="text-xs font-semibold text-muted-foreground shrink-0 break-words">
                 Answered: {Object.keys(exerciseAnswers).length} /{" "}
                 {currentLesson.exercises.length}
               </div>
             </div>
 
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-3 sm:space-y-4 w-full min-w-0">
               {currentLesson.exercises.map((exercise) => {
                 const isAnswered = exercise.order in exerciseAnswers;
                 const wasCorrect = exerciseAnswers[exercise.order];
@@ -713,16 +715,16 @@ export function TutorWorkspace() {
             {/* Completion Banner */}
             {Object.keys(exerciseAnswers).length ===
               currentLesson.exercises.length && (
-              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 sm:p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 min-w-0">
-                <div className="flex items-center gap-3 min-w-0">
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 sm:p-4 md:p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 min-w-0 w-full overflow-hidden">
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
                   <div className="p-2 rounded-full bg-emerald-500 text-white shrink-0">
                     <Award size={20} />
                   </div>
-                  <div className="min-w-0">
-                    <h4 className="text-sm font-bold text-emerald-950 dark:text-emerald-100 truncate">
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-xs sm:text-sm font-bold text-emerald-950 dark:text-emerald-100 truncate">
                       Practice Completed!
                     </h4>
-                    <p className="text-xs text-emerald-800 dark:text-emerald-300">
+                    <p className="text-[11px] sm:text-xs text-emerald-800 dark:text-emerald-300 break-words">
                       Score:{" "}
                       {Math.round(
                         (Object.values(exerciseAnswers).filter(Boolean).length /
@@ -736,28 +738,28 @@ export function TutorWorkspace() {
 
                 <Button
                   onClick={() => setActiveStep("vocabulary")}
-                  className="w-full sm:w-auto cursor-pointer font-semibold shadow-xs justify-center"
+                  className="w-full sm:w-auto cursor-pointer font-semibold shadow-xs justify-center min-w-0 max-w-full whitespace-normal break-words h-auto min-h-9 py-2 px-3 text-xs sm:text-sm text-center shrink-0"
                 >
-                  View Vocabulary & Cards →
+                  <span className="break-words">View Vocabulary & Cards →</span>
                 </Button>
               </div>
             )}
 
-            <div className="flex flex-col-reverse sm:flex-row justify-between gap-2 sm:gap-3 w-full">
+            <div className="flex flex-col-reverse sm:flex-row justify-between gap-2 sm:gap-3 w-full min-w-0">
               <Button
                 variant="outline"
                 onClick={() => setActiveStep("dialogue")}
-                className="w-full sm:w-auto gap-1.5 cursor-pointer justify-center"
+                className="w-full sm:w-auto gap-1.5 cursor-pointer justify-center min-w-0 max-w-full whitespace-normal break-words h-auto min-h-9 py-2 px-3 text-xs sm:text-sm text-center"
               >
-                <ChevronLeft size={16} />
-                Back to Dialogue
+                <ChevronLeft size={16} className="shrink-0" />
+                <span className="break-words">Back to Dialogue</span>
               </Button>
               <Button
                 onClick={() => setActiveStep("vocabulary")}
-                className="w-full sm:w-auto gap-2 cursor-pointer font-semibold shadow-xs justify-center"
+                className="w-full sm:w-auto gap-2 cursor-pointer font-semibold shadow-xs justify-center min-w-0 max-w-full whitespace-normal break-words h-auto min-h-9 py-2 px-3 text-xs sm:text-sm text-center"
               >
-                <span>Vocabulary & Cards</span>
-                <ArrowRight size={16} />
+                <span className="break-words">Vocabulary & Cards</span>
+                <ArrowRight size={16} className="shrink-0" />
               </Button>
             </div>
           </div>
@@ -765,14 +767,14 @@ export function TutorWorkspace() {
 
         {/* Step 4: Vocabulary & Flashcards */}
         {activeStep === "vocabulary" && (
-          <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-200 min-w-0">
-            <div className="rounded-xl sm:rounded-2xl border border-border/80 bg-card p-3.5 sm:p-6 md:p-8 shadow-xs space-y-4 sm:space-y-6 min-w-0 max-w-full">
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 pb-3 sm:pb-4 border-b border-border/60 min-w-0">
-                <div className="space-y-0.5 min-w-0">
-                  <h3 className="text-sm sm:text-base font-bold text-foreground">
+          <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-200 min-w-0 w-full max-w-full">
+            <div className="rounded-xl sm:rounded-2xl border border-border/80 bg-card p-3 sm:p-5 md:p-8 shadow-xs space-y-3.5 sm:space-y-6 min-w-0 max-w-full overflow-hidden">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 pb-3 sm:pb-4 border-b border-border/60 min-w-0 w-full">
+                <div className="space-y-0.5 min-w-0 flex-1">
+                  <h3 className="text-sm sm:text-base font-bold text-foreground truncate">
                     Lesson Vocabulary
                   </h3>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground break-words">
                     Review introduced vocabulary and export directly to your Flashcards.
                   </p>
                 </div>
@@ -780,55 +782,55 @@ export function TutorWorkspace() {
                 <Button
                   onClick={handleAddAllToFlashcards}
                   disabled={isAddingCards || cardsAddedCount !== null}
-                  className="gap-2 cursor-pointer font-semibold shadow-xs w-full sm:w-auto justify-center shrink-0"
+                  className="gap-2 cursor-pointer font-semibold shadow-xs w-full sm:w-auto justify-center shrink-0 min-w-0 max-w-full whitespace-normal break-words h-auto min-h-9 py-2 px-3 text-xs sm:text-sm text-center"
                 >
                   {isAddingCards ? (
                     <>
-                      <Loader2 size={15} className="animate-spin" />
-                      Adding cards...
+                      <Loader2 size={15} className="animate-spin shrink-0" />
+                      <span className="break-words">Adding cards...</span>
                     </>
                   ) : cardsAddedCount !== null ? (
                     <>
-                      <CheckCircle2 size={15} />
-                      Added {cardsAddedCount} cards!
+                      <CheckCircle2 size={15} className="shrink-0" />
+                      <span className="break-words">Added {cardsAddedCount} cards!</span>
                     </>
                   ) : (
                     <>
-                      <Layers size={15} />
-                      Add All Words to Flashcards
+                      <Layers size={15} className="shrink-0" />
+                      <span className="break-words">Add All Words to Flashcards</span>
                     </>
                   )}
                 </Button>
               </div>
 
               {/* Vocabulary Table */}
-              <div className="divide-y divide-border/60">
+              <div className="divide-y divide-border/60 w-full min-w-0">
                 {currentLesson.vocabulary.map((item, idx) => (
                   <div
                     key={idx}
-                    className="py-2.5 sm:py-3 flex items-center justify-between gap-3 min-w-0"
+                    className="py-2.5 sm:py-3 flex items-center justify-between gap-2.5 sm:gap-3 min-w-0 w-full overflow-hidden"
                   >
-                    <div className="space-y-0.5 min-w-0 flex-1">
-                      <div className="text-sm sm:text-base font-bold text-foreground break-words">
+                    <div className="space-y-0.5 min-w-0 flex-1 overflow-hidden">
+                      <div className="text-xs sm:text-base font-bold text-foreground break-words min-w-0">
                         {showFurigana && item.reading && item.reading !== item.jpText ? (
-                          <ruby className="inline-flex flex-col items-start leading-none">
-                            <span className="text-[10px] font-normal text-muted-foreground select-none pb-0.5 leading-none">
+                          <ruby className="inline-flex flex-col items-start leading-none max-w-full">
+                            <span className="text-[10px] font-normal text-muted-foreground select-none pb-0.5 leading-none break-words">
                               {item.reading}
                             </span>
-                            <span className="leading-tight">{item.jpText}</span>
+                            <span className="leading-tight break-words">{item.jpText}</span>
                           </ruby>
                         ) : (
                           <>
-                            <span>{item.jpText}</span>
+                            <span className="break-words">{item.jpText}</span>
                             {item.reading && item.reading !== item.jpText && (
-                              <span className="text-xs text-muted-foreground font-normal ml-2">
+                              <span className="text-xs text-muted-foreground font-normal ml-2 break-words">
                                 ({item.reading})
                               </span>
                             )}
                           </>
                         )}
                       </div>
-                      <div className="text-xs text-muted-foreground break-words">
+                      <div className="text-xs text-muted-foreground break-words min-w-0">
                         {item.enText}
                       </div>
                     </div>
@@ -854,64 +856,64 @@ export function TutorWorkspace() {
               </div>
 
               {/* Feedback Section */}
-              <div className="pt-4 sm:pt-6 border-t border-border/60 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 text-xs text-muted-foreground min-w-0">
-                <span>How was this lesson explanation?</span>
-                <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="pt-3.5 sm:pt-6 border-t border-border/60 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 text-xs text-muted-foreground min-w-0 w-full">
+                <span className="break-words">How was this lesson explanation?</span>
+                <div className="flex items-center gap-2 w-full sm:w-auto min-w-0">
                   <Button
                     variant="outline"
                     size="sm"
                     disabled={feedbackSubmitted || isSubmittingFeedback}
                     onClick={() => handleFeedback("helpful")}
-                    className="flex-1 sm:flex-none justify-center h-8 gap-1.5 text-xs cursor-pointer hover:text-emerald-600 hover:border-emerald-500/50"
+                    className="flex-1 sm:flex-none justify-center h-auto min-h-8 py-1.5 px-2.5 gap-1.5 text-xs cursor-pointer hover:text-emerald-600 hover:border-emerald-500/50 min-w-0 whitespace-normal break-words"
                   >
                     {isSubmittingFeedback ? (
-                      <Loader2 size={13} className="animate-spin" />
+                      <Loader2 size={13} className="animate-spin shrink-0" />
                     ) : (
-                      <ThumbsUp size={13} />
+                      <ThumbsUp size={13} className="shrink-0" />
                     )}
-                    Helpful
+                    <span>Helpful</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     disabled={feedbackSubmitted || isSubmittingFeedback}
                     onClick={() => handleFeedback("confusing")}
-                    className="flex-1 sm:flex-none justify-center h-8 gap-1.5 text-xs cursor-pointer hover:text-red-500 hover:border-red-500/50"
+                    className="flex-1 sm:flex-none justify-center h-auto min-h-8 py-1.5 px-2.5 gap-1.5 text-xs cursor-pointer hover:text-red-500 hover:border-red-500/50 min-w-0 whitespace-normal break-words"
                   >
                     {isSubmittingFeedback ? (
-                      <Loader2 size={13} className="animate-spin" />
+                      <Loader2 size={13} className="animate-spin shrink-0" />
                     ) : (
-                      <ThumbsDown size={13} />
+                      <ThumbsDown size={13} className="shrink-0" />
                     )}
-                    Needs improvement
+                    <span>Needs improvement</span>
                   </Button>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col-reverse sm:flex-row justify-between gap-2 sm:gap-3 w-full">
+            <div className="flex flex-col-reverse sm:flex-row justify-between gap-2 sm:gap-3 w-full min-w-0">
               <Button
                 variant="outline"
                 onClick={() => setActiveStep("exercises")}
-                className="w-full sm:w-auto gap-1.5 cursor-pointer justify-center"
+                className="w-full sm:w-auto gap-1.5 cursor-pointer justify-center min-w-0 max-w-full whitespace-normal break-words h-auto min-h-9 py-2 px-3 text-xs sm:text-sm text-center"
               >
-                <ChevronLeft size={16} />
-                Back to Exercises
+                <ChevronLeft size={16} className="shrink-0" />
+                <span className="break-words">Back to Exercises</span>
               </Button>
               <Button
                 onClick={handleFinishLesson}
                 disabled={isFinishing}
-                className="w-full sm:w-auto gap-2 cursor-pointer font-semibold shadow-xs justify-center"
+                className="w-full sm:w-auto gap-2 cursor-pointer font-semibold shadow-xs justify-center min-w-0 max-w-full whitespace-normal break-words h-auto min-h-9 py-2 px-3 text-xs sm:text-sm text-center"
               >
                 {isFinishing ? (
                   <>
-                    <Loader2 size={16} className="animate-spin" />
-                    <span>Finishing...</span>
+                    <Loader2 size={16} className="animate-spin shrink-0" />
+                    <span className="break-words">Finishing...</span>
                   </>
                 ) : (
                   <>
-                    <span>Finish & Return to Curriculum</span>
-                    <CheckCircle2 size={16} />
+                    <span className="break-words">Finish & Return to Curriculum</span>
+                    <CheckCircle2 size={16} className="shrink-0" />
                   </>
                 )}
               </Button>

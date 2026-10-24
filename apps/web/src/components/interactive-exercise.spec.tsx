@@ -181,4 +181,56 @@ describe("InteractiveExercise", () => {
     const form = container.querySelector("form");
     expect(form?.className).toContain("flex-col sm:flex-row");
   });
+
+  it("applies whitespace-normal and break-words on interactive exercise buttons to prevent 320px blowout", () => {
+    const mcExercise: LessonExercise = {
+      id: "ex_mc_wrap",
+      order: 1,
+      type: "multiple_choice",
+      prompt: "Select answer",
+      options: ["Very long option that needs to wrap properly without overflowing on 320px viewports"],
+      correctAnswer: "Very long option that needs to wrap properly without overflowing on 320px viewports",
+      explanation: "Test",
+    };
+
+    const { container, rerender } = render(
+      <InteractiveExercise
+        exercise={mcExercise}
+        onAnswer={vi.fn()}
+        isAnswered={false}
+      />
+    );
+
+    const mcBtn = screen.getByRole("button", { name: /Very long option/i });
+    expect(mcBtn.className).toContain("whitespace-normal");
+    expect(mcBtn.className).toContain("break-words");
+
+    // Reorder exercise chips & buttons
+    const reorderExercise: LessonExercise = {
+      id: "ex_reorder_wrap",
+      order: 2,
+      type: "reorder",
+      prompt: "Reorder test",
+      options: ["WordA", "WordB"],
+      correctAnswer: "WordA WordB",
+      explanation: "Reorder explanation",
+    };
+
+    render(
+      <InteractiveExercise
+        exercise={reorderExercise}
+        onAnswer={vi.fn()}
+        isAnswered={false}
+      />
+    );
+
+    const chipA = screen.getByRole("button", { name: "WordA" });
+    expect(chipA.className).toContain("break-words");
+    expect(chipA.className).toContain("max-w-full");
+
+    const checkOrderBtn = screen.getByRole("button", { name: "Check Order" });
+    expect(checkOrderBtn.className).toContain("whitespace-normal");
+    expect(checkOrderBtn.className).toContain("break-words");
+  });
 });
+
