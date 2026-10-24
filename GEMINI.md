@@ -57,3 +57,33 @@ These rules are mandatory for all AI agents and developers working on the Nippon
 - **Mandatory Bug Regression Testing**:
   - For every bug fix, always create dedicated automated regression tests that specifically replicate and validate the failing scenario before marking the task complete.
   - Ensure tests cover edge cases (e.g., offline mode, page reload/refresh, unauthenticated state, debounce/flush lifecycles).
+
+---
+
+## 5. Mobile-First Responsive Layout & Breakpoint Standards (CRITICAL RULE)
+
+> **MANDATORY**: ALL user interfaces MUST be designed mobile-first and strictly support viewports down to **320px** (e.g., iPhone SE, Galaxy Fold outer display, narrow split screens, mobile PWA / Capacitor). There must be ZERO horizontal overflow or horizontal page body scrolling.
+
+- **Baseline Viewport (320px)**:
+  - Every screen, modal, card, drawer, and interactive component must render legibly and correctly at `320px` width without content clipping or horizontal overflow.
+  - Root containers and scroll views must enforce `w-full min-w-0 max-w-full overflow-x-hidden`.
+- **Padding Scaling & Safe Areas**:
+  - Never use static large paddings (e.g. `p-6`, `p-8`) on outer page containers. Always use responsive scaling:
+    - Main page containers: `p-3 sm:p-6 md:p-8`.
+    - Cards & panels: `p-3.5 sm:p-5` or `p-3.5 sm:p-6 md:p-8`.
+  - Always apply safe area padding utilities for mobile notches and system bars: `pb-safe`, `pt-safe`.
+- **Flexbox Shrinking & Overflow Prevention (`min-w-0`)**:
+  - In CSS flexbox, flex items default to `min-width: auto`. Any flex child that contains text with `truncate`, `line-clamp`, or flexible wrapping MUST explicitly include `min-w-0` (and `flex-1` when expanding).
+  - Avoid fixed minimum widths on cards or inner elements (e.g. avoid `min-w-[260px]` without responsive prefixes; use `sm:min-w-[260px] min-w-0 w-full sm:w-auto`).
+- **Action Stacking & Form Controls**:
+  - Action buttons positioned side-by-side must stack vertically on mobile: `flex flex-col-reverse sm:flex-row justify-between gap-2 sm:gap-3 w-full`.
+  - Action buttons inside stacked bars must expand to full width on mobile for easy touch targeting: `w-full sm:w-auto justify-center`.
+  - Inline forms (input + submit button) must stack on mobile: `flex flex-col sm:flex-row gap-2 w-full min-w-0`, with input `w-full sm:flex-1 min-w-0` and button `w-full sm:w-auto justify-center`.
+  - Option buttons and selection chips must use `w-full min-w-0 break-words`.
+- **Compact Navigation on Small Screens**:
+  - Multi-step wizards, tab bars, and header navigation must adapt gracefully on screens `< 640px`.
+  - Use compact indicators (e.g. icon + step number `1`, `2`, `3`, `4`) with screen-reader accessible attributes (`aria-label="1. Theory"`, `aria-hidden="true"` on mobile text), expanding to full text labels on `sm+`.
+- **Text & Media Wrapping**:
+  - Headings, blockquotes, lists, and paragraphs in user-facing content or Markdown renderers must include `break-words min-w-0`.
+  - Tables and code blocks must always be enclosed in isolated horizontal scroll containers (`overflow-x-auto rounded-xl border border-border/80 bg-card min-w-0 max-w-full`) so they never force the page to scroll horizontally.
+
