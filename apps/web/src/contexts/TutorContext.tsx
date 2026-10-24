@@ -21,6 +21,7 @@ import {
   submitLessonFeedbackAction,
   generateNextUnitAction,
 } from "@/actions/tutor";
+import { API_URL } from "@/lib/api-config";
 import { useAuth } from "./AuthContext";
 import { useFlashCards } from "./FlashCardsContext";
 
@@ -111,6 +112,19 @@ const persistCurriculum = (level: CurriculumLevel, topics: CurriculumTopic[]) =>
   }
 };
 
+const getClientAuthHeaders = (): Record<string, string> => {
+  if (typeof window === "undefined") return {};
+  try {
+    const token = localStorage.getItem("nipponic.token");
+    if (token) {
+      return { Authorization: `Bearer ${token}` };
+    }
+  } catch {
+    // Ignore storage read errors
+  }
+  return {};
+};
+
 export function TutorProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
   const { decks, createDeck, createCard, addCardsToDeck } = useFlashCards();
@@ -149,7 +163,23 @@ export function TutorProvider({ children }: { children: ReactNode }) {
         try {
           data = await getCurriculumAction(level);
         } catch (fetchErr) {
-          console.warn("Failed to fetch curriculum action, falling back to cache:", fetchErr);
+          console.warn("Failed to fetch curriculum action, trying direct API:", fetchErr);
+        }
+
+        // Direct API fallback if server action failed or returned empty
+        if ((!data || data.length === 0) && (typeof navigator === "undefined" || navigator.onLine)) {
+          try {
+            const authHeaders = getClientAuthHeaders();
+            const res = await fetch(`${API_URL}/tutor/curriculum?level=${level}`, {
+              method: "GET",
+              headers: authHeaders,
+            });
+            if (res.ok) {
+              data = await res.json();
+            }
+          } catch (directErr) {
+            console.warn("Direct API getCurriculum fallback failed:", directErr);
+          }
         }
 
         const localProgress = getStoredProgress();
@@ -276,7 +306,32 @@ export function TutorProvider({ children }: { children: ReactNode }) {
       setIsGeneratingUnit(true);
       setError(null);
       try {
-        const updated = await generateNextUnitAction(targetLevel);
+        let updated: CurriculumTopic[] = [];
+        try {
+          updated = await generateNextUnitAction(targetLevel);
+        } catch (serverActionErr) {
+          console.warn("Server action generateNextUnit failed, attempting direct API fallback:", serverActionErr);
+        }
+
+        if (!updated || updated.length === 0) {
+          try {
+            const authHeaders = getClientAuthHeaders();
+            const res = await fetch(`${API_URL}/tutor/curriculum/generate`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                ...authHeaders,
+              },
+              body: JSON.stringify({ level: targetLevel }),
+            });
+            if (res.ok) {
+              updated = await res.json();
+            }
+          } catch (directApiErr) {
+            console.warn("Direct API generateNextUnit fallback failed:", directApiErr);
+          }
+        }
+
         if (updated && updated.length > 0) {
           const localProgress = getStoredProgress();
           const merged = updated.map((topic) => {
@@ -328,9 +383,36 @@ export function TutorProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       try {
-        const lesson = await getLessonAction(topicId);
+        let lesson: Lesson | null = null;
+        let serverActionFailedWithException = false;
+        try {
+          lesson = await getLessonAction(topicId);
+        } catch (serverActionErr) {
+          serverActionFailedWithException = true;
+          console.warn(`Server action getLesson failed for ${topicId}, attempting direct API fallback:`, serverActionErr);
+        }
+
+        if (!lesson && (typeof navigator === "undefined" || navigator.onLine)) {
+          try {
+            const authHeaders = getClientAuthHeaders();
+            const res = await fetch(`${API_URL}/tutor/topics/${topicId}/lesson`, {
+              method: "GET",
+              headers: authHeaders,
+            });
+            if (res.ok) {
+              lesson = await res.json();
+            }
+          } catch (directApiErr) {
+            console.warn(`Direct API getLesson fallback failed for ${topicId}:`, directApiErr);
+          }
+        }
+
         if (!lesson) {
-          setError("Failed to generate or load this lesson. Please check your network and try again.");
+          if (serverActionFailedWithException) {
+            setError("Failed to generate or load lesson. Please try again.");
+          } else {
+            setError("Failed to generate or load this lesson. Please check your network and try again.");
+          }
           setCurrentLesson(null);
           return null;
         }
@@ -357,7 +439,23 @@ export function TutorProvider({ children }: { children: ReactNode }) {
 
       // 2. If authenticated, sync with backend
       if (isAuthenticated) {
-        await submitLessonProgressAction(currentLesson.id, { score });
+        try {
+          await submitLessonProgressAction(currentLesson.id, { score });
+        } catch {
+          try {
+            const authHeaders = getClientAuthHeaders();
+            await fetch(`${API_URL}/tutor/lessons/${currentLesson.id}/progress`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                ...authHeaders,
+              },
+              body: JSON.stringify({ score }),
+            });
+          } catch {
+            // Ignore background sync errors
+          }
+        }
       }
 
       // 3. Update currentLesson state
@@ -391,10 +489,38 @@ export function TutorProvider({ children }: { children: ReactNode }) {
       comment?: string
     ): Promise<boolean> => {
       if (!currentLesson) return false;
-      const res = await submitLessonFeedbackAction(currentLesson.id, {
-        rating,
-        comment,
-      });
+      let res = { success: false };
+      try {
+        res = await submitLessonFeedbackAction(currentLesson.id, {
+          rating,
+          comment,
+        });
+      } catch {
+        // Fallback to direct API
+      }
+
+      if (!res.success) {
+        try {
+          const authHeaders = getClientAuthHeaders();
+          const apiRes = await fetch(
+            `${API_URL}/tutor/lessons/${currentLesson.id}/feedback`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                ...authHeaders,
+              },
+              body: JSON.stringify({ rating, comment }),
+            }
+          );
+          if (apiRes.ok) {
+            const data = await apiRes.json();
+            return !!data.success;
+          }
+        } catch {
+          return false;
+        }
+      }
       return res.success;
     },
     [currentLesson]
