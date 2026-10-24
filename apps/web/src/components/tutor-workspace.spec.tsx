@@ -489,5 +489,85 @@ describe("TutorWorkspace", () => {
     expect(container).toHaveTextContent("学生");
     expect(container).toHaveTextContent("(がくせい)");
   });
+
+  it("applies responsive mobile layout classes on curriculum dashboard and active lesson view", () => {
+    // 1. Dashboard View
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [
+        {
+          id: "top_resp",
+          level: "N5",
+          unitIndex: 1,
+          unitTitle: "Basics",
+          lessonIndex: 1,
+          title: "Introduction",
+          grammarKey: "intro",
+          objective: "Intro objective",
+          isCompleted: false,
+        },
+      ],
+      selectedLevel: "N5",
+      currentLesson: null,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+    } as any);
+
+    const { container, rerender } = render(<TutorWorkspace />);
+
+    const dashboardRoot = container.firstElementChild as HTMLElement;
+    expect(dashboardRoot.className).toContain("p-3 sm:p-6 md:p-8");
+    expect(dashboardRoot.className).toContain("overflow-x-hidden");
+    expect(dashboardRoot.className).toContain("pb-safe");
+
+    // 2. Active Lesson View
+    const mockLesson = {
+      id: "les_resp",
+      topicId: "top_resp",
+      title: "Introduction",
+      level: "N5",
+      theoryMarkdown: "# Intro",
+      dialogue: [{ speaker: "A", jpText: "こんにちは", enText: "Hello" }],
+      vocabulary: [{ jpText: "今", reading: "いま", enText: "now" }],
+      exercises: [],
+    };
+
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [],
+      selectedLevel: "N5",
+      currentLesson: mockLesson,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+    } as any);
+
+    rerender(<TutorWorkspace />);
+
+    // Check header has responsive layout
+    const header = container.querySelector(".border-b.bg-card\\/60") as HTMLElement;
+    expect(header).not.toBeNull();
+    expect(header.className).toContain("flex-col sm:flex-row");
+    expect(header.className).toContain("p-3 sm:p-4");
+
+    // Check 4 steps have mobile number indicators
+    const theoryBtn = screen.getByRole("button", { name: /1\.\s*Theory/i });
+    expect(theoryBtn.getAttribute("aria-label")).toBe("1. Theory");
+    const mobileIndicator = theoryBtn.querySelector(".sm\\:hidden");
+    expect(mobileIndicator?.textContent).toBe("1");
+
+    // Check dialogue step action bar has flex-col-reverse on mobile
+    fireEvent.click(screen.getByRole("button", { name: /2\.\s*Dialogue/i }));
+    const backBtn = screen.getByRole("button", { name: /Back to Theory/i });
+    const actionBar = backBtn.parentElement as HTMLElement;
+    expect(actionBar.className).toContain("flex-col-reverse sm:flex-row");
+  });
 });
 

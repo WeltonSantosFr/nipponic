@@ -369,7 +369,7 @@ function renderBlock(
           return (
             <h1
               key={key}
-              className="text-2xl sm:text-3xl font-black text-foreground tracking-tight pb-2 border-b border-border/80 mt-6 mb-3 first:mt-0"
+              className="text-xl sm:text-2xl md:text-3xl font-black text-foreground tracking-tight pb-2 border-b border-border/80 mt-5 sm:mt-6 mb-2.5 sm:mb-3 first:mt-0 break-words min-w-0"
             >
               {inline}
             </h1>
@@ -378,7 +378,7 @@ function renderBlock(
           return (
             <h2
               key={key}
-              className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight pb-1.5 border-b border-border/60 mt-5 mb-2.5 first:mt-0"
+              className="text-lg sm:text-xl md:text-2xl font-extrabold text-foreground tracking-tight pb-1.5 border-b border-border/60 mt-4 sm:mt-5 mb-2 sm:mb-2.5 first:mt-0 break-words min-w-0"
             >
               {inline}
             </h2>
@@ -387,10 +387,10 @@ function renderBlock(
           return (
             <h3
               key={key}
-              className="text-lg sm:text-xl font-bold text-foreground mt-4 mb-2 first:mt-0 flex items-center gap-2"
+              className="text-base sm:text-lg md:text-xl font-bold text-foreground mt-3.5 sm:mt-4 mb-1.5 sm:mb-2 first:mt-0 flex items-center gap-2 break-words min-w-0"
             >
               <span className="w-1.5 h-4 bg-primary rounded-full shrink-0" />
-              <span>{inline}</span>
+              <span className="break-words min-w-0">{inline}</span>
             </h3>
           );
         case 4:
@@ -398,7 +398,7 @@ function renderBlock(
           return (
             <h4
               key={key}
-              className="text-xs sm:text-sm font-bold uppercase tracking-wider text-primary mt-3.5 mb-1.5 first:mt-0"
+              className="text-xs sm:text-sm font-bold uppercase tracking-wider text-primary mt-3 sm:mt-3.5 mb-1 sm:mb-1.5 first:mt-0 break-words min-w-0"
             >
               {inline}
             </h4>
@@ -408,7 +408,7 @@ function renderBlock(
 
     case "paragraph":
       return (
-        <p key={key} className="text-sm md:text-base text-foreground/90 leading-relaxed mb-3 last:mb-0">
+        <p key={key} className="text-xs sm:text-sm md:text-base text-foreground/90 leading-relaxed mb-3 last:mb-0 break-words min-w-0">
           {renderInline(block.text, showFurigana)}
         </p>
       );
@@ -417,14 +417,14 @@ function renderBlock(
       return (
         <div
           key={key}
-          className="my-3.5 rounded-xl border border-border/80 bg-muted/60 dark:bg-muted/30 p-4 font-mono text-xs md:text-sm text-foreground overflow-x-auto shadow-xs"
+          className="my-3 sm:my-3.5 rounded-xl border border-border/80 bg-muted/60 dark:bg-muted/30 p-3 sm:p-4 font-mono text-xs md:text-sm text-foreground overflow-x-auto shadow-xs min-w-0 max-w-full"
         >
           {block.lang && (
             <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground pb-2 border-b border-border/50 mb-2">
               {block.lang}
             </div>
           )}
-          <pre className="whitespace-pre-wrap break-words">{block.text}</pre>
+          <pre className="whitespace-pre-wrap break-words min-w-0">{block.text}</pre>
         </div>
       );
 
@@ -432,7 +432,7 @@ function renderBlock(
       return (
         <blockquote
           key={key}
-          className="my-3.5 pl-4 border-l-4 border-primary/70 bg-primary/5 dark:bg-primary/10 py-3 pr-4 rounded-r-xl text-sm text-foreground/90 space-y-2"
+          className="my-3 sm:my-3.5 pl-3.5 sm:pl-4 border-l-4 border-primary/70 bg-primary/5 dark:bg-primary/10 py-2.5 sm:py-3 pr-3.5 sm:pr-4 rounded-r-xl text-xs sm:text-sm text-foreground/90 space-y-2 min-w-0 break-words"
         >
           {renderInline(block.text, showFurigana)}
         </blockquote>
@@ -443,10 +443,10 @@ function renderBlock(
         return (
           <ol
             key={key}
-            className="my-3 space-y-1.5 pl-5 list-decimal text-sm md:text-base text-foreground/90"
+            className="my-2.5 sm:my-3 space-y-1.5 pl-4 sm:pl-5 list-decimal text-xs sm:text-sm md:text-base text-foreground/90 min-w-0 break-words"
           >
             {block.items.map((item, idx) => (
-              <li key={idx} className="leading-relaxed pl-1">
+              <li key={idx} className="leading-relaxed pl-1 break-words">
                 {renderInline(item, showFurigana)}
               </li>
             ))}
@@ -456,10 +456,10 @@ function renderBlock(
       return (
         <ul
           key={key}
-          className="my-3 space-y-1.5 pl-5 list-disc marker:text-primary text-sm md:text-base text-foreground/90"
+          className="my-2.5 sm:my-3 space-y-1.5 pl-4 sm:pl-5 list-disc marker:text-primary text-xs sm:text-sm md:text-base text-foreground/90 min-w-0 break-words"
         >
           {block.items.map((item, idx) => (
-            <li key={idx} className="leading-relaxed pl-1">
+            <li key={idx} className="leading-relaxed pl-1 break-words">
               {renderInline(item, showFurigana)}
             </li>
           ))}
@@ -468,12 +468,12 @@ function renderBlock(
 
     case "table":
       return (
-        <div key={key} className="my-4 overflow-x-auto rounded-xl border border-border/80 bg-card shadow-xs">
-          <table className="w-full text-xs md:text-sm text-left border-collapse">
+        <div key={key} className="my-3 sm:my-4 overflow-x-auto rounded-xl border border-border/80 bg-card shadow-xs min-w-0 max-w-full">
+          <table className="w-full text-xs md:text-sm text-left border-collapse min-w-full">
             <thead className="bg-muted/50 border-b border-border/80 font-bold text-foreground">
               <tr>
                 {block.headers.map((header, idx) => (
-                  <th key={idx} className="p-3 text-left">
+                  <th key={idx} className="p-2.5 sm:p-3 text-left whitespace-nowrap sm:whitespace-normal">
                     {renderInline(header, showFurigana)}
                   </th>
                 ))}
@@ -483,7 +483,7 @@ function renderBlock(
               {block.rows.map((row, rowIdx) => (
                 <tr key={rowIdx} className="hover:bg-muted/30 transition-colors">
                   {row.map((cell, colIdx) => (
-                    <td key={colIdx} className="p-3 align-top">
+                    <td key={colIdx} className="p-2.5 sm:p-3 align-top whitespace-nowrap sm:whitespace-normal">
                       {renderInline(cell ?? "", showFurigana)}
                     </td>
                   ))}

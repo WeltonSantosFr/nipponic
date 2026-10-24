@@ -154,4 +154,31 @@ describe("InteractiveExercise", () => {
     expect(ruby).toHaveTextContent("きわ");
     expect(ruby).toHaveTextContent("極");
   });
+
+  it("applies responsive mobile classes for 320px viewport compatibility", () => {
+    const exercise: LessonExercise = {
+      id: "ex_responsive",
+      order: 1,
+      type: "fill_blank",
+      prompt: "Responsive test prompt",
+      correctAnswer: "test",
+      explanation: "Test explanation",
+    };
+
+    const { container } = render(
+      <InteractiveExercise
+        exercise={exercise}
+        onAnswer={vi.fn()}
+        isAnswered={false}
+      />
+    );
+
+    const rootCard = container.firstElementChild as HTMLElement;
+    expect(rootCard.className).toContain("p-3.5 sm:p-5");
+    expect(rootCard.className).toContain("min-w-0");
+    expect(rootCard.className).toContain("max-w-full");
+
+    const form = container.querySelector("form");
+    expect(form?.className).toContain("flex-col sm:flex-row");
+  });
 });

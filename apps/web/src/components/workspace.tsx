@@ -199,24 +199,24 @@ export function Workspace(props: WorkspaceProps = {}) {
       />
 
       <SidebarInset className="flex flex-col min-h-screen min-w-0 max-w-full overflow-x-hidden">
-        <header className="flex min-h-14 items-center justify-between border-b px-4 sm:px-6 shrink-0 pt-safe">
-          <div className="flex items-center gap-3 min-w-0">
+        <header className="flex min-h-14 items-center justify-between border-b px-3 sm:px-6 shrink-0 pt-safe">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <SidebarTrigger className="h-9 w-9 shrink-0 cursor-pointer" />
             {activeSidebarView === "notes" ? (
               selectedNote && (
-                <span className="text-sm font-medium text-muted-foreground truncate max-w-[180px] sm:max-w-sm">
+                <span className="text-sm font-medium text-muted-foreground truncate max-w-[140px] xs:max-w-[180px] sm:max-w-sm">
                   {selectedNote.title}
                 </span>
               )
             ) : activeSidebarView === "flashcards" ? (
               selectedDeck && (
-                <span className="text-sm font-medium text-muted-foreground truncate max-w-[180px] sm:max-w-sm flex items-center gap-1.5">
+                <span className="text-sm font-medium text-muted-foreground truncate max-w-[140px] xs:max-w-[180px] sm:max-w-sm flex items-center gap-1.5 min-w-0">
                   <Layers size={15} className="text-primary shrink-0" />
                   <span className="truncate">{selectedDeck.name}</span>
                 </span>
               )
             ) : (
-              <span className="text-sm font-medium text-muted-foreground truncate max-w-[180px] sm:max-w-sm flex items-center gap-1.5">
+              <span className="text-sm font-medium text-muted-foreground truncate max-w-[140px] xs:max-w-[180px] sm:max-w-sm flex items-center gap-1.5 min-w-0">
                 <GraduationCap size={15} className="text-primary shrink-0" />
                 <span>AI Tutor</span>
               </span>
