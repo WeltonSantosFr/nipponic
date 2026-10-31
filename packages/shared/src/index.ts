@@ -329,7 +329,8 @@ export type AddCardsDto = AddCardsToDeckInput;
 export type AddCardsToDeckDto = AddCardsToDeckInput;
 
 export type DeckTabMode = "my" | "app" | "public";
-export type SidebarViewMode = "notes" | "flashcards" | "tutor";
+export const SidebarViewModeSchema = z.enum(["notes", "flashcards", "tutor", "stats"]);
+export type SidebarViewMode = z.infer<typeof SidebarViewModeSchema>;
 
 export const DeckCardFilterModeSchema = z.enum(["all", "due"]);
 export type DeckCardFilterMode = z.infer<typeof DeckCardFilterModeSchema>;
@@ -649,6 +650,8 @@ export interface FlashCardsContextData {
   reorderDeckCards: (deckId: string, cardIds: string[]) => Promise<void>;
   addDeckToMyDecks: (deck: Deck) => Promise<Deck | null>;
   refreshAll: () => Promise<void>;
+  studyStats?: StudyStats | null;
+  refreshStats?: () => Promise<void>;
 }
 
 export interface StarterUser {
@@ -861,3 +864,64 @@ export const GenerateUnitPayloadSchema = z.object({
   topics: z.array(GeneratedTopicSchema),
 });
 export type GenerateUnitPayload = z.infer<typeof GenerateUnitPayloadSchema>;
+
+// ==========================================
+// Study Stats & Dashboard Contracts
+// ==========================================
+
+export const StreakStatsSchema = z.object({
+  current: z.number().int().min(0),
+  longest: z.number().int().min(0),
+  lastStudiedAt: z.string().nullable(),
+  isActiveToday: z.boolean(),
+});
+export type StreakStats = z.infer<typeof StreakStatsSchema>;
+
+export const TodayStatsSchema = z.object({
+  reviewsCount: z.number().int().min(0),
+  targetReviews: z.number().int().min(1),
+  retentionRate: z.number().min(0).max(100),
+});
+export type TodayStats = z.infer<typeof TodayStatsSchema>;
+
+export const CardsBreakdownSchema = z.object({
+  total: z.number().int().min(0),
+  dueToday: z.number().int().min(0),
+  newCards: z.number().int().min(0),
+  learning: z.number().int().min(0),
+  mature: z.number().int().min(0),
+});
+export type CardsBreakdown = z.infer<typeof CardsBreakdownSchema>;
+
+export const RatingsDistributionSchema = z.object({
+  again: z.number().int().min(0),
+  hard: z.number().int().min(0),
+  good: z.number().int().min(0),
+  easy: z.number().int().min(0),
+  totalReviews: z.number().int().min(0),
+});
+export type RatingsDistribution = z.infer<typeof RatingsDistributionSchema>;
+
+export const HeatmapDaySchema = z.object({
+  date: z.string(), // "YYYY-MM-DD"
+  count: z.number().int().min(0),
+});
+export type HeatmapDay = z.infer<typeof HeatmapDaySchema>;
+
+export const ForecastDaySchema = z.object({
+  date: z.string(), // "YYYY-MM-DD"
+  dayLabel: z.string(), // "Mon", "Tue", etc.
+  count: z.number().int().min(0),
+});
+export type ForecastDay = z.infer<typeof ForecastDaySchema>;
+
+export const StudyStatsSchema = z.object({
+  streak: StreakStatsSchema,
+  today: TodayStatsSchema,
+  cardsBreakdown: CardsBreakdownSchema,
+  ratingsDistribution: RatingsDistributionSchema,
+  heatmap: z.array(HeatmapDaySchema),
+  forecast: z.array(ForecastDaySchema),
+});
+export type StudyStats = z.infer<typeof StudyStatsSchema>;
+

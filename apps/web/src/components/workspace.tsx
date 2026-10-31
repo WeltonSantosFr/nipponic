@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/sidebar";
 import dynamic from "next/dynamic";
 import { AppSidebar } from "@/components/app-sidebar";
-import { BookOpen, GraduationCap, Layers, Loader2 } from "lucide-react";
+import { BookOpen, GraduationCap, Layers, Loader2, TrendingUp } from "lucide-react";
 import { useNotes } from "@/contexts/NotesContext";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
 import { getGlossaryRules } from "@/services/glossary";
@@ -51,6 +51,18 @@ const DeckWorkspace = dynamic(
 
 const TutorWorkspace = dynamic(
   () => import("@/components/tutor-workspace").then((mod) => mod.TutorWorkspace),
+  {
+    loading: () => (
+      <div className="flex-1 flex items-center justify-center p-8">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    ),
+    ssr: false,
+  }
+);
+
+const StatsWorkspace = dynamic(
+  () => import("@/components/stats-workspace").then((mod) => mod.StatsWorkspace),
   {
     loading: () => (
       <div className="flex-1 flex items-center justify-center p-8">
@@ -215,6 +227,11 @@ export function Workspace(props: WorkspaceProps = {}) {
                   <span className="truncate">{selectedDeck.name}</span>
                 </span>
               )
+            ) : activeSidebarView === "stats" ? (
+              <span className="text-sm font-medium text-muted-foreground truncate max-w-[140px] xs:max-w-[180px] sm:max-w-sm flex items-center gap-1.5 min-w-0">
+                <TrendingUp size={15} className="text-primary shrink-0" />
+                <span>Study Statistics</span>
+              </span>
             ) : (
               <span className="text-sm font-medium text-muted-foreground truncate max-w-[140px] xs:max-w-[180px] sm:max-w-sm flex items-center gap-1.5 min-w-0">
                 <GraduationCap size={15} className="text-primary shrink-0" />
@@ -273,6 +290,10 @@ export function Workspace(props: WorkspaceProps = {}) {
         ) : activeSidebarView === "flashcards" ? (
           <div className="flex-1 flex flex-col items-center justify-start w-full min-w-0 max-w-full">
             <DeckWorkspace deck={selectedDeck} />
+          </div>
+        ) : activeSidebarView === "stats" ? (
+          <div className="flex-1 flex flex-col items-stretch justify-start w-full min-w-0 max-w-full overflow-x-hidden">
+            <StatsWorkspace />
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-stretch justify-start w-full min-w-0 max-w-full overflow-x-hidden">

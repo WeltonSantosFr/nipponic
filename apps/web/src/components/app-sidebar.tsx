@@ -50,6 +50,7 @@ import {
   Check,
   CheckCircle2,
   DoorOpen,
+  Flame,
   Globe,
   GraduationCap,
   Heart,
@@ -61,6 +62,7 @@ import {
   Settings,
   Sparkles,
   Trash2,
+  TrendingUp,
   UserPlus,
   UserRound,
   X,
@@ -279,6 +281,7 @@ export function AppSidebar({
   const { isMobile, setOpenMobile } = useSidebar();
   const { notes, createNewNote, deleteNote } = useNotes();
   const {
+    cards,
     decks,
     appDecks,
     publicDecks,
@@ -292,6 +295,8 @@ export function AppSidebar({
     activeSidebarView,
     setActiveSidebarView,
     addDeckToMyDecks,
+    studyStats,
+    getDueCards,
   } = useFlashCards();
 
   const {
@@ -484,42 +489,54 @@ export function AppSidebar({
         )}
 
         {/* Feature Selector Navigation */}
-        <div className="flex p-1 bg-muted/60 rounded-lg border border-border/70 text-xs font-medium">
+        <div className="flex p-0.5 bg-muted/60 rounded-lg border border-border/70 text-[11px] font-medium gap-0.5 w-full">
           <button
             type="button"
             onClick={() => setActiveSidebarView("notes")}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md transition-all cursor-pointer ${
+            className={`flex-1 min-w-0 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all cursor-pointer ${
               activeSidebarView === "notes"
                 ? "bg-background text-foreground shadow-xs font-semibold"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <BookOpen size={14} />
-            <span>Notes</span>
+            <BookOpen size={13} className="shrink-0" />
+            <span className="truncate">Notes</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveSidebarView("flashcards")}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md transition-all cursor-pointer ${
+            className={`flex-1 min-w-0 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all cursor-pointer ${
               activeSidebarView === "flashcards"
                 ? "bg-background text-foreground shadow-xs font-semibold"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Layers size={14} />
-            <span>Cards</span>
+            <Layers size={13} className="shrink-0" />
+            <span className="truncate">Cards</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveSidebarView("tutor")}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md transition-all cursor-pointer ${
+            className={`flex-1 min-w-0 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all cursor-pointer ${
               activeSidebarView === "tutor"
                 ? "bg-background text-foreground shadow-xs font-semibold"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <GraduationCap size={14} />
-            <span>Tutor</span>
+            <GraduationCap size={13} className="shrink-0" />
+            <span className="truncate">Tutor</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSidebarView("stats")}
+            className={`flex-1 min-w-0 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all cursor-pointer ${
+              activeSidebarView === "stats"
+                ? "bg-background text-foreground shadow-xs font-semibold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <TrendingUp size={13} className="shrink-0" />
+            <span className="truncate">Stats</span>
           </button>
         </div>
 
@@ -654,7 +671,7 @@ export function AppSidebar({
               )}
             </div>
           </>
-        ) : (
+        ) : activeSidebarView === "tutor" ? (
           /* Level Selector for Tutor */
           <div className="flex p-0.5 bg-muted/60 rounded-lg border border-border/70 text-[11px] font-medium gap-0.5 w-full">
             {(["N5", "N4", "N3", "N2", "N1"] as const).map((lvl) => (
@@ -671,6 +688,17 @@ export function AppSidebar({
                 {lvl}
               </button>
             ))}
+          </div>
+        ) : (
+          /* Stats Quick Status */
+          <div className="px-2.5 py-1.5 text-xs text-muted-foreground flex items-center justify-between border border-border/60 rounded-lg bg-muted/40">
+            <span className="flex items-center gap-1.5 font-medium">
+              <Flame size={14} className="text-amber-500 fill-amber-500" />
+              <span>{studyStats?.streak.current ?? 0} Day Streak</span>
+            </span>
+            <span className="font-semibold text-foreground">
+              {studyStats?.today.reviewsCount ?? 0} reviews today
+            </span>
           </div>
         )}
       </SidebarHeader>
@@ -804,7 +832,7 @@ export function AppSidebar({
               )
             )}
           </SidebarGroup>
-        ) : (
+        ) : activeSidebarView === "tutor" ? (
           /* Tutor Lessons Area */
           <SidebarGroup>
             <div className="flex items-center justify-between px-2 py-1">
@@ -898,6 +926,63 @@ export function AppSidebar({
                 })}
               </SidebarMenu>
             )}
+          </SidebarGroup>
+        ) : (
+          /* Stats Sidebar View */
+          <SidebarGroup>
+            <div className="flex items-center justify-between px-2 py-1">
+              <SidebarGroupLabel className="p-0">Study Overview</SidebarGroupLabel>
+            </div>
+            <div className="px-2 py-2 space-y-3">
+              <div className="p-3 rounded-lg border border-border/70 bg-card space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Current Streak</span>
+                  <span className="font-bold text-foreground flex items-center gap-1">
+                    <Flame size={13} className="text-amber-500 fill-amber-500" />
+                    {studyStats?.streak.current ?? 0} days
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Today&apos;s Reviews</span>
+                  <span className="font-semibold text-foreground">
+                    {studyStats?.today.reviewsCount ?? 0} / {studyStats?.today.targetReviews ?? 20}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Retention Rate</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                    {studyStats?.today.retentionRate ?? 100}%
+                  </span>
+                </div>
+              </div>
+
+              {((studyStats?.cardsBreakdown.dueToday ?? cards.filter(isCardDue).length) > 0) ? (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const dueList = getDueCards ? getDueCards() : cards.filter(isCardDue);
+                    if (dueList.length > 0) {
+                      startPlayingDeck({
+                        id: "all-due",
+                        name: `Daily Due Review (${dueList.length})`,
+                        cards: dueList,
+                        isPublic: false,
+                      });
+                    }
+                    if (isMobile) setOpenMobile(false);
+                  }}
+                  className="w-full text-xs gap-1.5 cursor-pointer font-semibold shadow-xs"
+                >
+                  <Flame size={13} className="fill-current" />
+                  <span>Review {studyStats?.cardsBreakdown.dueToday ?? cards.filter(isCardDue).length} Due Cards</span>
+                </Button>
+              ) : (
+                <div className="text-center py-2 text-xs text-muted-foreground flex items-center justify-center gap-1.5">
+                  <CheckCircle2 size={14} className="text-emerald-500" />
+                  <span>No cards due right now</span>
+                </div>
+              )}
+            </div>
           </SidebarGroup>
         )}
 
