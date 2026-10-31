@@ -7,6 +7,7 @@ import * as bcrypt from 'bcrypt';
 
 vi.mock('bcrypt', () => ({
   compareSync: vi.fn(),
+  hashSync: vi.fn(() => 'dummy_hash'),
 }));
 
 describe('AuthService', () => {
@@ -94,5 +95,14 @@ describe('AuthService', () => {
     expect(prismaMock.db.orm.public.User.first).toHaveBeenCalledWith({ email: loginDto.email });
     expect(bcrypt.compareSync).toHaveBeenCalledWith(loginDto.password, mockUser.password);
     expect(jwtServiceMock.signAsync).not.toHaveBeenCalled();
+  });
+
+  it('login - still runs a password comparison when the user does not exist (timing/enumeration)', async () => {
+    prismaMock.db.orm.public.User.first.mockResolvedValue(null);
+    vi.mocked(bcrypt.compareSync).mockClear();
+
+    await expect(service.login({ email: 'ghost@x.com', password: 'whatever' })).rejects.toThrow(UnauthorizedException);
+
+    expect(bcrypt.compareSync).toHaveBeenCalledWith('whatever', 'dummy_hash');
   });
 });

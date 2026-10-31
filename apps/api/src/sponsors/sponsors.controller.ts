@@ -1,22 +1,40 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Delete,
-  Inject,
+  BadRequestException,
   Body,
+  Controller,
+  Delete,
+  Get,
   Headers,
+  HttpCode,
+  Inject,
+  NotFoundException,
+  Post,
   Req,
-  UseGuards,
+  ServiceUnavailableException,
   UnauthorizedException,
-  ForbiddenException,
+  UseGuards,
+  type RawBodyRequest,
 } from "@nestjs/common";
+import type { Request } from "express";
+import type { JwtPayload } from "@nipponic/shared";
 import { SponsorsService } from "./sponsors.service";
-import type { LinkGithubInput, MockSponsorshipInput } from "./sponsors.dto";
+import {
+  GithubSponsorsWebhookSchema,
+  LinkGithubInputSchema,
+  MockSponsorshipInputSchema,
+  type LinkGithubInput,
+} from "./sponsors.dto";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
-import type { JwtPayload } from "@nipponic/shared";
-import type { Request } from "express";
+
+/**
+ * Mock sponsorship endpoints are a development convenience. They are disabled unless
+ * explicitly enabled AND never available in production. When disabled they respond
+ * with 404 so the routes are indistinguishable from non-existent ones.
+ */
+export function isMockSponsorsEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
+  return env.ENABLE_MOCK_SPONSORS === "true" && env.NODE_ENV !== "production";
+}
 
 @Controller("sponsors")
 export class SponsorsController {
@@ -35,38 +53,60 @@ export class SponsorsController {
     @CurrentUser() user: JwtPayload,
     @Body() body: LinkGithubInput
   ) {
-    return this.sponsorsService.linkGithub(user.sub, body);
+    const parsed = LinkGithubInputSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException("A valid GitHub username is required");
+    }
+    return this.sponsorsService.linkGithub(user.sub, parsed.data);
   }
 
   @Post("webhook")
+  @HttpCode(200)
   async handleWebhook(
     @Headers("x-hub-signature-256") signature: string | undefined,
-    @Body() body: any,
-    @Req() req: Request
+    @Headers("x-github-delivery") deliveryId: string | undefined,
+    @Body() body: unknown,
+    @Req() req: RawBodyRequest<Request>
   ) {
-    // If signature is present, validate against request body
-    const rawBody = (req as any).rawBody || JSON.stringify(body);
-    const isValid = this.sponsorsService.verifyWebhookSignature(rawBody, signature);
-    if (!isValid) {
+    if (!this.sponsorsService.isWebhookConfigured()) {
+      throw new ServiceUnavailableException("Webhook receiver is not configured");
+    }
+
+    // The HMAC must be computed over the exact bytes GitHub sent.
+    if (!req.rawBody) {
+      throw new BadRequestException("Raw request body unavailable");
+    }
+    if (!this.sponsorsService.verifyWebhookSignature(req.rawBody, signature)) {
       throw new UnauthorizedException("Invalid GitHub webhook signature");
     }
 
-    return this.sponsorsService.handleWebhook(body);
+    const parsed = GithubSponsorsWebhookSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException("Malformed webhook payload");
+    }
+
+    if (!this.sponsorsService.registerDelivery(deliveryId)) {
+      return { status: "duplicate" };
+    }
+
+    return this.sponsorsService.handleWebhook(parsed.data);
   }
 
   @Post("mock")
-  mockSponsor(@Body() body: MockSponsorshipInput) {
-    if (process.env.NODE_ENV === "production") {
-      throw new ForbiddenException("Mock sponsorships are not available in production");
+  @UseGuards(AuthGuard)
+  mockSponsor(@Body() body: unknown) {
+    if (!isMockSponsorsEnabled()) throw new NotFoundException();
+    const parsed = MockSponsorshipInputSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException("Invalid mock sponsorship payload");
     }
-    return this.sponsorsService.mockSponsor(body);
+    return this.sponsorsService.mockSponsor(parsed.data);
   }
 
   @Delete("mock")
+  @UseGuards(AuthGuard)
   clearMockSponsors() {
-    if (process.env.NODE_ENV === "production") {
-      throw new ForbiddenException("Mock sponsorships are not available in production");
-    }
+    if (!isMockSponsorsEnabled()) throw new NotFoundException();
     return this.sponsorsService.clearMockSponsors();
   }
 }

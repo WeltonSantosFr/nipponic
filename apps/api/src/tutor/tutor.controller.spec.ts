@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { TutorController } from "./tutor.controller";
 import { TutorService } from "./tutor.service";
 import type { Request } from "express";
+import { BadRequestException } from "@nestjs/common";
+import { GUARDS_METADATA } from "@nestjs/common/constants";
+import type { JwtService } from "@nestjs/jwt";
+import { AuthGuard } from "../auth/auth.guard";
 
 describe("TutorController", () => {
   let controller: TutorController;
@@ -82,11 +86,53 @@ describe("TutorController", () => {
     const mockTopics = [{ id: "top_new", title: "New Generated Topic" }];
     tutorServiceMock.generateNextUnitForLevel = vi.fn().mockResolvedValue(mockTopics as any);
 
-    const mockReq = { headers: {} } as Request;
-    const result = await controller.generateNextUnit("N1", mockReq);
+    const user = { sub: "usr_1", username: "tester", email: "tester@test.com" };
+    const result = await controller.generateNextUnit("N1", user);
 
     expect(result).toEqual(mockTopics);
-    expect(tutorServiceMock.generateNextUnitForLevel).toHaveBeenCalledWith("N1", undefined);
+    expect(tutorServiceMock.generateNextUnitForLevel).toHaveBeenCalledWith("N1", "usr_1");
+  });
+
+  describe("security regressions", () => {
+    it("generateNextUnit requires AuthGuard (Gemini quota cannot be burned anonymously)", () => {
+      const guards = Reflect.getMetadata(GUARDS_METADATA, TutorController.prototype.generateNextUnit);
+      expect(guards).toContain(AuthGuard);
+    });
+
+    it("generateNextUnit rejects an invalid level", async () => {
+      const user = { sub: "usr_1", username: "t", email: "t@t.com" };
+      await expect(controller.generateNextUnit("N9; DROP", user)).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it("getCurriculum rejects an invalid level", async () => {
+      await expect(controller.getCurriculum("bogus", { headers: {} } as Request)).rejects.toBeInstanceOf(
+        BadRequestException
+      );
+    });
+
+    it("ignores forged tokens (signature is verified, not just decoded)", async () => {
+      const jwtMock = {
+        verifyAsync: vi.fn().mockRejectedValue(new Error("invalid signature")),
+        decode: vi.fn().mockReturnValue({ sub: "victim_id" }),
+      };
+      const secured = new TutorController(tutorServiceMock, jwtMock as unknown as JwtService);
+      vi.mocked(tutorServiceMock.getCurriculum).mockResolvedValue([] as any);
+
+      await secured.getCurriculum("N5", { headers: { authorization: "Bearer forged.token.value" } } as Request);
+
+      expect(tutorServiceMock.getCurriculum).toHaveBeenCalledWith("N5", undefined);
+      expect(jwtMock.decode).not.toHaveBeenCalled();
+    });
+
+    it("uses the user id from a validly signed token", async () => {
+      const jwtMock = { verifyAsync: vi.fn().mockResolvedValue({ sub: "usr_real" }) };
+      const secured = new TutorController(tutorServiceMock, jwtMock as unknown as JwtService);
+      vi.mocked(tutorServiceMock.getCurriculum).mockResolvedValue([] as any);
+
+      await secured.getCurriculum("N5", { headers: { authorization: "Bearer good.token.value" } } as Request);
+
+      expect(tutorServiceMock.getCurriculum).toHaveBeenCalledWith("N5", "usr_real");
+    });
   });
 });
 

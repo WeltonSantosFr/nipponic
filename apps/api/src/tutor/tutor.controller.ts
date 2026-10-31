@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -19,9 +20,18 @@ import type { JwtPayload } from "@nipponic/shared";
 import {
   SubmitLessonProgressSchema,
   SubmitLessonFeedbackSchema,
+  CurriculumLevelSchema,
   type SubmitLessonProgressDto,
   type SubmitLessonFeedbackDto,
 } from "./tutor.dto";
+
+function parseLevel(level: unknown) {
+  const parsed = CurriculumLevelSchema.safeParse(level || "N5");
+  if (!parsed.success) {
+    throw new BadRequestException("Invalid level. Expected one of N5, N4, N3, N2, N1");
+  }
+  return parsed.data;
+}
 
 @Controller("tutor")
 export class TutorController {
@@ -30,15 +40,19 @@ export class TutorController {
     @Optional() @Inject(JwtService) private readonly jwtService?: JwtService
   ) {}
 
-  private extractUserId(request: Request): string | undefined {
+  /**
+   * Optional authentication: returns the user id only when the bearer token has a
+   * valid signature and is not expired. Forged or invalid tokens are treated as anonymous.
+   */
+  private async extractUserId(request: Request): Promise<string | undefined> {
     try {
       const [type, token] = request.headers.authorization?.split(" ") ?? [];
       if (type === "Bearer" && token && this.jwtService) {
-        const payload = this.jwtService.decode(token) as JwtPayload | null;
+        const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
         return payload?.sub;
       }
     } catch {
-      // Ignore token decode errors for optional auth
+      // Invalid or expired token: fall back to anonymous access
     }
     return undefined;
   }
@@ -48,17 +62,17 @@ export class TutorController {
     @Query("level") level: string = "N5",
     @Req() request: Request
   ) {
-    const userId = this.extractUserId(request);
-    return await this.tutorService.getCurriculum(level || "N5", userId);
+    const userId = await this.extractUserId(request);
+    return await this.tutorService.getCurriculum(parseLevel(level), userId);
   }
 
   @Post("curriculum/generate")
+  @UseGuards(AuthGuard)
   async generateNextUnit(
     @Body("level") level: string = "N5",
-    @Req() request: Request
+    @CurrentUser() user: JwtPayload
   ) {
-    const userId = this.extractUserId(request);
-    return await this.tutorService.generateNextUnitForLevel(level || "N5", userId);
+    return await this.tutorService.generateNextUnitForLevel(parseLevel(level), user.sub);
   }
 
   @Get("topics/:topicId/lesson")
@@ -66,7 +80,7 @@ export class TutorController {
     @Param("topicId") topicId: string,
     @Req() request: Request
   ) {
-    const userId = this.extractUserId(request);
+    const userId = await this.extractUserId(request);
     return await this.tutorService.getLessonByTopicId(topicId, userId);
   }
 
@@ -88,7 +102,7 @@ export class TutorController {
     @Req() request: Request
   ) {
     const parsed = SubmitLessonFeedbackSchema.parse(body);
-    const userId = this.extractUserId(request);
+    const userId = await this.extractUserId(request);
     return await this.tutorService.submitFeedback(
       lessonId,
       parsed.rating,

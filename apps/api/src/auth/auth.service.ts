@@ -1,8 +1,12 @@
 import { Inject, Injectable, UnauthorizedException } from "@nestjs/common";
-import { compareSync } from "bcrypt";
+import { compareSync, hashSync } from "bcrypt";
 import { PrismaService } from "../prisma.service";
 import type { LoginUserDto, AuthResponse } from "@nipponic/shared";
 import { JwtService } from "@nestjs/jwt";
+
+// Compared against when the email is unknown so response time does not reveal
+// whether an account exists (user enumeration via timing).
+const DUMMY_PASSWORD_HASH = hashSync("nipponic-dummy-password", 10);
 
 @Injectable()
 export class AuthService {
@@ -16,11 +20,11 @@ export class AuthService {
   async login({ email, password }: LoginUserDto): Promise<AuthResponse> {
     const user = await this.prisma.db.orm.public.User.first({ email });
 
+    const isPasswordValid = compareSync(password, user?.password ?? DUMMY_PASSWORD_HASH);
+
     if (!user) {
       throw new UnauthorizedException("Invalid Credentials");
     }
-
-    const isPasswordValid = compareSync(password, user.password);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException("Invalid Credentials");
