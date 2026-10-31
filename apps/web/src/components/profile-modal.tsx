@@ -185,7 +185,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     <>
       {/* Main Profile Modal */}
       <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md shadow-2xl">
           <DialogHeader>
             <div className="flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -425,7 +425,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         open={isDeleteModalOpen}
         onOpenChange={(open) => !open && !isDeletingAccount && setIsDeleteModalOpen(false)}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md shadow-2xl">
           <DialogHeader>
             <div className="flex items-center gap-2 text-destructive">
               <Trash2 className="h-5 w-5 text-red-500" />
