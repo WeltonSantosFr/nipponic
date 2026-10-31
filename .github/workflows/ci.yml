@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # TODO: make blocking once the existing ESLint warnings (apps/web) are cleaned up.
+      - name: Lint
+        run: pnpm lint
+        continue-on-error: true
+
+      - name: Type check
+        run: pnpm check-types
+
+      - name: Test
+        run: pnpm test
+
+      # TODO: make blocking once the existing high/critical advisories are resolved.
+      - name: Dependency audit (production, high severity)
+        run: pnpm audit --prod --audit-level=high
+        continue-on-error: true

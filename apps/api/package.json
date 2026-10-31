@@ -29,7 +29,9 @@
   "dependencies": {
     "@nestjs/common": "^11.1.17",
     "@nestjs/core": "^11.1.17",
+    "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-express": "^11.1.17",
+    "@nestjs/throttler": "^6.7.1",
     "@nipponic/shared": "workspace:*",
     "@prisma/composer": "0.14.0",
     "@prisma/composer-prisma-cloud": "0.14.0",
@@ -38,13 +40,13 @@
     "bcrypt": "^6.0.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
+    "prisma": "8.0.0-rc.9",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2",
-    "prisma": "8.0.0-rc.9"
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
-    "@nestjs/jwt": "^11.0.2",
     "@nestjs/testing": "^12.0.1",
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.6",

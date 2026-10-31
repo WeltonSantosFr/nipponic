@@ -1,4 +1,6 @@
 import { Module } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { AppController } from "./app.controller";
 import { PrismaService } from "./prisma.service";
 
@@ -14,8 +16,11 @@ import { SponsorsModule } from "./sponsors/sponsors.module";
 import { TutorModule } from "./tutor/tutor.module";
 
 @Module({
-  imports: [AuthModule, NotesModule, CardsModule, DecksModule, SponsorsModule, TutorModule],
+  imports: [
+    // Global baseline: 100 requests/minute per client IP. Sensitive routes override it with @Throttle.
+    ThrottlerModule.forRoot([{ name: "default", ttl: 60_000, limit: 100 }]),
+    AuthModule, NotesModule, CardsModule, DecksModule, SponsorsModule, TutorModule],
   controllers: [AppController, UsersController],
-  providers: [PrismaService, UsersService],
+  providers: [PrismaService, UsersService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

@@ -11,6 +11,7 @@ import {
   UseGuards,
   Optional,
 } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
 import { JwtService } from "@nestjs/jwt";
 import type { Request } from "express";
 import { TutorService } from "./tutor.service";
@@ -66,6 +67,8 @@ export class TutorController {
     return await this.tutorService.getCurriculum(parseLevel(level), userId);
   }
 
+  // Each call consumes Gemini quota: 5 per minute per IP
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post("curriculum/generate")
   @UseGuards(AuthGuard)
   async generateNextUnit(

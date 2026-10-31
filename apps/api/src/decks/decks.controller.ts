@@ -20,6 +20,8 @@ import type {
 } from "./decks.dto";
 import type { JwtPayload } from "@nipponic/shared";
 import { CurrentUser } from "../auth/current-user.decorator";
+import { CreateDeckSchema, UpdateDeckSchema, AddCardsToDeckSchema, ReorderDeckCardsSchema } from "@nipponic/shared";
+import { ZodValidationPipe } from "../common/zod-validation.pipe";
 
 @Controller("decks")
 export class DecksController {
@@ -29,7 +31,7 @@ export class DecksController {
 
   @Post()
   @UseGuards(AuthGuard)
-  create(@Body() deck: CreateDeckDto, @CurrentUser() user: JwtPayload) {
+  create(@Body(new ZodValidationPipe(CreateDeckSchema)) deck: CreateDeckDto, @CurrentUser() user: JwtPayload) {
     return this.decksService.create(deck, user.sub);
   }
 
@@ -56,7 +58,7 @@ export class DecksController {
   update(
     @CurrentUser() user: JwtPayload,
     @Param("id") id: string,
-    @Body() deck: UpdateDeckDto
+    @Body(new ZodValidationPipe(UpdateDeckSchema)) deck: UpdateDeckDto
   ) {
     return this.decksService.update(user.sub, id, deck);
   }
@@ -72,7 +74,7 @@ export class DecksController {
   addCards(
     @CurrentUser() user: JwtPayload,
     @Param("id") id: string,
-    @Body() dto: AddCardsDto
+    @Body(new ZodValidationPipe(AddCardsToDeckSchema)) dto: AddCardsDto
   ) {
     return this.decksService.addCards(user.sub, id, dto);
   }
@@ -92,7 +94,7 @@ export class DecksController {
   reorderCards(
     @CurrentUser() user: JwtPayload,
     @Param("id") id: string,
-    @Body() dto: ReorderCardsDto
+    @Body(new ZodValidationPipe(ReorderDeckCardsSchema)) dto: ReorderCardsDto
   ) {
     return this.decksService.reorderCards(user.sub, id, dto);
   }

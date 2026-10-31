@@ -15,6 +15,7 @@ import {
   UseGuards,
   type RawBodyRequest,
 } from "@nestjs/common";
+import { SkipThrottle } from "@nestjs/throttler";
 import type { Request } from "express";
 import type { JwtPayload } from "@nipponic/shared";
 import { SponsorsService } from "./sponsors.service";
@@ -60,6 +61,8 @@ export class SponsorsController {
     return this.sponsorsService.linkGithub(user.sub, parsed.data);
   }
 
+  // Authenticated by HMAC signature; GitHub delivers from shared IPs, so skip the IP rate limit
+  @SkipThrottle()
   @Post("webhook")
   @HttpCode(200)
   async handleWebhook(
