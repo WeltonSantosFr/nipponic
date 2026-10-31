@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/sidebar";
 import dynamic from "next/dynamic";
 import { AppSidebar } from "@/components/app-sidebar";
+import { BottomNavigation } from "@/components/bottom-navigation";
 import { BookOpen, GraduationCap, Layers, Loader2, TrendingUp } from "lucide-react";
 import { useNotes } from "@/contexts/NotesContext";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
@@ -242,7 +243,7 @@ export function Workspace(props: WorkspaceProps = {}) {
         </header>
 
         {activeSidebarView === "notes" ? (
-          <div className="flex-1 p-3 sm:p-6 md:p-8 flex flex-col items-center justify-start w-full min-w-0 max-w-full pb-safe">
+          <div className="flex-1 p-3 sm:p-6 md:p-8 flex flex-col items-center justify-start w-full min-w-0 max-w-full pb-20 sm:pb-safe">
             {!selectedNote ? (
               <Card className="w-full max-w-md text-center shadow-sm my-auto">
                 <CardHeader className="flex flex-col items-center">
@@ -288,18 +289,21 @@ export function Workspace(props: WorkspaceProps = {}) {
             )}
           </div>
         ) : activeSidebarView === "flashcards" ? (
-          <div className="flex-1 flex flex-col items-center justify-start w-full min-w-0 max-w-full">
+          <div className="flex-1 flex flex-col items-center justify-start w-full min-w-0 max-w-full pb-20 sm:pb-safe">
             <DeckWorkspace deck={selectedDeck} />
           </div>
         ) : activeSidebarView === "stats" ? (
-          <div className="flex-1 flex flex-col items-stretch justify-start w-full min-w-0 max-w-full overflow-x-hidden">
+          <div className="flex-1 flex flex-col items-stretch justify-start w-full min-w-0 max-w-full overflow-x-hidden pb-20 sm:pb-safe">
             <StatsWorkspace />
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-stretch justify-start w-full min-w-0 max-w-full overflow-x-hidden">
+          <div className="flex-1 flex flex-col items-stretch justify-start w-full min-w-0 max-w-full overflow-x-hidden pb-20 sm:pb-safe">
             <TutorWorkspace />
           </div>
         )}
+
+        {/* Mobile Fixed Bottom Navigation */}
+        <BottomNavigation />
       </SidebarInset>
 
       {/* Interactive Modal Play Mode */}

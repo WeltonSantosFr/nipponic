@@ -1,12 +1,18 @@
 import { describe, it, expect, vi, beforeAll } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import {
+  AppSidebar,
   SidebarNoteItem,
   SidebarMyDeckItem,
   SidebarRemoteDeckItem,
 } from "./app-sidebar";
 import { SidebarProvider, SidebarMenu } from "@/components/ui/sidebar";
-import { normalizeDeckName, type Note, type Deck } from "@nipponic/shared";
+import * as AuthContextModule from "@/contexts/AuthContext";
+import * as NotesContextModule from "@/contexts/NotesContext";
+import * as FlashCardsContextModule from "@/contexts/FlashCardsContext";
+import * as TutorContextModule from "@/contexts/TutorContext";
+import type { TutorContextData } from "@/contexts/TutorContext";
+import { normalizeDeckName, type Note, type Deck, type AuthContextData, type FlashCardsContextData, type NotesContextData } from "@nipponic/shared";
 
 beforeAll(() => {
   Object.defineProperty(window, "matchMedia", {
@@ -235,5 +241,118 @@ describe("SidebarRemoteDeckItem", () => {
     expect(addBtn).toBeInTheDocument();
     fireEvent.click(addBtn);
     expect(handleAdd).toHaveBeenCalledWith(mockRemoteDeck);
+  });
+});
+
+describe("AppSidebar - Primary Vertical Navigation", () => {
+  const mockSetActiveSidebarView = vi.fn();
+
+  it("renders all 4 primary navigation items with full labels and badges", () => {
+    vi.spyOn(AuthContextModule, "useAuth").mockReturnValue({
+      user: { sub: "u-1", username: "welton", email: "w@example.com" },
+      isAuthenticated: true,
+      login: vi.fn(),
+      logout: vi.fn(),
+      isWakingServer: false,
+      hasInitialToken: true,
+      setIsWakingServer: vi.fn(),
+      setUser: vi.fn(),
+    });
+
+    vi.spyOn(NotesContextModule, "useNotes").mockReturnValue({
+      notes: [{ id: "n-1", title: "Test Note", enText: "", jpText: "", sourceLang: "EN", updatedAt: "2026-01-01" }],
+      selectedNoteId: null,
+      selectedNote: undefined,
+      setSelectedNoteId: vi.fn(),
+      createNewNote: vi.fn(),
+      updateNoteContent: vi.fn(),
+      saveNote: vi.fn(),
+      deleteNote: vi.fn(),
+      refreshNotes: vi.fn(),
+    });
+
+    vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue({
+      cards: [],
+      decks: [{ id: "d-1", name: "Deck 1", cards: [], isPublic: false }],
+      appDecks: [],
+      publicDecks: [],
+      activeDeckTab: "my",
+      setActiveDeckTab: vi.fn(),
+      selectedDeckId: null,
+      selectedDeck: undefined,
+      isCurrentDeckOwner: false,
+      setSelectedDeckId: vi.fn(),
+      activeSidebarView: "notes",
+      setActiveSidebarView: mockSetActiveSidebarView,
+      playingDeck: null,
+      startPlayingDeck: vi.fn(),
+      stopPlayingDeck: vi.fn(),
+      createCard: vi.fn(),
+      updateCard: vi.fn(),
+      deleteCard: vi.fn(),
+      reviewCard: vi.fn(),
+      getDueCards: () => [],
+      createDeck: vi.fn(),
+      updateDeck: vi.fn(),
+      deleteDeck: vi.fn(),
+      addCardsToDeck: vi.fn(),
+      removeCardFromDeck: vi.fn(),
+      reorderDeckCards: vi.fn(),
+      addDeckToMyDecks: vi.fn(),
+      refreshAll: vi.fn(),
+      studyStats: {
+        streak: { current: 5, longest: 10, lastStudiedAt: null, isActiveToday: true },
+        today: { reviewsCount: 3, targetReviews: 20, retentionRate: 100 },
+        cardsBreakdown: { total: 10, dueToday: 2, newCards: 1, learning: 2, mature: 7 },
+        ratingsDistribution: { again: 0, hard: 0, good: 3, easy: 0, totalReviews: 3 },
+        heatmap: [],
+        forecast: [],
+      },
+      refreshStats: vi.fn(),
+    });
+
+    vi.spyOn(TutorContextModule, "useTutor").mockReturnValue({
+      curriculum: [],
+      selectedLevel: "N5",
+      setSelectedLevel: vi.fn(),
+      selectedTopicId: null,
+      setSelectedTopicId: vi.fn(),
+      currentLesson: null,
+      isLoadingCurriculum: false,
+      isLoadingLesson: false,
+      isGeneratingUnit: false,
+      error: null,
+      clearError: vi.fn(),
+      loadLesson: vi.fn(),
+      generateNextUnit: vi.fn(),
+      submitProgress: vi.fn(),
+      submitFeedback: vi.fn(),
+      addVocabularyToDeck: vi.fn(),
+      closeLesson: vi.fn(),
+    });
+
+    render(
+      <SidebarProvider>
+        <AppSidebar selectedNoteId={null} onSelectNote={vi.fn()} />
+      </SidebarProvider>
+    );
+
+    // Verify all 4 vertical navigation items render their full labels
+    expect(screen.getByRole("button", { name: /notes/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /cards/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /ai tutor/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /study stats/i })).toBeInTheDocument();
+
+    // Verify badges
+    expect(screen.getByText("2 due")).toBeInTheDocument();
+    expect(screen.getByText("5d")).toBeInTheDocument();
+    expect(screen.getByText("N5")).toBeInTheDocument();
+
+    // Clicking an item switches activeSidebarView
+    fireEvent.click(screen.getByRole("button", { name: /cards/i }));
+    expect(mockSetActiveSidebarView).toHaveBeenCalledWith("flashcards");
+
+    fireEvent.click(screen.getByRole("button", { name: /study stats/i }));
+    expect(mockSetActiveSidebarView).toHaveBeenCalledWith("stats");
   });
 });

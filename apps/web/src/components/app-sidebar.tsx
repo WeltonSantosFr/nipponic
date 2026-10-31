@@ -25,6 +25,8 @@ const SettingsModal = dynamic(
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   Sidebar,
   SidebarContent,
@@ -401,6 +403,18 @@ export function AppSidebar({
     [decks]
   );
 
+  const cardsDueCount = useMemo(() => {
+    if (studyStats?.cardsBreakdown?.dueToday !== undefined) {
+      return studyStats.cardsBreakdown.dueToday;
+    }
+    const list = getDueCards ? getDueCards() : cards.filter(isCardDue);
+    return list.length;
+  }, [studyStats, getDueCards, cards]);
+
+  const streakCount = useMemo(() => {
+    return studyStats?.streak?.current ?? 0;
+  }, [studyStats]);
+
   const handleSelectNote = useCallback(
     (id: string) => {
       onSelectNote(id);
@@ -488,57 +502,118 @@ export function AppSidebar({
           </p>
         )}
 
-        {/* Feature Selector Navigation */}
-        <div className="flex p-0.5 bg-muted/60 rounded-lg border border-border/70 text-[11px] font-medium gap-0.5 w-full">
+        {/* Primary Vertical Navigation */}
+        <div className="flex flex-col gap-1 w-full min-w-0">
           <button
             type="button"
             onClick={() => setActiveSidebarView("notes")}
-            className={`flex-1 min-w-0 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all cursor-pointer ${
+            className={`w-full min-w-0 flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all cursor-pointer ${
               activeSidebarView === "notes"
-                ? "bg-background text-foreground shadow-xs font-semibold"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-primary/10 text-primary font-bold shadow-xs border border-primary/20"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50 font-medium"
             }`}
           >
-            <BookOpen size={13} className="shrink-0" />
-            <span className="truncate">Notes</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <BookOpen
+                size={16}
+                className={activeSidebarView === "notes" ? "text-primary shrink-0" : "text-muted-foreground shrink-0"}
+              />
+              <span className="truncate">Notes</span>
+            </div>
+            {notes.length > 0 && (
+              <Badge
+                variant="secondary"
+                className="text-[10px] font-semibold px-1.5 py-0 h-4 min-w-4 text-center shrink-0"
+              >
+                {notes.length}
+              </Badge>
+            )}
           </button>
+
           <button
             type="button"
             onClick={() => setActiveSidebarView("flashcards")}
-            className={`flex-1 min-w-0 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all cursor-pointer ${
+            className={`w-full min-w-0 flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all cursor-pointer ${
               activeSidebarView === "flashcards"
-                ? "bg-background text-foreground shadow-xs font-semibold"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-primary/10 text-primary font-bold shadow-xs border border-primary/20"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50 font-medium"
             }`}
           >
-            <Layers size={13} className="shrink-0" />
-            <span className="truncate">Cards</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Layers
+                size={16}
+                className={activeSidebarView === "flashcards" ? "text-primary shrink-0" : "text-muted-foreground shrink-0"}
+              />
+              <span className="truncate">Cards</span>
+            </div>
+            {cardsDueCount > 0 ? (
+              <Badge
+                className="bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold px-1.5 py-0 h-4 shrink-0 shadow-xs"
+              >
+                {cardsDueCount} due
+              </Badge>
+            ) : decks.length > 0 ? (
+              <Badge
+                variant="secondary"
+                className="text-[10px] font-semibold px-1.5 py-0 h-4 min-w-4 text-center shrink-0"
+              >
+                {decks.length}
+              </Badge>
+            ) : null}
           </button>
+
           <button
             type="button"
             onClick={() => setActiveSidebarView("tutor")}
-            className={`flex-1 min-w-0 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all cursor-pointer ${
+            className={`w-full min-w-0 flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all cursor-pointer ${
               activeSidebarView === "tutor"
-                ? "bg-background text-foreground shadow-xs font-semibold"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-primary/10 text-primary font-bold shadow-xs border border-primary/20"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50 font-medium"
             }`}
           >
-            <GraduationCap size={13} className="shrink-0" />
-            <span className="truncate">Tutor</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <GraduationCap
+                size={16}
+                className={activeSidebarView === "tutor" ? "text-primary shrink-0" : "text-muted-foreground shrink-0"}
+              />
+              <span className="truncate">AI Tutor</span>
+            </div>
+            <Badge
+              variant="outline"
+              className="text-[10px] font-bold px-1.5 py-0 h-4 shrink-0"
+            >
+              {selectedLevel}
+            </Badge>
           </button>
+
           <button
             type="button"
             onClick={() => setActiveSidebarView("stats")}
-            className={`flex-1 min-w-0 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all cursor-pointer ${
+            className={`w-full min-w-0 flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all cursor-pointer ${
               activeSidebarView === "stats"
-                ? "bg-background text-foreground shadow-xs font-semibold"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-primary/10 text-primary font-bold shadow-xs border border-primary/20"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50 font-medium"
             }`}
           >
-            <TrendingUp size={13} className="shrink-0" />
-            <span className="truncate">Stats</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <TrendingUp
+                size={16}
+                className={activeSidebarView === "stats" ? "text-primary shrink-0" : "text-muted-foreground shrink-0"}
+              />
+              <span className="truncate">Study Stats</span>
+            </div>
+            {streakCount > 0 && (
+              <Badge
+                className="bg-amber-500/15 text-amber-950 dark:text-amber-100 border border-amber-500/35 text-[10px] font-bold px-1.5 py-0 h-4 flex items-center gap-1 shrink-0"
+              >
+                <Flame size={10} className="fill-amber-500 text-amber-500" />
+                <span>{streakCount}d</span>
+              </Badge>
+            )}
           </button>
         </div>
+
+        <Separator className="my-1 opacity-60" />
 
         {activeSidebarView === "notes" ? (
           <>
