@@ -50,6 +50,7 @@ export const UpdateUserSchema = z.object({
   username: z.string().min(1).optional(),
   email: z.string().email().optional(),
   password: z.string().min(6).optional(),
+  currentPassword: z.string().optional(),
   githubUsername: z.string().nullable().optional(),
 });
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;

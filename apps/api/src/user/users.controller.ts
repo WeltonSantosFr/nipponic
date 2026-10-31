@@ -1,14 +1,12 @@
 import {
   Controller,
-  Get,
   Post,
+  Get,
   Inject,
   Body,
-  Param,
   Patch,
   Delete,
   UseGuards,
-  ForbiddenException,
 } from "@nestjs/common";
 
 import { UsersService } from "./users.service";
@@ -17,6 +15,10 @@ import type { JwtPayload } from "@nipponic/shared";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 
+/**
+ * NOTE: Listing users and addressing other users by id (`GET /users`, `/users/:id`)
+ * is intentionally NOT exposed. Users can only access their own record via `/users/me`.
+ */
 @Controller("users")
 export class UsersController {
   constructor(
@@ -26,12 +28,6 @@ export class UsersController {
   @Post()
   create(@Body() body: CreateUserDto) {
     return this.usersService.create(body);
-  }
-
-  @Get()
-  @UseGuards(AuthGuard)
-  findAll() {
-    return this.usersService.findAll();
   }
 
   @Get("me")
@@ -50,36 +46,5 @@ export class UsersController {
   @UseGuards(AuthGuard)
   deleteMe(@CurrentUser() user: JwtPayload) {
     return this.usersService.delete(user.sub);
-  }
-
-  @Get(":id")
-  @UseGuards(AuthGuard)
-  findOne(@Param("id") id: string, @CurrentUser() user: JwtPayload) {
-    if (id !== user.sub) {
-      throw new ForbiddenException("You can only view your own profile.");
-    }
-    return this.usersService.findOne(id);
-  }
-
-  @Patch(":id")
-  @UseGuards(AuthGuard)
-  update(
-    @Param("id") id: string,
-    @Body() body: Partial<UpdateUserDto>,
-    @CurrentUser() user: JwtPayload,
-  ) {
-    if (id !== user.sub) {
-      throw new ForbiddenException("You can only modify your own profile.");
-    }
-    return this.usersService.update(id, body);
-  }
-
-  @Delete(":id")
-  @UseGuards(AuthGuard)
-  delete(@Param("id") id: string, @CurrentUser() user: JwtPayload) {
-    if (id !== user.sub) {
-      throw new ForbiddenException("You can only delete your own profile.");
-    }
-    return this.usersService.delete(id);
   }
 }

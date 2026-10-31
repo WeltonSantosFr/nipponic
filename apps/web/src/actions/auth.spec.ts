@@ -30,7 +30,7 @@ describe("auth actions", () => {
         "test-token-123",
         expect.objectContaining({
           httpOnly: true,
-          maxAge: 60 * 60 * 24 * 7,
+          maxAge: 60 * 60 * 24,
           path: "/",
         })
       );

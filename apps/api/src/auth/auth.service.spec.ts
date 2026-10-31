@@ -63,7 +63,7 @@ describe('AuthService', () => {
         username: mockUser.username,
         email: mockUser.email,
       },
-      { expiresIn: '7d' },
+      { expiresIn: '24h' },
     );
   });
 
