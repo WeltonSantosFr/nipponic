@@ -3,16 +3,17 @@ import { JwtModule } from "@nestjs/jwt";
 import { AuthService } from "./auth.service";
 import { AuthController } from "./auth.controller";
 import { PrismaService } from "../prisma.service";
-
-const jwtSecret =
-  process.env.JWT_SECRET || "nipponic-jwt-secret-dev-2026-key";
+import { resolveJwtSecret } from "../config/jwt-secret";
 
 @Module({
   imports: [
-    JwtModule.register({
+    JwtModule.registerAsync({
       global: true,
-      secret: jwtSecret,
-      signOptions: { expiresIn: "7d" },
+      useFactory: () => ({
+        secret: resolveJwtSecret(),
+        signOptions: { expiresIn: "24h", algorithm: "HS256" },
+        verifyOptions: { algorithms: ["HS256"] },
+      }),
     }),
   ],
   controllers: [AuthController],

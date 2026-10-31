@@ -1,21 +1,27 @@
 import {
   Controller,
-  Get,
   Post,
+  Get,
   Inject,
   Body,
-  Param,
   Patch,
   Delete,
   UseGuards,
-  ForbiddenException,
 } from "@nestjs/common";
 
+import { Throttle } from "@nestjs/throttler";
 import { UsersService } from "./users.service";
 import type { CreateUserDto, UpdateUserDto } from "./users.dto";
 import type { JwtPayload } from "@nipponic/shared";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
+
+/**
+ * NOTE: Listing users and addressing other users by id (`GET /users`, `/users/:id`)
+ * is intentionally NOT exposed. Users can only access their own record via `/users/me`.
+ */
+import { CreateUserSchema, UpdateUserSchema } from "@nipponic/shared";
+import { ZodValidationPipe } from "../common/zod-validation.pipe";
 
 @Controller("users")
 export class UsersController {
@@ -23,15 +29,11 @@ export class UsersController {
     @Inject(UsersService) private readonly usersService: UsersService,
   ) {}
 
+  // Sign-up abuse protection: 5 accounts per minute per IP
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post()
-  create(@Body() body: CreateUserDto) {
+  create(@Body(new ZodValidationPipe(CreateUserSchema)) body: CreateUserDto) {
     return this.usersService.create(body);
-  }
-
-  @Get()
-  @UseGuards(AuthGuard)
-  findAll() {
-    return this.usersService.findAll();
   }
 
   @Get("me")
@@ -42,7 +44,7 @@ export class UsersController {
 
   @Patch("me")
   @UseGuards(AuthGuard)
-  updateMe(@CurrentUser() user: JwtPayload, @Body() body: Partial<UpdateUserDto>) {
+  updateMe(@CurrentUser() user: JwtPayload, @Body(new ZodValidationPipe(UpdateUserSchema)) body: Partial<UpdateUserDto>) {
     return this.usersService.update(user.sub, body);
   }
 
@@ -50,36 +52,5 @@ export class UsersController {
   @UseGuards(AuthGuard)
   deleteMe(@CurrentUser() user: JwtPayload) {
     return this.usersService.delete(user.sub);
-  }
-
-  @Get(":id")
-  @UseGuards(AuthGuard)
-  findOne(@Param("id") id: string, @CurrentUser() user: JwtPayload) {
-    if (id !== user.sub) {
-      throw new ForbiddenException("You can only view your own profile.");
-    }
-    return this.usersService.findOne(id);
-  }
-
-  @Patch(":id")
-  @UseGuards(AuthGuard)
-  update(
-    @Param("id") id: string,
-    @Body() body: Partial<UpdateUserDto>,
-    @CurrentUser() user: JwtPayload,
-  ) {
-    if (id !== user.sub) {
-      throw new ForbiddenException("You can only modify your own profile.");
-    }
-    return this.usersService.update(id, body);
-  }
-
-  @Delete(":id")
-  @UseGuards(AuthGuard)
-  delete(@Param("id") id: string, @CurrentUser() user: JwtPayload) {
-    if (id !== user.sub) {
-      throw new ForbiddenException("You can only delete your own profile.");
-    }
-    return this.usersService.delete(id);
   }
 }

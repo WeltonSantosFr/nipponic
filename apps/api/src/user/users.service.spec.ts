@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ConflictException } from '@nestjs/common';
+import { BadRequestException, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { PrismaService } from '../prisma.service';
 import { Logger } from '@nestjs/common';
 
 vi.mock('bcrypt', () => ({
   hashSync: vi.fn((pwd: string) => `hashed_${pwd}`),
+  compareSync: vi.fn((pwd: string, hash: string) => hash === `hashed_${pwd}`),
 }));
 
 describe('UsersService', () => {
@@ -18,7 +19,6 @@ describe('UsersService', () => {
         orm: {
           public: {
             User: {
-              all: vi.fn(),
               first: vi.fn(),
               create: vi.fn(),
               where: vi.fn(),
@@ -32,22 +32,6 @@ describe('UsersService', () => {
     };
 
     service = new UsersService(prismaMock as unknown as PrismaService);
-  });
-
-  it('findAll - should return a list of users', async () => {
-    // Arrange
-    const mockUsers = [
-      { id: '1', username: 'user1', email: 'user1@example.com' },
-      { id: '2', username: 'user2', email: 'user2@example.com' },
-    ];
-    prismaMock.db.orm.public.User.all.mockResolvedValue(mockUsers);
-
-    // Act
-    const result = await service.findAll();
-
-    // Assert
-    expect(result).toEqual(mockUsers);
-    expect(prismaMock.db.orm.public.User.all).toHaveBeenCalledTimes(1);
   });
 
   it('findOne - should return a user by id', async () => {
@@ -82,7 +66,7 @@ describe('UsersService', () => {
     const result = await service.create(createUserDto);
 
     // Assert
-    expect(result).toEqual(createdUser);
+    expect(result).toEqual({ id: createdUser.id, username: createdUser.username, email: createdUser.email });
     expect(prismaMock.db.orm.public.User.create).toHaveBeenCalledWith({
       username: createUserDto.username,
       email: createUserDto.email,
@@ -106,7 +90,8 @@ describe('UsersService', () => {
 
   it('update - should update user and re-hash password if password is provided', async () => {
     // Arrange
-    const updateDto = { username: 'kenji', password: 'newPassword456' };
+    const updateDto = { username: 'kenji', password: 'newPassword456', currentPassword: 'oldPassword123' };
+    prismaMock.db.orm.public.User.first.mockResolvedValue({ id: 'usr_123', password: 'hashed_oldPassword123' });
     const updatedUser = {
       id: 'usr_123',
       username: 'kenji',
@@ -120,7 +105,8 @@ describe('UsersService', () => {
     const result = await service.update('usr_123', updateDto);
 
     // Assert
-    expect(result).toEqual(updatedUser);
+    expect(result).toEqual({ id: 'usr_123', username: 'kenji', email: 'kenji@nipponic.com' });
+    expect(result).not.toHaveProperty('password');
     expect(prismaMock.db.orm.public.User.where).toHaveBeenCalledWith({ id: 'usr_123' });
     expect(updateMock).toHaveBeenCalledWith({
       username: 'kenji',
@@ -188,5 +174,58 @@ describe('UsersService', () => {
     expect(prismaMock.db.orm.public.User.where).toHaveBeenCalledWith({ id: 'usr_123' });
     expect(userDeleteMock).toHaveBeenCalledTimes(1);
     loggerErrorSpy.mockRestore();
+  });
+
+  describe('security regressions', () => {
+    it('findOne - never returns the password hash', async () => {
+      prismaMock.db.orm.public.User.first.mockResolvedValue({
+        id: 'usr_1', username: 'a', email: 'a@b.c', password: 'hashed_secret', githubUsername: null,
+      });
+      const result = await service.findOne('usr_1');
+      expect(result).not.toHaveProperty('password');
+    });
+
+    it('findOne - never returns the password hash for supporters either', async () => {
+      prismaMock.db.orm.public.Sponsor = { first: vi.fn().mockResolvedValue({ isActive: true, tierName: 'Bento Box' }) };
+      prismaMock.db.orm.public.User.first.mockResolvedValue({
+        id: 'usr_1', username: 'a', email: 'a@b.c', password: 'hashed_secret', githubUsername: 'gh',
+      });
+      const result = await service.findOne('usr_1');
+      expect(result).not.toHaveProperty('password');
+      expect(result).toMatchObject({ isSupporter: true });
+    });
+
+    it('create - never returns the password hash', async () => {
+      prismaMock.db.orm.public.User.first.mockResolvedValue(null);
+      prismaMock.db.orm.public.User.create.mockResolvedValue({
+        id: 'usr_1', username: 'a', email: 'a@b.c', password: 'hashed_secret',
+      });
+      const result = await service.create({ username: 'a', email: 'a@b.c', password: 'secret1' });
+      expect(result).not.toHaveProperty('password');
+    });
+
+    it('update - requires current password to change password', async () => {
+      await expect(service.update('usr_1', { password: 'newSecret1' })).rejects.toBeInstanceOf(BadRequestException);
+      expect(prismaMock.db.orm.public.User.where).not.toHaveBeenCalled();
+    });
+
+    it('update - rejects an incorrect current password', async () => {
+      prismaMock.db.orm.public.User.first.mockResolvedValue({ id: 'usr_1', password: 'hashed_real' });
+      await expect(
+        service.update('usr_1', { password: 'newSecret1', currentPassword: 'wrong' }),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+      expect(prismaMock.db.orm.public.User.where).not.toHaveBeenCalled();
+    });
+
+    it('update - never persists currentPassword', async () => {
+      const updateMock = vi.fn().mockResolvedValue({ id: 'usr_1', username: 'x', password: 'h' });
+      prismaMock.db.orm.public.User.where.mockReturnValue({ update: updateMock });
+      await service.update('usr_1', { username: 'x', currentPassword: 'whatever' });
+      expect(updateMock).toHaveBeenCalledWith({ username: 'x' });
+    });
+
+    it('does not expose findAll', () => {
+      expect((service as unknown as Record<string, unknown>).findAll).toBeUndefined();
+    });
   });
 });

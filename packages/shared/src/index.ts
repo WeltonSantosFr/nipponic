@@ -50,6 +50,7 @@ export const UpdateUserSchema = z.object({
   username: z.string().min(1).optional(),
   email: z.string().email().optional(),
   password: z.string().min(6).optional(),
+  currentPassword: z.string().optional(),
   githubUsername: z.string().nullable().optional(),
 });
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
@@ -713,6 +714,30 @@ export const MockSponsorshipInputSchema = z.object({
   isActive: z.boolean().default(true),
 });
 export type MockSponsorshipInput = z.infer<typeof MockSponsorshipInputSchema>;
+
+export const GithubSponsorsWebhookSchema = z.object({
+  action: z.string().max(64).optional(),
+  sponsorship: z
+    .object({
+      sponsor: z
+        .object({
+          login: z.string().min(1).max(100),
+          id: z.union([z.number(), z.string()]).optional(),
+          name: z.string().max(200).nullable().optional(),
+          avatar_url: z.string().url().max(500).optional(),
+        })
+        .optional(),
+      tier: z
+        .object({
+          name: z.string().max(200).optional(),
+          monthly_price_in_cents: z.number().int().min(0).optional(),
+          is_one_time: z.boolean().optional(),
+        })
+        .optional(),
+    })
+    .optional(),
+});
+export type GithubSponsorsWebhookPayload = z.infer<typeof GithubSponsorsWebhookSchema>;
 
 // ==========================================
 // AI Tutor & Daily Lessons Contracts

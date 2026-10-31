@@ -2,6 +2,7 @@ import { ConflictException, Inject, Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
 import type { LinkGithubInput, MockSponsorshipInput } from "./sponsors.dto";
 import * as crypto from "node:crypto";
+import type { GithubSponsorsWebhookPayload } from "@nipponic/shared";
 
 @Injectable()
 export class SponsorsService {
@@ -77,39 +78,64 @@ export class SponsorsService {
     };
   }
 
-  verifyWebhookSignature(rawBody: string | Buffer, signatureHeader?: string): boolean {
-    const secret = process.env.GITHUB_SPONSORS_WEBHOOK_SECRET;
-    if (!secret) {
-      // If no secret is configured in dev, allow passage with a warning
-      this.logger.warn("GITHUB_SPONSORS_WEBHOOK_SECRET not configured. Skipping signature verification.");
-      return true;
-    }
+  private static readonly DELIVERY_TTL_MS = 24 * 60 * 60 * 1000;
+  private static readonly DELIVERY_CACHE_MAX = 5000;
+  private readonly processedDeliveries = new Map<string, number>();
 
-    if (!signatureHeader) {
-      return false;
-    }
-
-    const hmac = crypto.createHmac("sha256", secret);
-    const calculatedSignature = `sha256=${hmac.update(rawBody).digest("hex")}`;
-
-    try {
-      return crypto.timingSafeEqual(
-        Buffer.from(calculatedSignature),
-        Buffer.from(signatureHeader)
-      );
-    } catch {
-      return false;
-    }
+  isWebhookConfigured(): boolean {
+    return !!process.env.GITHUB_SPONSORS_WEBHOOK_SECRET;
   }
 
-  async handleWebhook(payload: any) {
+  /**
+   * Verifies the GitHub `X-Hub-Signature-256` HMAC over the RAW request body.
+   * Fails closed: without a configured secret every request is rejected.
+   */
+  verifyWebhookSignature(rawBody: string | Buffer, signatureHeader?: string): boolean {
+    const secret = process.env.GITHUB_SPONSORS_WEBHOOK_SECRET;
+    if (!secret || !signatureHeader) {
+      return false;
+    }
+
+    const calculated = Buffer.from(
+      `sha256=${crypto.createHmac("sha256", secret).update(rawBody).digest("hex")}`,
+    );
+    const received = Buffer.from(signatureHeader);
+
+    return received.length === calculated.length && crypto.timingSafeEqual(calculated, received);
+  }
+
+  /**
+   * Idempotency guard for webhook retries/replays, keyed by `X-GitHub-Delivery`.
+   * Returns true the first time a delivery id is seen within the TTL window.
+   * (In-memory: sufficient for a single API instance; entries expire after 24h.)
+   */
+  registerDelivery(deliveryId?: string): boolean {
+    if (!deliveryId) return true;
+
+    const now = Date.now();
+    for (const [id, seenAt] of this.processedDeliveries) {
+      if (now - seenAt > SponsorsService.DELIVERY_TTL_MS) this.processedDeliveries.delete(id);
+      else break; // Map keeps insertion order, so the rest are newer
+    }
+
+    if (this.processedDeliveries.has(deliveryId)) return false;
+
+    if (this.processedDeliveries.size >= SponsorsService.DELIVERY_CACHE_MAX) {
+      const oldest = this.processedDeliveries.keys().next().value;
+      if (oldest !== undefined) this.processedDeliveries.delete(oldest);
+    }
+    this.processedDeliveries.set(deliveryId, now);
+    return true;
+  }
+
+  async handleWebhook(payload: GithubSponsorsWebhookPayload) {
     const action = payload.action;
     const sponsorship = payload.sponsorship;
     const sponsor = sponsorship?.sponsor;
     const tier = sponsorship?.tier;
 
     if (!sponsor?.login) {
-      this.logger.warn("Webhook received without sponsor login: " + JSON.stringify(payload));
+      this.logger.warn(`Webhook received without sponsor login (action: ${payload.action ?? "unknown"})`);
       return { status: "ignored" };
     }
 

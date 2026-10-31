@@ -4,6 +4,8 @@ import { AuthGuard } from "../auth/auth.guard";
 import type { CreateNoteDto, UpdateNoteDto } from "./notes.dto";
 import type { JwtPayload } from "@nipponic/shared";
 import { CurrentUser } from "../auth/current-user.decorator";
+import { CreateNoteSchema, UpdateNoteSchema } from "@nipponic/shared";
+import { ZodValidationPipe } from "../common/zod-validation.pipe";
 
 @Controller("notes")
 export class NotesController {
@@ -13,7 +15,7 @@ export class NotesController {
 
   @Post()
   @UseGuards(AuthGuard)
-  create(@Body() note: CreateNoteDto, @CurrentUser() user: JwtPayload) {
+  create(@Body(new ZodValidationPipe(CreateNoteSchema)) note: CreateNoteDto, @CurrentUser() user: JwtPayload) {
     return this.notesService.create(note, user.sub);
   }
 
@@ -31,7 +33,7 @@ export class NotesController {
 
   @Patch(":id")
   @UseGuards(AuthGuard)
-  update(@CurrentUser() user: JwtPayload, @Param('id') id:string, @Body() note: UpdateNoteDto) {
+  update(@CurrentUser() user: JwtPayload, @Param('id') id:string, @Body(new ZodValidationPipe(UpdateNoteSchema)) note: UpdateNoteDto) {
     return this.notesService.update(user.sub, id, note)
   }
 

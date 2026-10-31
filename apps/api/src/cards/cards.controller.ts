@@ -14,6 +14,8 @@ import { AuthGuard } from "../auth/auth.guard";
 import type { CreateCardDto, ReviewCardDto, UpdateCardDto } from "./cards.dto";
 import type { JwtPayload } from "@nipponic/shared";
 import { CurrentUser } from "../auth/current-user.decorator";
+import { CreateCardSchema, UpdateCardSchema, ReviewCardSchema } from "@nipponic/shared";
+import { ZodValidationPipe } from "../common/zod-validation.pipe";
 
 @Controller("cards")
 export class CardsController {
@@ -23,7 +25,7 @@ export class CardsController {
 
   @Post()
   @UseGuards(AuthGuard)
-  create(@Body() card: CreateCardDto, @CurrentUser() user: JwtPayload) {
+  create(@Body(new ZodValidationPipe(CreateCardSchema)) card: CreateCardDto, @CurrentUser() user: JwtPayload) {
     return this.cardsService.create(card, user.sub);
   }
 
@@ -44,7 +46,7 @@ export class CardsController {
   update(
     @CurrentUser() user: JwtPayload,
     @Param("id") id: string,
-    @Body() card: UpdateCardDto
+    @Body(new ZodValidationPipe(UpdateCardSchema)) card: UpdateCardDto
   ) {
     return this.cardsService.update(user.sub, id, card);
   }
@@ -54,7 +56,7 @@ export class CardsController {
   review(
     @CurrentUser() user: JwtPayload,
     @Param("id") id: string,
-    @Body() body: ReviewCardDto
+    @Body(new ZodValidationPipe(ReviewCardSchema)) body: ReviewCardDto
   ) {
     return this.cardsService.review(user.sub, id, body.rating);
   }

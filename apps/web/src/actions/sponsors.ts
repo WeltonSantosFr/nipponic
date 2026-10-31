@@ -76,11 +76,17 @@ export async function mockSponsorAction(
     };
   }
 
+  const token = (await cookies()).get("nipponic.token")?.value;
+  if (!token) {
+    return { success: false, message: "User not authenticated" };
+  }
+
   try {
     const res = await fetch(`${getApiUrl()}/sponsors/mock`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(input),
     });
@@ -111,9 +117,15 @@ export async function clearMockSponsorsAction(): Promise<ActionResponse> {
     };
   }
 
+  const token = (await cookies()).get("nipponic.token")?.value;
+  if (!token) {
+    return { success: false, message: "User not authenticated" };
+  }
+
   try {
     const res = await fetch(`${getApiUrl()}/sponsors/mock`, {
       method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     if (!res.ok) {

@@ -1,7 +1,25 @@
-import { ConflictException, Inject, Injectable, Logger } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
 import type { CreateUserDto, UpdateUserDto } from "./users.dto";
-import { hashSync } from "bcrypt";
+import { compareSync, hashSync } from "bcrypt";
+
+/**
+ * Removes credential material from a user record before it leaves the service layer.
+ * Every API response that contains a user MUST go through this function.
+ */
+export function toPublicUser<T extends { password?: unknown }>(
+  user: T,
+): Omit<T, "password"> {
+  const { password: _password, ...rest } = user;
+  return rest;
+}
 
 @Injectable()
 export class UsersService {
@@ -20,16 +38,14 @@ export class UsersService {
       email: data.email,
       password: hashSync(data.password, 10),
     });
-    return newUser;
-  }
-
-  async findAll() {
-    return this.prisma.db.orm.public.User.all();
+    return toPublicUser(newUser);
   }
 
   async findOne(id: string) {
     const user = await this.prisma.db.orm.public.User.first({ id });
     if (!user) return null;
+
+    const publicUser = toPublicUser(user);
 
     if (user.githubUsername) {
       const sponsor = await this.prisma.db.orm.public.Sponsor.first({
@@ -37,7 +53,7 @@ export class UsersService {
       });
       if (sponsor) {
         return {
-          ...user,
+          ...publicUser,
           isSupporter: true,
           isActiveSupporter: sponsor.isActive,
           tierName: sponsor.tierName,
@@ -45,12 +61,24 @@ export class UsersService {
       }
     }
 
-    return user;
+    return publicUser;
   }
 
   async update(id: string, body: Partial<UpdateUserDto>) {
-    const dataToUpdate: any = { ...body };
+    const { currentPassword, ...rest } = body;
+    const dataToUpdate: Record<string, unknown> & {
+      password?: string;
+      githubUsername?: string | null;
+    } = { ...rest };
+
     if (dataToUpdate.password) {
+      if (!currentPassword) {
+        throw new BadRequestException("Current password is required to change your password");
+      }
+      const current = await this.prisma.db.orm.public.User.first({ id });
+      if (!current || !compareSync(currentPassword, current.password)) {
+        throw new UnauthorizedException("Current password is incorrect");
+      }
       dataToUpdate.password = hashSync(dataToUpdate.password, 10);
     }
     if (dataToUpdate.githubUsername !== undefined) {
@@ -80,7 +108,7 @@ export class UsersService {
       }
     }
 
-    return updated;
+    return updated ? toPublicUser(updated) : updated;
   }
 
   async delete(id: string) {
@@ -89,7 +117,7 @@ export class UsersService {
     } catch (error) {
       this.logger.error(`Failed to delete notes for user ${id}`, error);
     }
-    return this.prisma.db.orm.public.User.where({ id: id }).delete();
+    const deleted = await this.prisma.db.orm.public.User.where({ id: id }).delete();
+    return deleted ? toPublicUser(deleted) : deleted;
   }
 }
-
