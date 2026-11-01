@@ -48,7 +48,7 @@ export interface TutorContextData {
   closeLesson: () => void;
 }
 
-const TutorContext = createContext<TutorContextData>({} as TutorContextData);
+const TutorContext = createContext<TutorContextData | null>(null);
 
 const LOCAL_STORAGE_KEY = "nipponic.tutor_progress";
 const CURRICULUM_CACHE_KEY = "nipponic.tutor_curriculum_cache";

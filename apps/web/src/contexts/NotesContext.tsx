@@ -181,7 +181,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
         if (updated && updated.updatedAt) {
           setNotes((prevNotes) => {
             const next = prevNotes.map((n) =>
-              n.id === id ? { ...n, updatedAt: updated.updatedAt } : n
+              n.id === id ? { ...n, ...payload, updatedAt: updated.updatedAt } : n
             );
             notesRef.current = next;
             persistNotes(next);
