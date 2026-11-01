@@ -6,5 +6,9 @@ import {
   type SubmitLessonFeedbackDto,
 } from "@nipponic/shared";
 
-export { SubmitLessonProgressSchema, SubmitLessonFeedbackSchema, CurriculumLevelSchema };
+export {
+  SubmitLessonProgressSchema,
+  SubmitLessonFeedbackSchema,
+  CurriculumLevelSchema,
+};
 export type { SubmitLessonProgressDto, SubmitLessonFeedbackDto };

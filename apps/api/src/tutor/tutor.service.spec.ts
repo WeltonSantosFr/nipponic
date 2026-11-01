@@ -60,7 +60,7 @@ describe("TutorService", () => {
 
     service = new TutorService(
       prismaMock as unknown as PrismaService,
-      geminiServiceMock
+      geminiServiceMock,
     );
   });
 
@@ -129,9 +129,11 @@ describe("TutorService", () => {
       });
 
       prismaMock.db.orm.public.UserLessonProgress.where.mockReturnValue({
-        all: vi.fn().mockResolvedValue([
-          { lessonId: "les_1", completedAt: new Date(), score: 100 },
-        ]),
+        all: vi
+          .fn()
+          .mockResolvedValue([
+            { lessonId: "les_1", completedAt: new Date(), score: 100 },
+          ]),
       });
 
       const result = await service.getCurriculum("N5", "usr_123");
@@ -240,7 +242,9 @@ describe("TutorService", () => {
       });
 
       prismaMock.db.orm.public.Lesson.create.mockResolvedValue(mockSavedLesson);
-      prismaMock.db.orm.public.LessonExercise.create.mockResolvedValue({ id: "ex_new" });
+      prismaMock.db.orm.public.LessonExercise.create.mockResolvedValue({
+        id: "ex_new",
+      });
 
       prismaMock.db.orm.public.LessonExercise.where.mockReturnValue({
         all: vi.fn().mockResolvedValue([
@@ -256,7 +260,9 @@ describe("TutorService", () => {
         ]),
       });
 
-      vi.mocked(geminiServiceMock.generateLesson).mockResolvedValue(mockGenerated);
+      vi.mocked(geminiServiceMock.generateLesson).mockResolvedValue(
+        mockGenerated,
+      );
 
       const result = await service.getLessonByTopicId("top_2");
 
@@ -269,6 +275,62 @@ describe("TutorService", () => {
       expect(prismaMock.db.orm.public.Lesson.create).toHaveBeenCalled();
       expect(result.id).toBe("les_new");
       expect(result.exercises).toHaveLength(1);
+    });
+
+    it("PREBAKED LESSON: should return prebaked Unit 1 lesson (particle-wa-desu) without calling Gemini", async () => {
+      const mockTopic = {
+        id: "top_wa_desu",
+        level: "N5",
+        title: "Identity & The Copula (〜は〜です)",
+        grammarKey: "particle-wa-desu",
+        objective:
+          "Learn how to introduce yourself and state identity using topic marker は and copula です.",
+      };
+
+      prismaMock.db.orm.public.CurriculumTopic.where.mockReturnValue({
+        first: vi.fn().mockResolvedValue(mockTopic),
+      });
+
+      prismaMock.db.orm.public.Lesson.where.mockReturnValue({
+        first: vi.fn().mockResolvedValue(null),
+      });
+
+      prismaMock.db.orm.public.Lesson.create.mockResolvedValue({
+        id: "les_wa_desu",
+        topicId: "top_wa_desu",
+        title: "Identity & The Copula (〜は〜です)",
+        level: "N5",
+        theoryMarkdown: "### 📘 Stating Identity: A は B です",
+        dialogueJson: [],
+        vocabularyJson: [],
+        createdAt: new Date(),
+      });
+
+      prismaMock.db.orm.public.LessonExercise.where.mockReturnValue({
+        all: vi.fn().mockResolvedValue([
+          {
+            id: "ex_1",
+            order: 1,
+            type: "multiple_choice",
+            prompt: "Choose the correct particle...",
+            optionsJson: ["は", "が", "を", "に"],
+            correctAnswer: "は",
+            explanation: "Particle は marks topic.",
+          },
+        ]),
+      });
+
+      const result = await service.getLessonByTopicId("top_wa_desu");
+
+      // Verify Gemini was NOT called because prebaked content exists
+      expect(geminiServiceMock.generateLesson).not.toHaveBeenCalled();
+      expect(prismaMock.db.orm.public.Lesson.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Identity & The Copula (〜は〜です)",
+          level: "N5",
+        }),
+      );
+      expect(result.title).toBe("Identity & The Copula (〜は〜です)");
     });
 
     it("STALE BOGUS FALLBACK: should discard bogus desu fallback lesson on non-desu topics and regenerate via Gemini", async () => {
@@ -293,9 +355,22 @@ describe("TutorService", () => {
 
       const mockGenerated = {
         title: "Classical Negative Nuance ざるを得ない",
-        theoryMarkdown: "### ざるを得ない\nFormulas: V-ない (stem) + ざるを得ない",
-        dialogue: [{ speaker: "A", jpText: "行かざるを得ない", enText: "I have no choice but to go" }],
-        vocabulary: [{ jpText: "ざるを得ない", reading: "ざるをえない", enText: "Cannot help but" }],
+        theoryMarkdown:
+          "### ざるを得ない\nFormulas: V-ない (stem) + ざるを得ない",
+        dialogue: [
+          {
+            speaker: "A",
+            jpText: "行かざるを得ない",
+            enText: "I have no choice but to go",
+          },
+        ],
+        vocabulary: [
+          {
+            jpText: "ざるを得ない",
+            reading: "ざるをえない",
+            enText: "Cannot help but",
+          },
+        ],
         exercises: [
           {
             order: 1,
@@ -333,14 +408,22 @@ describe("TutorService", () => {
 
       prismaMock.db.orm.public.Lesson.create.mockResolvedValue(mockNewLesson);
 
-      prismaMock.db.orm.public.LessonExercise.where.mockImplementation((filter: any) => ({
-        all: vi.fn().mockResolvedValue(
-          filter.lessonId === "les_stale" ? [{ id: "old_ex_1" }] : [{ id: "new_ex_1", order: 1 }]
-        ),
-        delete: deleteExerciseMock,
-      }));
+      prismaMock.db.orm.public.LessonExercise.where.mockImplementation(
+        (filter: any) => ({
+          all: vi
+            .fn()
+            .mockResolvedValue(
+              filter.lessonId === "les_stale"
+                ? [{ id: "old_ex_1" }]
+                : [{ id: "new_ex_1", order: 1 }],
+            ),
+          delete: deleteExerciseMock,
+        }),
+      );
 
-      vi.mocked(geminiServiceMock.generateLesson).mockResolvedValue(mockGenerated);
+      vi.mocked(geminiServiceMock.generateLesson).mockResolvedValue(
+        mockGenerated,
+      );
 
       const result = await service.getLessonByTopicId("top_n1");
 
@@ -375,10 +458,15 @@ describe("TutorService", () => {
         topicId: "top_kiwamar",
         title: "Extreme Emotional States",
         level: "N1",
-        theoryMarkdown: "### Key Formula\n`[Phrase / Stem] + kiwamarinai-extreme`",
+        theoryMarkdown:
+          "### Key Formula\n`[Phrase / Stem] + kiwamarinai-extreme`",
         dialogueJson: [],
         vocabularyJson: [
-          { jpText: "kiwamarinai-extreme", reading: "kiwamarinai-extreme", enText: "Extreme" },
+          {
+            jpText: "kiwamarinai-extreme",
+            reading: "kiwamarinai-extreme",
+            enText: "Extreme",
+          },
         ],
         createdAt: new Date(),
       };
@@ -386,8 +474,16 @@ describe("TutorService", () => {
       const mockFreshGenerated = {
         title: "Extreme Emotional States (〜極まりない / 〜極まる)",
         theoryMarkdown: "### 〜極まりない\nFormulas: Na-stem + 極まりない",
-        dialogue: [{ speaker: "田中", jpText: "危険極まりない", enText: "Extremely dangerous" }],
-        vocabulary: [{ jpText: "極まりない", reading: "きわまりない", enText: "Extreme" }],
+        dialogue: [
+          {
+            speaker: "田中",
+            jpText: "危険極まりない",
+            enText: "Extremely dangerous",
+          },
+        ],
+        vocabulary: [
+          { jpText: "極まりない", reading: "きわまりない", enText: "Extreme" },
+        ],
         exercises: [
           {
             order: 1,
@@ -423,14 +519,22 @@ describe("TutorService", () => {
         createdAt: new Date(),
       });
 
-      prismaMock.db.orm.public.LessonExercise.where.mockImplementation((filter: any) => ({
-        all: vi.fn().mockResolvedValue(
-          filter.lessonId === "les_bogus_slug" ? [{ id: "old_ex_slug" }] : [{ id: "new_ex_1", order: 1 }]
-        ),
-        delete: deleteExerciseMock,
-      }));
+      prismaMock.db.orm.public.LessonExercise.where.mockImplementation(
+        (filter: any) => ({
+          all: vi
+            .fn()
+            .mockResolvedValue(
+              filter.lessonId === "les_bogus_slug"
+                ? [{ id: "old_ex_slug" }]
+                : [{ id: "new_ex_1", order: 1 }],
+            ),
+          delete: deleteExerciseMock,
+        }),
+      );
 
-      vi.mocked(geminiServiceMock.generateLesson).mockResolvedValue(mockFreshGenerated);
+      vi.mocked(geminiServiceMock.generateLesson).mockResolvedValue(
+        mockFreshGenerated,
+      );
 
       const result = await service.getLessonByTopicId("top_kiwamar");
 
@@ -569,8 +673,16 @@ describe("TutorService", () => {
       // 3 reviews: 2 confusing, 1 helpful = 66.7% confusing (>= 60%)
       prismaMock.db.orm.public.LessonFeedback.where.mockReturnValue({
         all: vi.fn().mockResolvedValue([
-          { id: "fb_1", rating: "confusing", comment: "Examples were too abstract" },
-          { id: "fb_2", rating: "confusing", comment: "Needs better conjugation explanation" },
+          {
+            id: "fb_1",
+            rating: "confusing",
+            comment: "Examples were too abstract",
+          },
+          {
+            id: "fb_2",
+            rating: "confusing",
+            comment: "Needs better conjugation explanation",
+          },
           { id: "fb_3", rating: "helpful", comment: null },
         ]),
         delete: deleteFeedbackMock,
@@ -579,8 +691,16 @@ describe("TutorService", () => {
       const mockUpgradedGenerated = {
         title: "Upgraded Formal Nuance たるもの",
         theoryMarkdown: "### Enhanced Step-by-Step Theory for たるもの",
-        dialogue: [{ speaker: "社長", jpText: "指導者たるもの、模範を示さねばならない。", enText: "As a leader..." }],
-        vocabulary: [{ jpText: "たるもの", reading: "たるもの", enText: "Befitting" }],
+        dialogue: [
+          {
+            speaker: "社長",
+            jpText: "指導者たるもの、模範を示さねばならない。",
+            enText: "As a leader...",
+          },
+        ],
+        vocabulary: [
+          { jpText: "たるもの", reading: "たるもの", enText: "Befitting" },
+        ],
         exercises: [
           {
             order: 1,
@@ -604,14 +724,22 @@ describe("TutorService", () => {
         createdAt: new Date(),
       });
 
-      prismaMock.db.orm.public.LessonExercise.where.mockImplementation((filter: any) => ({
-        all: vi.fn().mockResolvedValue(
-          filter.lessonId === "les_stale_fb" ? [{ id: "old_ex_fb" }] : [{ id: "new_ex_fb", order: 1 }]
-        ),
-        delete: deleteExerciseMock,
-      }));
+      prismaMock.db.orm.public.LessonExercise.where.mockImplementation(
+        (filter: any) => ({
+          all: vi
+            .fn()
+            .mockResolvedValue(
+              filter.lessonId === "les_stale_fb"
+                ? [{ id: "old_ex_fb" }]
+                : [{ id: "new_ex_fb", order: 1 }],
+            ),
+          delete: deleteExerciseMock,
+        }),
+      );
 
-      vi.mocked(geminiServiceMock.generateLesson).mockResolvedValue(mockUpgradedGenerated);
+      vi.mocked(geminiServiceMock.generateLesson).mockResolvedValue(
+        mockUpgradedGenerated,
+      );
 
       const result = await service.getLessonByTopicId("top_fb_3");
 
@@ -624,7 +752,9 @@ describe("TutorService", () => {
         grammarKey: "tarumono",
         objective: "Express conduct befitting a status",
         isRegeneration: true,
-        regenerationReason: expect.stringContaining("67% confusing ratings (2/3 reviews)"),
+        regenerationReason: expect.stringContaining(
+          "67% confusing ratings (2/3 reviews)",
+        ),
         previousFeedbackComments: [
           "Examples were too abstract",
           "Needs better conjugation explanation",
@@ -641,7 +771,7 @@ describe("TutorService", () => {
       });
 
       await expect(service.getLessonByTopicId("unknown")).rejects.toThrow(
-        NotFoundException
+        NotFoundException,
       );
     });
   });
@@ -665,13 +795,13 @@ describe("TutorService", () => {
       expect(result.success).toBe(true);
       expect(result.score).toBe(100);
       expect(
-        prismaMock.db.orm.public.UserLessonProgress.create
+        prismaMock.db.orm.public.UserLessonProgress.create,
       ).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: "usr_1",
           lessonId: "les_1",
           score: 100,
-        })
+        }),
       );
     });
   });
@@ -690,19 +820,19 @@ describe("TutorService", () => {
         "les_1",
         "helpful",
         "Great lesson!",
-        "usr_1"
+        "usr_1",
       );
 
       expect(result.success).toBe(true);
       expect(
-        prismaMock.db.orm.public.LessonFeedback.create
+        prismaMock.db.orm.public.LessonFeedback.create,
       ).toHaveBeenCalledWith(
         expect.objectContaining({
           lessonId: "les_1",
           rating: "helpful",
           comment: "Great lesson!",
           userId: "usr_1",
-        })
+        }),
       );
     });
   });
@@ -742,8 +872,14 @@ describe("TutorService", () => {
 
       const result = await service.generateNextUnitForLevel("N5");
 
-      expect(geminiServiceMock.generateCurriculumUnit).toHaveBeenCalledWith("N5", 2, 5);
-      expect(prismaMock.db.orm.public.CurriculumTopic.create).toHaveBeenCalledWith({
+      expect(geminiServiceMock.generateCurriculumUnit).toHaveBeenCalledWith(
+        "N5",
+        2,
+        5,
+      );
+      expect(
+        prismaMock.db.orm.public.CurriculumTopic.create,
+      ).toHaveBeenCalledWith({
         level: "N5",
         unitIndex: 2,
         unitTitle: "Unit 2: Daily Routines",
@@ -782,4 +918,3 @@ describe("TutorService", () => {
     });
   });
 });
-

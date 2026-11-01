@@ -8,6 +8,7 @@ import {
   type GenerateUnitPayload,
   GenerateUnitPayloadSchema,
 } from "@nipponic/shared";
+import { PREBAKED_LESSONS } from "./prebaked-lessons";
 
 export interface TopicGenerationContext {
   title: string;
@@ -68,7 +69,7 @@ export class GeminiService {
           candidates.push(
             path.resolve(__dirname, "../.env"),
             path.resolve(__dirname, "../../.env"),
-            path.resolve(__dirname, ".env")
+            path.resolve(__dirname, ".env"),
           );
         }
       } catch {}
@@ -82,7 +83,9 @@ export class GeminiService {
               raw = parsed.GEMINI_API_KEY;
               break;
             }
-            const match = content.match(/^\s*GEMINI_API_KEY\s*=\s*["']?([^"'\r\n]+)["']?/m);
+            const match = content.match(
+              /^\s*GEMINI_API_KEY\s*=\s*["']?([^"'\r\n]+)["']?/m,
+            );
             if (match?.[1]) {
               raw = match[1].trim();
               break;
@@ -97,7 +100,8 @@ export class GeminiService {
 
   buildLessonPrompt(context: TopicGenerationContext): string {
     const levelKey = (context.level || "N5").toUpperCase();
-    const levelCalibration = JLPT_LEVEL_CALIBRATION[levelKey] || JLPT_LEVEL_CALIBRATION.N5;
+    const levelCalibration =
+      JLPT_LEVEL_CALIBRATION[levelKey] || JLPT_LEVEL_CALIBRATION.N5;
 
     let refinementDirective = "";
     if (context.isRegeneration) {
@@ -182,12 +186,19 @@ All Japanese content MUST use authentic Kanji and Kana. NEVER USE ROMAJI.
   }
 
   async generateLesson(
-    context: TopicGenerationContext
+    context: TopicGenerationContext,
   ): Promise<GenerateLessonPayload> {
+    if (context.grammarKey && PREBAKED_LESSONS[context.grammarKey]) {
+      this.logger.log(
+        `Using prebaked lesson content for "${context.title}" (${context.grammarKey}).`,
+      );
+      return PREBAKED_LESSONS[context.grammarKey];
+    }
+
     const apiKey = this.getApiKey();
     if (!apiKey) {
       this.logger.warn(
-        `GEMINI_API_KEY not configured. Generating high-quality deterministic fallback lesson for "${context.title}".`
+        `GEMINI_API_KEY not configured. Generating high-quality deterministic fallback lesson for "${context.title}".`,
       );
       return this.generateFallbackLesson(context);
     }
@@ -210,15 +221,19 @@ All Japanese content MUST use authentic Kanji and Kana. NEVER USE ROMAJI.
                 temperature: context.isRegeneration ? 0.35 : 0.3,
               },
             }),
-          }
+          },
         );
 
         if (!response.ok) {
           const errorText = await response.text();
           this.logger.warn(
-            `Gemini API request failed for model ${model} (${response.status}): ${errorText}`
+            `Gemini API request failed for model ${model} (${response.status}): ${errorText}`,
           );
-          if (response.status === 400 || response.status === 401 || response.status === 403) {
+          if (
+            response.status === 400 ||
+            response.status === 401 ||
+            response.status === 403
+          ) {
             // Invalid API key or permission error, don't keep failing on other models
             break;
           }
@@ -236,26 +251,37 @@ All Japanese content MUST use authentic Kanji and Kana. NEVER USE ROMAJI.
         return GenerateLessonPayloadSchema.parse(parsedJson);
       } catch (error) {
         this.logger.warn(
-          `Error generating lesson with Gemini model ${model}: ${error instanceof Error ? error.message : String(error)}`
+          `Error generating lesson with Gemini model ${model}: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     }
 
-    this.logger.log(`Using high-quality deterministic fallback lesson for "${context.title}".`);
+    this.logger.log(
+      `Using high-quality deterministic fallback lesson for "${context.title}".`,
+    );
     return this.generateFallbackLesson(context);
   }
 
   generateFallbackLesson(
-    context: TopicGenerationContext
+    context: TopicGenerationContext,
   ): GenerateLessonPayload {
+    if (context.grammarKey && PREBAKED_LESSONS[context.grammarKey]) {
+      return PREBAKED_LESSONS[context.grammarKey];
+    }
+
     // Extract authentic Japanese grammar pattern from title (e.g. "〜極まりない / 〜極まる" -> "極まりない")
     let cleanJpPattern = "";
     const matchParen = context.title.match(/[（(]([^）)]+)[）)]/);
     if (matchParen) {
-      cleanJpPattern = matchParen[1].replace(/^[〜~]/, "").split(/[/／]/)[0].trim();
+      cleanJpPattern = matchParen[1]
+        .replace(/^[〜~]/, "")
+        .split(/[/／]/)[0]
+        .trim();
     }
     if (!cleanJpPattern || /^[a-zA-Z0-9\-_ ]+$/.test(cleanJpPattern)) {
-      const matchJp = context.title.match(/[\u4e00-\u9faf\u3040-\u309f\u30a0-\u30ff]+/);
+      const matchJp = context.title.match(
+        /[\u4e00-\u9faf\u3040-\u309f\u30a0-\u30ff]+/,
+      );
       cleanJpPattern = matchJp ? matchJp[0] : "";
     }
     const key = cleanJpPattern || "文法表現";
@@ -338,12 +364,12 @@ All Japanese content MUST use authentic Kanji and Kana. NEVER USE ROMAJI.
   async generateCurriculumUnit(
     level: string,
     unitIndex: number,
-    startingLessonIndex: number
+    startingLessonIndex: number,
   ): Promise<GenerateUnitPayload> {
     const apiKey = this.getApiKey();
     if (!apiKey) {
       this.logger.warn(
-        `GEMINI_API_KEY not configured. Generating high-quality deterministic fallback unit for JLPT ${level} Unit ${unitIndex}.`
+        `GEMINI_API_KEY not configured. Generating high-quality deterministic fallback unit for JLPT ${level} Unit ${unitIndex}.`,
       );
       return this.generateFallbackUnit(level, unitIndex, startingLessonIndex);
     }
@@ -387,15 +413,19 @@ All unitTitle, title, and objective fields MUST be in English.
                 temperature: 0.4,
               },
             }),
-          }
+          },
         );
 
         if (!response.ok) {
           const errorText = await response.text();
           this.logger.warn(
-            `Gemini API request failed for curriculum unit with model ${model} (${response.status}): ${errorText}`
+            `Gemini API request failed for curriculum unit with model ${model} (${response.status}): ${errorText}`,
           );
-          if (response.status === 400 || response.status === 401 || response.status === 403) {
+          if (
+            response.status === 400 ||
+            response.status === 401 ||
+            response.status === 403
+          ) {
             // Invalid API key or permission error, don't keep failing on other models
             break;
           }
@@ -413,7 +443,7 @@ All unitTitle, title, and objective fields MUST be in English.
         return GenerateUnitPayloadSchema.parse(parsedJson);
       } catch (error) {
         this.logger.warn(
-          `Error generating curriculum unit with Gemini model ${model}: ${error instanceof Error ? error.message : String(error)}`
+          `Error generating curriculum unit with Gemini model ${model}: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     }
@@ -421,11 +451,10 @@ All unitTitle, title, and objective fields MUST be in English.
     return this.generateFallbackUnit(level, unitIndex, startingLessonIndex);
   }
 
-
   generateFallbackUnit(
     level: string,
     unitIndex: number,
-    startingLessonIndex: number
+    startingLessonIndex: number,
   ): GenerateUnitPayload {
     const titlesByLevel: Record<string, string> = {
       N5: `Everyday Conversation & Actions (Unit ${unitIndex})`,
@@ -436,7 +465,8 @@ All unitTitle, title, and objective fields MUST be in English.
     };
 
     const unitTitle =
-      titlesByLevel[level] || `JLPT ${level} Advanced Study (Unit ${unitIndex})`;
+      titlesByLevel[level] ||
+      `JLPT ${level} Advanced Study (Unit ${unitIndex})`;
 
     return {
       unitTitle,
@@ -469,4 +499,3 @@ All unitTitle, title, and objective fields MUST be in English.
     };
   }
 }
-

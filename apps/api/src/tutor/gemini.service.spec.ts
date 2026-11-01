@@ -10,10 +10,13 @@ describe("GeminiService", () => {
         title: "Extreme Emotional States (〜極まりない / 〜極まる)",
         level: "N1",
         grammarKey: "kiwamarinai-extreme",
-        objective: "Express uncontainable extreme emotional states like danger, impoliteness, or regret in high literary style.",
+        objective:
+          "Express uncontainable extreme emotional states like danger, impoliteness, or regret in high literary style.",
       });
 
-      expect(fallback.title).toBe("Extreme Emotional States (〜極まりない / 〜極まる)");
+      expect(fallback.title).toBe(
+        "Extreme Emotional States (〜極まりない / 〜極まる)",
+      );
 
       // Check vocabulary items do not contain romaji slug "kiwamarinai-extreme"
       for (const vocab of fallback.vocabulary) {
@@ -36,7 +39,9 @@ describe("GeminiService", () => {
       for (const line of fallback.dialogue) {
         expect(line.jpText).not.toContain("kiwamarinai-extreme");
       }
-      expect(fallback.dialogue.some((line) => line.jpText.includes("極まりない"))).toBe(true);
+      expect(
+        fallback.dialogue.some((line) => line.jpText.includes("極まりない")),
+      ).toBe(true);
     });
 
     it("should handle topics without parentheses by extracting Japanese characters", () => {
@@ -65,7 +70,9 @@ describe("GeminiService", () => {
         });
 
         expect(prompt).toContain(`JLPT ${level} PEDAGOGICAL SPECIFICATIONS`);
-        expect(prompt).toContain(`calibrated specifically for JLPT level ${level}`);
+        expect(prompt).toContain(
+          `calibrated specifically for JLPT level ${level}`,
+        );
       }
     });
 
@@ -76,19 +83,30 @@ describe("GeminiService", () => {
         grammarKey: "kiwamarinai-extreme",
         objective: "Express uncontainable extreme emotional states",
         isRegeneration: true,
-        regenerationReason: "Negative feedback threshold reached: 67% confusing",
+        regenerationReason:
+          "Negative feedback threshold reached: 67% confusing",
         previousFeedbackComments: [
           "I didn't understand the difference between 極まりない and 極まる.",
           "Please include clearer conjugation steps.",
         ],
       });
 
-      expect(prompt).toContain("REFINEMENT DIRECTIVE (CRITICAL - PEDAGOGICAL UPGRADE)");
-      expect(prompt).toContain("Negative feedback threshold reached: 67% confusing");
-      expect(prompt).toContain('1. "I didn\'t understand the difference between 極まりない and 極まる."');
-      expect(prompt).toContain('2. "Please include clearer conjugation steps."');
+      expect(prompt).toContain(
+        "REFINEMENT DIRECTIVE (CRITICAL - PEDAGOGICAL UPGRADE)",
+      );
+      expect(prompt).toContain(
+        "Negative feedback threshold reached: 67% confusing",
+      );
+      expect(prompt).toContain(
+        '1. "I didn\'t understand the difference between 極まりない and 極まる."',
+      );
+      expect(prompt).toContain(
+        '2. "Please include clearer conjugation steps."',
+      );
       expect(prompt).toContain("STEP-BY-STEP FORMULA & CONJUGATION BREAKDOWN");
-      expect(prompt).toContain('CONTRASTIVE ANALYSIS & NUANCE ("When to use vs When NOT to use")');
+      expect(prompt).toContain(
+        'CONTRASTIVE ANALYSIS & NUANCE ("When to use vs When NOT to use")',
+      );
       expect(prompt).toContain("SITUATIONALLY ENRICHED DIALOGUE");
       expect(prompt).toContain("TARGETED REINFORCING EXERCISES");
     });

@@ -29,7 +29,9 @@ import {
 function parseLevel(level: unknown) {
   const parsed = CurriculumLevelSchema.safeParse(level || "N5");
   if (!parsed.success) {
-    throw new BadRequestException("Invalid level. Expected one of N5, N4, N3, N2, N1");
+    throw new BadRequestException(
+      "Invalid level. Expected one of N5, N4, N3, N2, N1",
+    );
   }
   return parsed.data;
 }
@@ -38,7 +40,7 @@ function parseLevel(level: unknown) {
 export class TutorController {
   constructor(
     @Inject(TutorService) private readonly tutorService: TutorService,
-    @Optional() @Inject(JwtService) private readonly jwtService?: JwtService
+    @Optional() @Inject(JwtService) private readonly jwtService?: JwtService,
   ) {}
 
   /**
@@ -61,7 +63,7 @@ export class TutorController {
   @Get("curriculum")
   async getCurriculum(
     @Query("level") level: string = "N5",
-    @Req() request: Request
+    @Req() request: Request,
   ) {
     const userId = await this.extractUserId(request);
     return await this.tutorService.getCurriculum(parseLevel(level), userId);
@@ -73,15 +75,18 @@ export class TutorController {
   @UseGuards(AuthGuard)
   async generateNextUnit(
     @Body("level") level: string = "N5",
-    @CurrentUser() user: JwtPayload
+    @CurrentUser() user: JwtPayload,
   ) {
-    return await this.tutorService.generateNextUnitForLevel(parseLevel(level), user.sub);
+    return await this.tutorService.generateNextUnitForLevel(
+      parseLevel(level),
+      user.sub,
+    );
   }
 
   @Get("topics/:topicId/lesson")
   async getLessonByTopic(
     @Param("topicId") topicId: string,
-    @Req() request: Request
+    @Req() request: Request,
   ) {
     const userId = await this.extractUserId(request);
     return await this.tutorService.getLessonByTopicId(topicId, userId);
@@ -92,17 +97,21 @@ export class TutorController {
   async recordProgress(
     @Param("id") lessonId: string,
     @Body() body: SubmitLessonProgressDto,
-    @CurrentUser() user: JwtPayload
+    @CurrentUser() user: JwtPayload,
   ) {
     const parsed = SubmitLessonProgressSchema.parse(body);
-    return await this.tutorService.recordProgress(user.sub, lessonId, parsed.score);
+    return await this.tutorService.recordProgress(
+      user.sub,
+      lessonId,
+      parsed.score,
+    );
   }
 
   @Post("lessons/:id/feedback")
   async submitFeedback(
     @Param("id") lessonId: string,
     @Body() body: SubmitLessonFeedbackDto,
-    @Req() request: Request
+    @Req() request: Request,
   ) {
     const parsed = SubmitLessonFeedbackSchema.parse(body);
     const userId = await this.extractUserId(request);
@@ -110,7 +119,7 @@ export class TutorController {
       lessonId,
       parsed.rating,
       parsed.comment,
-      userId
+      userId,
     );
   }
 }

@@ -8,6 +8,7 @@ import {
 import { PrismaService } from "../prisma.service";
 import { GeminiService, type TopicGenerationContext } from "./gemini.service";
 import { ALL_SEED_CURRICULA } from "./curriculum.seed";
+import { PREBAKED_LESSONS } from "./prebaked-lessons";
 import type {
   CurriculumLevel,
   CurriculumTopic,
@@ -25,7 +26,7 @@ export class TutorService implements OnModuleInit {
 
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    @Inject(GeminiService) private readonly geminiService: GeminiService
+    @Inject(GeminiService) private readonly geminiService: GeminiService,
   ) {}
 
   async onModuleInit() {
@@ -37,7 +38,12 @@ export class TutorService implements OnModuleInit {
     try {
       await this.prisma.connect();
       const runtime = this.prisma.db.runtime() as unknown as {
-        driver?: { execute: (req: { sql: string; params: unknown[] }) => Promise<unknown> };
+        driver?: {
+          execute: (req: {
+            sql: string;
+            params: unknown[];
+          }) => Promise<unknown>;
+        };
       };
       const driver = runtime?.driver;
       if (!driver) return;
@@ -111,14 +117,14 @@ export class TutorService implements OnModuleInit {
       for (const sql of statements) {
         await driver.execute({ sql, params: [] }).catch((err: unknown) => {
           this.logger.debug(
-            `Table init notice: ${err instanceof Error ? err.message : String(err)}`
+            `Table init notice: ${err instanceof Error ? err.message : String(err)}`,
           );
         });
       }
       this.logger.log("Tutor database schema verification completed.");
     } catch (err) {
       this.logger.warn(
-        `Could not auto-verify tutor tables: ${err instanceof Error ? err.message : String(err)}`
+        `Could not auto-verify tutor tables: ${err instanceof Error ? err.message : String(err)}`,
       );
     }
   }
@@ -133,10 +139,10 @@ export class TutorService implements OnModuleInit {
         "N1",
       ];
       for (const level of levels) {
-        const existingTopic = await this.prisma.db.orm.public.CurriculumTopic
-          .where({ level })
-          .first()
-          .catch(() => null);
+        const existingTopic =
+          await this.prisma.db.orm.public.CurriculumTopic.where({ level })
+            .first()
+            .catch(() => null);
 
         if (!existingTopic && ALL_SEED_CURRICULA[level]) {
           this.logger.log(`Seeding initial ${level} curriculum topics...`);
@@ -152,29 +158,137 @@ export class TutorService implements OnModuleInit {
             }).catch(() => {});
           }
           this.logger.log(
-            `Seeded ${ALL_SEED_CURRICULA[level].length} ${level} curriculum topics.`
+            `Seeded ${ALL_SEED_CURRICULA[level].length} ${level} curriculum topics.`,
           );
+        }
+      }
+
+      // Sync prebaked unit 1 topics and lessons to guarantee the latest content is active
+      for (const topic of ALL_SEED_CURRICULA.N5.filter(
+        (t) => t.unitIndex === 1,
+      )) {
+        try {
+          let dbTopic = await this.prisma.db.orm.public.CurriculumTopic.where({
+            level: "N5",
+            unitIndex: 1,
+            lessonIndex: topic.lessonIndex,
+          })
+            .first()
+            .catch(() => null);
+
+          if (!dbTopic) {
+            dbTopic = await this.prisma.db.orm.public.CurriculumTopic.create({
+              level: topic.level,
+              unitIndex: topic.unitIndex,
+              unitTitle: topic.unitTitle,
+              lessonIndex: topic.lessonIndex,
+              title: topic.title,
+              grammarKey: topic.grammarKey,
+              objective: topic.objective,
+            }).catch(() => null);
+          } else if (
+            dbTopic.grammarKey !== topic.grammarKey ||
+            dbTopic.title !== topic.title ||
+            dbTopic.unitTitle !== topic.unitTitle ||
+            dbTopic.objective !== topic.objective
+          ) {
+            await this.prisma.db.orm.public.CurriculumTopic.where({
+              id: dbTopic.id,
+            })
+              .update({
+                title: topic.title,
+                grammarKey: topic.grammarKey,
+                objective: topic.objective,
+                unitTitle: topic.unitTitle,
+              })
+              .catch(() => {});
+          }
+
+          if (dbTopic && PREBAKED_LESSONS[topic.grammarKey]) {
+            const prebaked = PREBAKED_LESSONS[topic.grammarKey];
+            const existingLesson = await this.prisma.db.orm.public.Lesson.where(
+              { topicId: dbTopic.id },
+            )
+              .first()
+              .catch(() => null);
+
+            let lessonId: string;
+            if (!existingLesson) {
+              const createdLesson =
+                await this.prisma.db.orm.public.Lesson.create({
+                  topicId: dbTopic.id,
+                  title: prebaked.title,
+                  level: topic.level,
+                  theoryMarkdown: prebaked.theoryMarkdown,
+                  dialogueJson: prebaked.dialogue,
+                  vocabularyJson: prebaked.vocabulary,
+                }).catch(() => null);
+              lessonId = createdLesson ? createdLesson.id : "";
+            } else if (existingLesson.title !== prebaked.title) {
+              lessonId = existingLesson.id;
+              await this.prisma.db.orm.public.Lesson.where({
+                id: existingLesson.id,
+              })
+                .update({
+                  title: prebaked.title,
+                  level: topic.level,
+                  theoryMarkdown: prebaked.theoryMarkdown,
+                  dialogueJson: prebaked.dialogue,
+                  vocabularyJson: prebaked.vocabulary,
+                })
+                .catch(() => {});
+
+              await this.prisma.db.orm.public.LessonExercise.where({ lessonId })
+                .delete()
+                .catch(() => {});
+            } else {
+              lessonId = existingLesson.id;
+            }
+
+            if (
+              lessonId &&
+              (!existingLesson || existingLesson.title !== prebaked.title)
+            ) {
+              for (const ex of prebaked.exercises) {
+                await this.prisma.db.orm.public.LessonExercise.create({
+                  lessonId,
+                  order: ex.order,
+                  type: ex.type,
+                  prompt: ex.prompt,
+                  optionsJson: ex.options ?? null,
+                  correctAnswer: ex.correctAnswer,
+                  explanation: ex.explanation,
+                }).catch(() => {});
+              }
+            }
+          }
+        } catch {
+          // Ignore individual topic sync failure
         }
       }
     } catch (error) {
       this.logger.warn(
-        `Could not seed curriculum topics: ${error instanceof Error ? error.message : String(error)}`
+        `Could not seed curriculum topics: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
 
-  async getCurriculum(level: string = "N5", userId?: string): Promise<CurriculumTopic[]> {
+  async getCurriculum(
+    level: string = "N5",
+    userId?: string,
+  ): Promise<CurriculumTopic[]> {
     try {
-      let topics = await this.prisma.db.orm.public.CurriculumTopic
-        .where({ level })
-        .all();
+      let topics = await this.prisma.db.orm.public.CurriculumTopic.where({
+        level,
+      }).all();
 
       // Auto-seed level if empty and default curriculum is available
       if (
         topics.length === 0 &&
         ALL_SEED_CURRICULA[level as keyof typeof ALL_SEED_CURRICULA]
       ) {
-        const seedList = ALL_SEED_CURRICULA[level as keyof typeof ALL_SEED_CURRICULA];
+        const seedList =
+          ALL_SEED_CURRICULA[level as keyof typeof ALL_SEED_CURRICULA];
         for (const topic of seedList) {
           await this.prisma.db.orm.public.CurriculumTopic.create({
             level: topic.level,
@@ -186,36 +300,41 @@ export class TutorService implements OnModuleInit {
             objective: topic.objective,
           }).catch(() => {});
         }
-        topics = await this.prisma.db.orm.public.CurriculumTopic
-          .where({ level })
-          .all();
+        topics = await this.prisma.db.orm.public.CurriculumTopic.where({
+          level,
+        }).all();
       }
 
       topics.sort((a, b) =>
         a.unitIndex === b.unitIndex
           ? a.lessonIndex - b.lessonIndex
-          : a.unitIndex - b.unitIndex
+          : a.unitIndex - b.unitIndex,
       );
 
       let lessons: Array<{ id: string; topicId: string }> = [];
       try {
-        lessons = await this.prisma.db.orm.public.Lesson
-          .where({ level })
-          .all();
+        lessons = await this.prisma.db.orm.public.Lesson.where({ level }).all();
       } catch {
         lessons = [];
       }
 
       const lessonByTopicId = new Map(lessons.map((l) => [l.topicId, l]));
 
-      let userProgressMap = new Map<string, { completedAt: Date | null; score: number }>();
+      let userProgressMap = new Map<
+        string,
+        { completedAt: Date | null; score: number }
+      >();
       if (userId) {
         try {
-          const progresses = await this.prisma.db.orm.public.UserLessonProgress
-            .where({ userId })
-            .all();
+          const progresses =
+            await this.prisma.db.orm.public.UserLessonProgress.where({
+              userId,
+            }).all();
           userProgressMap = new Map(
-            progresses.map((p) => [p.lessonId, { completedAt: p.completedAt, score: p.score }])
+            progresses.map((p) => [
+              p.lessonId,
+              { completedAt: p.completedAt, score: p.score },
+            ]),
           );
         } catch {
           userProgressMap = new Map();
@@ -224,7 +343,9 @@ export class TutorService implements OnModuleInit {
 
       return topics.map((t) => {
         const existingLesson = lessonByTopicId.get(t.id);
-        const userProgress = existingLesson ? userProgressMap.get(existingLesson.id) : undefined;
+        const userProgress = existingLesson
+          ? userProgressMap.get(existingLesson.id)
+          : undefined;
 
         return {
           id: t.id,
@@ -242,9 +363,11 @@ export class TutorService implements OnModuleInit {
       });
     } catch (error) {
       this.logger.error(
-        `Error querying curriculum for level ${level}, falling back to seed list: ${error instanceof Error ? error.message : String(error)}`
+        `Error querying curriculum for level ${level}, falling back to seed list: ${error instanceof Error ? error.message : String(error)}`,
       );
-      const seedList = ALL_SEED_CURRICULA[level as keyof typeof ALL_SEED_CURRICULA] || ALL_SEED_CURRICULA.N5;
+      const seedList =
+        ALL_SEED_CURRICULA[level as keyof typeof ALL_SEED_CURRICULA] ||
+        ALL_SEED_CURRICULA.N5;
       return seedList.map((t) => ({
         id: `seed-${t.level}-${t.unitIndex}-${t.lessonIndex}`,
         level: t.level,
@@ -261,8 +384,9 @@ export class TutorService implements OnModuleInit {
   }
 
   async getLessonByTopicId(topicId: string, userId?: string): Promise<Lesson> {
-    let topic = await this.prisma.db.orm.public.CurriculumTopic
-      .where({ id: topicId })
+    let topic = await this.prisma.db.orm.public.CurriculumTopic.where({
+      id: topicId,
+    })
       .first()
       .catch(() => null);
 
@@ -270,7 +394,8 @@ export class TutorService implements OnModuleInit {
       const parts = topicId.split("-");
       const level = parts[1];
       const lessonIndex = parseInt(parts[3], 10);
-      const seedList = ALL_SEED_CURRICULA[level as keyof typeof ALL_SEED_CURRICULA] || [];
+      const seedList =
+        ALL_SEED_CURRICULA[level as keyof typeof ALL_SEED_CURRICULA] || [];
       const match = seedList.find((s) => s.lessonIndex === lessonIndex);
       if (match) {
         try {
@@ -303,52 +428,55 @@ export class TutorService implements OnModuleInit {
       throw new NotFoundException(`Curriculum topic "${topicId}" not found`);
     }
 
-    let lesson = await this.prisma.db.orm.public.Lesson
-      .where({ topicId })
-      .first();
+    let lesson = await this.prisma.db.orm.public.Lesson.where({
+      topicId,
+    }).first();
 
     const hasRomajiSlugLeak = Boolean(
       lesson &&
-      (
-        (lesson.theoryMarkdown && (
-          /[a-zA-Z]{3,}-[a-zA-Z]{3,}/.test(lesson.theoryMarkdown) ||
-          lesson.theoryMarkdown.includes("kiwamarinai-extreme")
-        )) ||
+      ((lesson.theoryMarkdown &&
+        (/[a-zA-Z]{3,}-[a-zA-Z]{3,}/.test(lesson.theoryMarkdown) ||
+          lesson.theoryMarkdown.includes("kiwamarinai-extreme"))) ||
         (Array.isArray(lesson.vocabularyJson) &&
           (lesson.vocabularyJson as any[]).some(
             (v) =>
               /^[a-zA-Z0-9\-_ ]+$/.test(v.jpText) ||
               /[a-zA-Z]{3,}-[a-zA-Z]{3,}/.test(v.jpText) ||
-              /[a-zA-Z]{3,}-[a-zA-Z]{3,}/.test(v.reading)
-          ))
-      )
+              /[a-zA-Z]{3,}-[a-zA-Z]{3,}/.test(v.reading),
+          ))),
     );
 
     const isStaleBogusFallback = Boolean(
       lesson &&
-      (
-        hasRomajiSlugLeak ||
-        (
-          topic.grammarKey !== "desu" &&
+      (hasRomajiSlugLeak ||
+        (topic.grammarKey !== "desu" &&
           (lesson.theoryMarkdown?.includes("[Noun / Phrase] + です") ||
-           lesson.theoryMarkdown?.includes("[Noun] + です") ||
-           lesson.title === "Polite Copula です")
-        )
-      )
+            lesson.theoryMarkdown?.includes("[Noun] + です") ||
+            lesson.title === "Polite Copula です"))),
     );
 
     let isRejectedByFeedback = false;
     let feedbackComments: string[] = [];
     let regenerationReason = "";
 
-    if (lesson && !isStaleBogusFallback) {
-      const feedbacks = await this.prisma.db.orm.public.LessonFeedback
-        .where({ lessonId: lesson.id })
-        .all();
+    const isPrebaked = Boolean(PREBAKED_LESSONS[topic.grammarKey]);
+    const needsPrebakedSync =
+      isPrebaked &&
+      lesson &&
+      (lesson.title !== PREBAKED_LESSONS[topic.grammarKey].title ||
+        isStaleBogusFallback);
+
+    if (lesson && !isStaleBogusFallback && !needsPrebakedSync) {
+      const feedbacks = await this.prisma.db.orm.public.LessonFeedback.where({
+        lessonId: lesson.id,
+      }).all();
 
       const totalFeedbacks = feedbacks.length;
-      const confusingFeedbacks = feedbacks.filter((f) => f.rating === "confusing");
-      const confusingRatio = totalFeedbacks > 0 ? confusingFeedbacks.length / totalFeedbacks : 0;
+      const confusingFeedbacks = feedbacks.filter(
+        (f) => f.rating === "confusing",
+      );
+      const confusingRatio =
+        totalFeedbacks > 0 ? confusingFeedbacks.length / totalFeedbacks : 0;
 
       // Threshold: >= 3 total reviews and >= 60% negative ("confusing") feedback
       if (totalFeedbacks >= 3 && confusingRatio >= 0.6) {
@@ -356,106 +484,162 @@ export class TutorService implements OnModuleInit {
         regenerationReason = `Community feedback threshold reached: ${Math.round(confusingRatio * 100)}% confusing ratings (${confusingFeedbacks.length}/${totalFeedbacks} reviews).`;
         feedbackComments = confusingFeedbacks
           .map((f) => f.comment)
-          .filter((c): c is string => typeof c === "string" && c.trim().length > 0);
+          .filter(
+            (c): c is string => typeof c === "string" && c.trim().length > 0,
+          );
       }
     }
 
-    if (!lesson || isStaleBogusFallback || isRejectedByFeedback) {
-      if ((isStaleBogusFallback || isRejectedByFeedback) && lesson) {
+    if (
+      !lesson ||
+      isStaleBogusFallback ||
+      isRejectedByFeedback ||
+      needsPrebakedSync
+    ) {
+      if (
+        (isStaleBogusFallback || isRejectedByFeedback || needsPrebakedSync) &&
+        lesson
+      ) {
         this.logger.log(
           isRejectedByFeedback
             ? `Regenerating lesson for topic "${topic.title}" (${topic.id}) due to negative feedback: ${regenerationReason}`
-            : `Replacing stale bogus fallback lesson for topic "${topic.title}" (${topic.id}) with fresh Gemini generation...`
+            : needsPrebakedSync
+              ? `Syncing prebaked lesson for topic "${topic.title}" (${topic.id})...`
+              : `Replacing stale bogus fallback lesson for topic "${topic.title}" (${topic.id}) with fresh Gemini generation...`,
         );
-        const oldExercises = await this.prisma.db.orm.public.LessonExercise
-          .where({ lessonId: lesson.id })
-          .all();
+        const oldExercises =
+          await this.prisma.db.orm.public.LessonExercise.where({
+            lessonId: lesson.id,
+          }).all();
         for (const ex of oldExercises) {
-          await this.prisma.db.orm.public.LessonExercise.where({ id: ex.id }).delete();
+          await this.prisma.db.orm.public.LessonExercise.where({
+            id: ex.id,
+          }).delete();
         }
-        const oldFeedbacks = await this.prisma.db.orm.public.LessonFeedback
-          .where({ lessonId: lesson.id })
-          .all();
+        const oldFeedbacks =
+          await this.prisma.db.orm.public.LessonFeedback.where({
+            lessonId: lesson.id,
+          }).all();
         for (const fb of oldFeedbacks) {
-          await this.prisma.db.orm.public.LessonFeedback.where({ id: fb.id }).delete();
+          await this.prisma.db.orm.public.LessonFeedback.where({
+            id: fb.id,
+          }).delete();
         }
-        const oldProgress = await this.prisma.db.orm.public.UserLessonProgress
-          .where({ lessonId: lesson.id })
-          .all();
+        const oldProgress =
+          await this.prisma.db.orm.public.UserLessonProgress.where({
+            lessonId: lesson.id,
+          }).all();
         for (const p of oldProgress) {
-          await this.prisma.db.orm.public.UserLessonProgress.where({ id: p.id }).delete();
+          await this.prisma.db.orm.public.UserLessonProgress.where({
+            id: p.id,
+          }).delete();
         }
-        await this.prisma.db.orm.public.Lesson.where({ id: lesson.id }).delete();
+        await this.prisma.db.orm.public.Lesson.where({
+          id: lesson.id,
+        }).delete();
         lesson = null;
       }
 
       this.logger.log(
         isRejectedByFeedback
           ? `Triggering improved lesson re-generation with Gemini for "${topic.title}" (${topic.id})...`
-          : `Lesson for topic "${topic.title}" (${topic.id}) not found in DB. Triggering JIT generation with Gemini...`
+          : `Lesson for topic "${topic.title}" (${topic.id}) not found in DB. Triggering JIT generation with Gemini...`,
       );
 
       let generated: GenerateLessonPayload;
-      try {
-        const generationContext: TopicGenerationContext = {
-          title: topic.title,
-          level: topic.level,
-          grammarKey: topic.grammarKey,
-          objective: topic.objective,
-          ...(isRejectedByFeedback
-            ? {
-                isRegeneration: true,
-                regenerationReason,
-                previousFeedbackComments: feedbackComments.length
-                  ? feedbackComments
-                  : undefined,
-              }
-            : {}),
-        };
-        generated = await this.geminiService.generateLesson(generationContext);
-      } catch (genError) {
-        this.logger.error(
-          `Gemini lesson generation failed for "${topic.title}", using deterministic fallback: ${genError}`
+      if (PREBAKED_LESSONS[topic.grammarKey]) {
+        this.logger.log(
+          `Using prebaked lesson content for "${topic.title}" (${topic.grammarKey}).`,
         );
-        generated = this.geminiService.generateFallbackLesson({
-          title: topic.title,
-          level: topic.level,
-          grammarKey: topic.grammarKey,
-          objective: topic.objective,
-        });
+        generated = PREBAKED_LESSONS[topic.grammarKey];
+      } else {
+        try {
+          const generationContext: TopicGenerationContext = {
+            title: topic.title,
+            level: topic.level,
+            grammarKey: topic.grammarKey,
+            objective: topic.objective,
+            ...(isRejectedByFeedback
+              ? {
+                  isRegeneration: true,
+                  regenerationReason,
+                  previousFeedbackComments: feedbackComments.length
+                    ? feedbackComments
+                    : undefined,
+                }
+              : {}),
+          };
+          generated =
+            await this.geminiService.generateLesson(generationContext);
+        } catch (genError) {
+          this.logger.error(
+            `Gemini lesson generation failed for "${topic.title}", using deterministic fallback: ${genError}`,
+          );
+          generated = this.geminiService.generateFallbackLesson({
+            title: topic.title,
+            level: topic.level,
+            grammarKey: topic.grammarKey,
+            objective: topic.objective,
+          });
+        }
       }
 
-      lesson = await this.prisma.db.orm.public.Lesson.create({
-        topicId: topic.id,
-        title: generated.title || topic.title,
-        level: topic.level,
-        theoryMarkdown: generated.theoryMarkdown,
-        dialogueJson: generated.dialogue,
-        vocabularyJson: generated.vocabulary,
-      });
-
-      // Create exercises
-      for (const ex of generated.exercises) {
-        await this.prisma.db.orm.public.LessonExercise.create({
-          lessonId: lesson.id,
-          order: ex.order,
-          type: ex.type,
-          prompt: ex.prompt,
-          optionsJson: ex.options ?? null,
-          correctAnswer: ex.correctAnswer,
-          explanation: ex.explanation,
+      try {
+        lesson = await this.prisma.db.orm.public.Lesson.create({
+          topicId: topic.id,
+          title: generated.title || topic.title,
+          level: topic.level,
+          theoryMarkdown: generated.theoryMarkdown,
+          dialogueJson: generated.dialogue,
+          vocabularyJson: generated.vocabulary,
         });
+
+        // Create exercises
+        for (const ex of generated.exercises) {
+          await this.prisma.db.orm.public.LessonExercise.create({
+            lessonId: lesson.id,
+            order: ex.order,
+            type: ex.type,
+            prompt: ex.prompt,
+            optionsJson: ex.options ?? null,
+            correctAnswer: ex.correctAnswer,
+            explanation: ex.explanation,
+          });
+        }
+
+        this.logger.log(
+          `Successfully generated and cached lesson "${lesson.id}" with ${generated.exercises.length} exercises.`,
+        );
+      } catch {
+        return {
+          id: `lesson-${topic.id}`,
+          topicId: topic.id,
+          title: generated.title || topic.title,
+          level: topic.level as "N5" | "N4" | "N3" | "N2" | "N1",
+          theoryMarkdown: generated.theoryMarkdown,
+          dialogue: generated.dialogue,
+          vocabulary: generated.vocabulary,
+          exercises: generated.exercises.map((e, idx) => ({
+            id: `ex-${topic.id}-${idx}`,
+            order: e.order,
+            type: e.type,
+            prompt: e.prompt,
+            options: e.options,
+            correctAnswer: e.correctAnswer,
+            explanation: e.explanation,
+          })),
+        };
       }
 
       this.logger.log(
-        `Successfully generated and cached lesson "${lesson.id}" with ${generated.exercises.length} exercises.`
+        `Successfully generated and cached lesson "${lesson.id}" with ${generated.exercises.length} exercises.`,
       );
     }
 
     // Retrieve exercises
-    const dbExercises = await this.prisma.db.orm.public.LessonExercise
-      .where({ lessonId: lesson.id })
-      .all();
+    const dbExercises = await this.prisma.db.orm.public.LessonExercise.where({
+      lessonId: lesson.id,
+    }).all();
 
     dbExercises.sort((a, b) => a.order - b.order);
 
@@ -463,9 +647,9 @@ export class TutorService implements OnModuleInit {
     let score: number | undefined;
 
     if (userId) {
-      const progress = await this.prisma.db.orm.public.UserLessonProgress
-        .where({ userId, lessonId: lesson.id })
-        .first();
+      const progress = await this.prisma.db.orm.public.UserLessonProgress.where(
+        { userId, lessonId: lesson.id },
+      ).first();
 
       if (progress) {
         isCompleted = Boolean(progress.completedAt);
@@ -477,16 +661,16 @@ export class TutorService implements OnModuleInit {
       Array.isArray(lesson.dialogueJson)
         ? lesson.dialogueJson
         : typeof lesson.dialogueJson === "string"
-        ? JSON.parse(lesson.dialogueJson)
-        : []
+          ? JSON.parse(lesson.dialogueJson)
+          : []
     ) as DialogueLine[];
 
     const vocabulary = (
       Array.isArray(lesson.vocabularyJson)
         ? lesson.vocabularyJson
         : typeof lesson.vocabularyJson === "string"
-        ? JSON.parse(lesson.vocabularyJson)
-        : []
+          ? JSON.parse(lesson.vocabularyJson)
+          : []
     ) as VocabularyItem[];
 
     const exercises: LessonExercise[] = dbExercises.map((e) => {
@@ -495,8 +679,8 @@ export class TutorService implements OnModuleInit {
         options = Array.isArray(e.optionsJson)
           ? (e.optionsJson as string[])
           : typeof e.optionsJson === "string"
-          ? JSON.parse(e.optionsJson)
-          : undefined;
+            ? JSON.parse(e.optionsJson)
+            : undefined;
       }
 
       return {
@@ -528,27 +712,29 @@ export class TutorService implements OnModuleInit {
   async recordProgress(
     userId: string,
     lessonId: string,
-    score: number
+    score: number,
   ): Promise<{ success: boolean; score: number }> {
-    const existingLesson = await this.prisma.db.orm.public.Lesson
-      .where({ id: lessonId })
-      .first();
+    const existingLesson = await this.prisma.db.orm.public.Lesson.where({
+      id: lessonId,
+    }).first();
 
     if (!existingLesson) {
       throw new NotFoundException(`Lesson "${lessonId}" not found`);
     }
 
-    const existingProgress = await this.prisma.db.orm.public.UserLessonProgress
-      .where({ userId, lessonId })
-      .first();
+    const existingProgress =
+      await this.prisma.db.orm.public.UserLessonProgress.where({
+        userId,
+        lessonId,
+      }).first();
 
     if (existingProgress) {
-      await this.prisma.db.orm.public.UserLessonProgress
-        .where({ id: existingProgress.id })
-        .update({
-          score: Math.max(existingProgress.score, score),
-          completedAt: new Date(),
-        });
+      await this.prisma.db.orm.public.UserLessonProgress.where({
+        id: existingProgress.id,
+      }).update({
+        score: Math.max(existingProgress.score, score),
+        completedAt: new Date(),
+      });
     } else {
       await this.prisma.db.orm.public.UserLessonProgress.create({
         userId,
@@ -565,11 +751,11 @@ export class TutorService implements OnModuleInit {
     lessonId: string,
     rating: string,
     comment?: string,
-    userId?: string
+    userId?: string,
   ): Promise<{ success: boolean }> {
-    const existingLesson = await this.prisma.db.orm.public.Lesson
-      .where({ id: lessonId })
-      .first();
+    const existingLesson = await this.prisma.db.orm.public.Lesson.where({
+      id: lessonId,
+    }).first();
 
     if (!existingLesson) {
       throw new NotFoundException(`Lesson "${lessonId}" not found`);
@@ -587,11 +773,10 @@ export class TutorService implements OnModuleInit {
 
   async generateNextUnitForLevel(
     level: string = "N5",
-    userId?: string
+    userId?: string,
   ): Promise<CurriculumTopic[]> {
-    const existingTopics = await this.prisma.db.orm.public.CurriculumTopic
-      .where({ level })
-      .all();
+    const existingTopics =
+      await this.prisma.db.orm.public.CurriculumTopic.where({ level }).all();
 
     const maxUnit = existingTopics.length
       ? Math.max(...existingTopics.map((t) => t.unitIndex))
@@ -608,16 +793,16 @@ export class TutorService implements OnModuleInit {
       generatedUnit = await this.geminiService.generateCurriculumUnit(
         level,
         nextUnitIndex,
-        startingLessonIndex
+        startingLessonIndex,
       );
     } catch (genError) {
       this.logger.error(
-        `Gemini unit generation failed for JLPT ${level}, using deterministic fallback: ${genError}`
+        `Gemini unit generation failed for JLPT ${level}, using deterministic fallback: ${genError}`,
       );
       generatedUnit = this.geminiService.generateFallbackUnit(
         level,
         nextUnitIndex,
-        startingLessonIndex
+        startingLessonIndex,
       );
     }
 
@@ -634,10 +819,9 @@ export class TutorService implements OnModuleInit {
     }
 
     this.logger.log(
-      `Successfully generated and saved ${generatedUnit.topics.length} topics for JLPT ${level} Unit ${nextUnitIndex}.`
+      `Successfully generated and saved ${generatedUnit.topics.length} topics for JLPT ${level} Unit ${nextUnitIndex}.`,
     );
 
     return await this.getCurriculum(level, userId);
   }
 }
-
