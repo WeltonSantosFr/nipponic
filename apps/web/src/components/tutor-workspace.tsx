@@ -26,6 +26,7 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
+  GraduationCap,
 } from "lucide-react";
 
 type LessonStep = "theory" | "dialogue" | "exercises" | "vocabulary";
@@ -34,6 +35,7 @@ export function TutorWorkspace() {
   const {
     curriculum,
     selectedLevel,
+    setSelectedLevel,
     currentLesson,
     isLoadingCurriculum,
     isLoadingLesson,
@@ -249,6 +251,42 @@ export function TutorWorkspace() {
             </Button>
           </div>
         )}
+
+        {/* JLPT Level Selector Bar */}
+        <div
+          data-testid="tutor-level-selector"
+          className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4 p-2 sm:p-2.5 rounded-2xl bg-card border border-border/80 shadow-xs w-full min-w-0"
+        >
+          <div className="flex items-center gap-2 px-1 shrink-0">
+            <GraduationCap size={16} className="text-primary shrink-0" />
+            <span className="text-xs sm:text-sm font-semibold text-foreground">
+              JLPT Level:
+            </span>
+          </div>
+
+          <div
+            role="tablist"
+            aria-label="Select JLPT Level"
+            className="flex items-center p-0.5 sm:p-1 bg-muted/60 rounded-xl border border-border/70 text-xs font-bold gap-1 w-full sm:w-auto overflow-x-auto min-w-0"
+          >
+            {(["N5", "N4", "N3", "N2", "N1"] as const).map((lvl) => (
+              <button
+                key={lvl}
+                role="tab"
+                type="button"
+                aria-selected={selectedLevel === lvl}
+                onClick={() => setSelectedLevel(lvl)}
+                className={`flex-1 sm:flex-initial px-3 sm:px-4 py-1.5 rounded-lg transition-all cursor-pointer text-center font-bold text-xs whitespace-nowrap ${
+                  selectedLevel === lvl
+                    ? "bg-background text-foreground shadow-xs font-extrabold"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
+              >
+                {lvl}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Banner Section */}
         <div className="rounded-xl sm:rounded-2xl border border-border/80 bg-linear-to-r from-primary/10 via-primary/5 to-transparent p-3 sm:p-5 md:p-8 shadow-xs min-w-0 w-full max-w-full overflow-hidden">

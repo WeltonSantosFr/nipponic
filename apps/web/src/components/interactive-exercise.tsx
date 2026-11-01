@@ -115,7 +115,12 @@ export const InteractiveExercise = memo(function InteractiveExercise({
 
       {/* Prompt */}
       <div className="text-xs sm:text-sm font-medium text-foreground leading-relaxed break-words min-w-0">
-        <FuriganaText text={exercise.prompt} showFurigana={showFurigana} />
+        <FuriganaText
+          text={exercise.prompt}
+          showFurigana={showFurigana}
+          interactive={true}
+          enContext={exercise.prompt}
+        />
       </div>
 
       {/* Multiple Choice Options */}
@@ -156,7 +161,7 @@ export const InteractiveExercise = memo(function InteractiveExercise({
                   {String.fromCharCode(65 + idx)}.
                 </span>
                 <span className="flex-1 min-w-0 break-words">
-                  <FuriganaText text={option} showFurigana={showFurigana} />
+                  <FuriganaText text={option} showFurigana={showFurigana} interactive={false} />
                 </span>
               </Button>
             );
@@ -205,7 +210,7 @@ export const InteractiveExercise = memo(function InteractiveExercise({
                   className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-md bg-primary text-primary-foreground text-xs sm:text-sm font-medium shadow-2xs hover:bg-primary/90 transition-all cursor-pointer break-words max-w-full"
                   title="Click to remove"
                 >
-                  <FuriganaText text={chip} showFurigana={showFurigana} />
+                  <FuriganaText text={chip} showFurigana={showFurigana} interactive={false} />
                 </button>
               ))
             )}
@@ -222,7 +227,7 @@ export const InteractiveExercise = memo(function InteractiveExercise({
                   onClick={() => handleTapChip(chip, idx)}
                   className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-md border border-border bg-card hover:bg-muted text-xs sm:text-sm font-medium transition-all cursor-pointer shadow-2xs break-words max-w-full"
                 >
-                  <FuriganaText text={chip} showFurigana={showFurigana} />
+                  <FuriganaText text={chip} showFurigana={showFurigana} interactive={false} />
                 </button>
               ))}
             </div>
@@ -269,13 +274,23 @@ export const InteractiveExercise = memo(function InteractiveExercise({
             <span>Explanation</span>
           </div>
           <div>
-            <FuriganaText text={exercise.explanation} showFurigana={showFurigana} />
+            <FuriganaText
+              text={exercise.explanation}
+              showFurigana={showFurigana}
+              interactive={true}
+              enContext={exercise.explanation}
+            />
           </div>
           {!wasCorrect && (
             <div className="font-medium pt-1">
               Correct answer:{" "}
               <span className="font-bold underline">
-                <FuriganaText text={exercise.correctAnswer} showFurigana={showFurigana} />
+                <FuriganaText
+                  text={exercise.correctAnswer}
+                  showFurigana={showFurigana}
+                  interactive={true}
+                  enContext={exercise.explanation}
+                />
               </span>
             </div>
           )}

@@ -126,6 +126,32 @@ describe("tutor actions", () => {
 
       expect(result).toBeNull();
     });
+
+    it("should include Authorization header when token is present for getLessonAction", async () => {
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "jwt-token-lesson" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const mockLesson = { id: "les_1", title: "Lesson 1" };
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockLesson),
+      });
+      global.fetch = fetchMock;
+
+      const result = await getLessonAction("top_1");
+
+      expect(result).toEqual(mockLesson);
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining("/tutor/topics/top_1/lesson"),
+        expect.objectContaining({
+          headers: {
+            Authorization: "Bearer jwt-token-lesson",
+          },
+        })
+      );
+    });
   });
 
   describe("submitLessonProgressAction", () => {
@@ -167,6 +193,45 @@ describe("tutor actions", () => {
         })
       );
     });
+
+    it("should return false when upstream response is not ok", async () => {
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+      });
+
+      const result = await submitLessonProgressAction("les_1", {
+        score: 50,
+      });
+
+      expect(result).toEqual({ success: false });
+    });
+
+    it("should return false and log error when fetch throws", async () => {
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "valid-jwt" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockRejectedValue(new Error("Network failure"));
+
+      const result = await submitLessonProgressAction("les_1", {
+        score: 80,
+      });
+
+      expect(result).toEqual({ success: false });
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "Error submitting lesson progress for les_1:",
+        expect.any(Error)
+      );
+      consoleSpy.mockRestore();
+    });
   });
 
   describe("submitLessonFeedbackAction", () => {
@@ -195,9 +260,98 @@ describe("tutor actions", () => {
         })
       );
     });
+
+    it("should return { success: false } when upstream response is not ok", async () => {
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue(undefined),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+
+      const result = await submitLessonFeedbackAction("les_1", { rating: "helpful" });
+
+      expect(result).toEqual({ success: false });
+    });
+
+    it("should include Authorization header when token is present in submitLessonFeedbackAction", async () => {
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "jwt-token-feedback" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ success: true }),
+      });
+      global.fetch = fetchMock;
+
+      const result = await submitLessonFeedbackAction("les_1", { rating: "helpful" });
+
+      expect(result).toEqual({ success: true });
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining("/tutor/lessons/les_1/feedback"),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: "Bearer jwt-token-feedback",
+          }),
+        })
+      );
+    });
+
+    it("should return { success: false } and log error when submitLessonFeedbackAction fetch throws", async () => {
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue(undefined),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockRejectedValue(new Error("Feedback service error"));
+
+      const result = await submitLessonFeedbackAction("les_1", { rating: "confusing" });
+
+      expect(result).toEqual({ success: false });
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "Error submitting feedback for lesson les_1:",
+        expect.any(Error)
+      );
+      consoleSpy.mockRestore();
+    });
   });
 
   describe("generateNextUnitAction", () => {
+    it("should post default level N5 and include token header when available", async () => {
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({ value: "jwt-token-gen" }),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      const mockTopics = [{ id: "top_gen", title: "Generated Topic" }];
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockTopics),
+      });
+      global.fetch = fetchMock;
+
+      const result = await generateNextUnitAction();
+
+      expect(result).toEqual(mockTopics);
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining("/tutor/curriculum/generate"),
+        expect.objectContaining({
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer jwt-token-gen",
+          },
+          body: JSON.stringify({ level: "N5" }),
+        })
+      );
+    });
+
     it("should post level and return generated curriculum topics", async () => {
       const mockCookieStore = {
         get: vi.fn().mockReturnValue(undefined),
@@ -238,6 +392,25 @@ describe("tutor actions", () => {
       const result = await generateNextUnitAction("N1");
 
       expect(result).toEqual([]);
+    });
+
+    it("should return empty array and log error when generateNextUnitAction fetch throws", async () => {
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue(undefined),
+      };
+      vi.mocked(cookies).mockResolvedValue(mockCookieStore as any);
+
+      global.fetch = vi.fn().mockRejectedValue(new Error("AI generation failure"));
+
+      const result = await generateNextUnitAction("N2");
+
+      expect(result).toEqual([]);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "Error generating next unit for N2:",
+        expect.any(Error)
+      );
+      consoleSpy.mockRestore();
     });
   });
 });

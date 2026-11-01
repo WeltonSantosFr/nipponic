@@ -206,6 +206,42 @@ describe("srs lib", () => {
       // Assert
       expect(stage).toBe("review");
     });
+
+    it("should return learning when card has lastReviewedAt but repetitions is 0", () => {
+      const card = {
+        lastReviewedAt: "2026-10-01T00:00:00.000Z",
+        repetitions: 0,
+        interval: 0,
+      } as any;
+      expect(getCardSRSStage(card)).toBe("learning");
+    });
+
+    it("should return learning when card has lastReviewedAt but repetitions is undefined", () => {
+      const card = {
+        lastReviewedAt: "2026-10-01T00:00:00.000Z",
+        repetitions: undefined,
+        interval: undefined,
+      } as any;
+      expect(getCardSRSStage(card)).toBe("learning");
+    });
+
+    it("should return review when card has no lastReviewedAt but repetitions >= 2 and interval < 21", () => {
+      const card = {
+        lastReviewedAt: null,
+        repetitions: 2,
+        interval: 10,
+      } as any;
+      expect(getCardSRSStage(card)).toBe("review");
+    });
+
+    it("should return review when card has repetitions >= 2 but interval is undefined", () => {
+      const card = {
+        lastReviewedAt: "2026-10-01T00:00:00.000Z",
+        repetitions: 2,
+        interval: undefined,
+      } as any;
+      expect(getCardSRSStage(card)).toBe("review");
+    });
   });
 
   describe("formatDueTime", () => {

@@ -131,6 +131,16 @@
   }
 }
 
+/* Modal Background Blur: guarantees blurred background across all browsers and engines (including Brave/Linux) */
+body:has([data-slot="dialog-overlay"]) > div:first-child,
+body:has([data-slot="dialog-overlay"]) > [data-base-ui-inert],
+body:has([data-slot="sheet-overlay"]) > [data-base-ui-inert] {
+  filter: blur(8px);
+  transition: filter 0.2s ease;
+  pointer-events: none;
+  user-select: none;
+}
+
 /* Modern Minimalist Scrollbars */
 ::-webkit-scrollbar {
   width: 5px;

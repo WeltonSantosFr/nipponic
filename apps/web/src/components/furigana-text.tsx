@@ -2,12 +2,16 @@
 
 import React, { memo, useMemo } from "react";
 import { useKuromoji } from "@/hooks/use-kuromoji";
-import { toHiragana } from "@/components/tokenized-text";
+import { toHiragana, TokenItem } from "@/components/tokenized-text";
+import { useFlashCards } from "@/contexts/FlashCardsContext";
+import { extractFlashcardWords, isWordInFlashcards } from "@/lib/flashcard-words";
 
 export interface FuriganaTextProps {
   text: string;
   showFurigana?: boolean;
   className?: string;
+  interactive?: boolean;
+  enContext?: string;
 }
 
 interface Segment {
@@ -20,13 +24,14 @@ interface Segment {
 interface TokenFeatures {
   surface_form: string;
   reading?: string;
+  basic_form?: string;
 }
 
 const plainTokenCache = new Map<string, TokenFeatures[]>();
 const MAX_CACHE_SIZE = 500;
 
 function getCachedTokens(
-  tokenizer: { tokenize: (text: string) => { surface_form: string; reading?: string }[] },
+  tokenizer: { tokenize: (text: string) => { surface_form: string; reading?: string; basic_form?: string }[] },
   text: string
 ): TokenFeatures[] {
   const cached = plainTokenCache.get(text);
@@ -35,6 +40,7 @@ function getCachedTokens(
   const tokens: TokenFeatures[] = rawTokens.map((t) => ({
     surface_form: t.surface_form,
     reading: t.reading,
+    basic_form: t.basic_form,
   }));
   if (plainTokenCache.size >= MAX_CACHE_SIZE) {
     const firstKey = plainTokenCache.keys().next().value;
@@ -107,8 +113,22 @@ export const FuriganaText = memo(function FuriganaText({
   text,
   showFurigana = true,
   className = "",
+  interactive = false,
+  enContext = "",
 }: FuriganaTextProps) {
   const tokenizer = useKuromoji();
+
+  let flashcardWords: Set<string> | undefined;
+  try {
+    const flashCtx = useFlashCards();
+    const userCards = [
+      ...(flashCtx?.cards || []),
+      ...(flashCtx?.decks || []).flatMap((d) => d.cards || []),
+    ];
+    flashcardWords = extractFlashcardWords(userCards);
+  } catch {
+    // If outside FlashCardsContext
+  }
 
   const segments = useMemo(() => parseRubyMarkup(text), [text]);
 
@@ -118,6 +138,23 @@ export const FuriganaText = memo(function FuriganaText({
     <span className={`inline-flex flex-wrap items-baseline gap-x-0.5 ${className}`.trim()}>
       {segments.map((seg, idx) => {
         if (seg.type === "ruby" && seg.kanji && seg.reading) {
+          if (interactive) {
+            const hasFc = flashcardWords
+              ? isWordInFlashcards(seg.kanji, undefined, flashcardWords)
+              : false;
+            return (
+              <TokenItem
+                key={idx}
+                word={seg.kanji}
+                reading={seg.reading}
+                showFurigana={showFurigana}
+                hasFlashcard={hasFc}
+                fullText={text}
+                enContext={enContext}
+              />
+            );
+          }
+
           if (!showFurigana) {
             return <span key={idx}>{seg.kanji}</span>;
           }
@@ -135,9 +172,9 @@ export const FuriganaText = memo(function FuriganaText({
         }
 
         const plainText = seg.text || "";
-        const hasKanji = /[\u4e00-\u9faf]/.test(plainText);
+        const hasJapanese = /[\u3040-\u30ff\u4e00-\u9faf]/.test(plainText);
 
-        if (!showFurigana || !hasKanji || !tokenizer) {
+        if (!hasJapanese || !tokenizer) {
           return <span key={idx}>{plainText}</span>;
         }
 
@@ -146,10 +183,35 @@ export const FuriganaText = memo(function FuriganaText({
         return (
           <React.Fragment key={idx}>
             {tokens.map((token, tIdx) => {
+              const isJp = /[\u3040-\u30ff\u4e00-\u9faf]/.test(token.surface_form);
+              if (!isJp) {
+                return <span key={tIdx}>{token.surface_form}</span>;
+              }
+
+              if (interactive) {
+                const nextToken = tokens[tIdx + 1];
+                const hasFc = flashcardWords
+                  ? isWordInFlashcards(token.surface_form, token.basic_form, flashcardWords)
+                  : false;
+                return (
+                  <TokenItem
+                    key={tIdx}
+                    word={token.surface_form}
+                    reading={token.reading}
+                    basicForm={token.basic_form}
+                    nextWord={nextToken?.surface_form}
+                    showFurigana={showFurigana}
+                    hasFlashcard={hasFc}
+                    fullText={text}
+                    enContext={enContext}
+                  />
+                );
+              }
+
               const tokenHasKanji = /[\u4e00-\u9faf]/.test(token.surface_form);
               const reading = token.reading ? toHiragana(token.reading) : "";
 
-              if (tokenHasKanji && reading) {
+              if (showFurigana && tokenHasKanji && reading) {
                 return (
                   <ruby
                     key={tIdx}

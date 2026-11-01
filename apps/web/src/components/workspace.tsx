@@ -20,9 +20,11 @@ import {
 } from "@/components/ui/sidebar";
 import dynamic from "next/dynamic";
 import { AppSidebar } from "@/components/app-sidebar";
-import { BookOpen, GraduationCap, Layers, Loader2 } from "lucide-react";
+import { BottomNavigation } from "@/components/bottom-navigation";
+import { BookOpen, GraduationCap, Layers, Loader2, TrendingUp } from "lucide-react";
 import { useNotes } from "@/contexts/NotesContext";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
+import { useTutor } from "@/contexts/TutorContext";
 import { getGlossaryRules } from "@/services/glossary";
 
 const TextEditor = dynamic(
@@ -61,6 +63,18 @@ const TutorWorkspace = dynamic(
   }
 );
 
+const StatsWorkspace = dynamic(
+  () => import("@/components/stats-workspace").then((mod) => mod.StatsWorkspace),
+  {
+    loading: () => (
+      <div className="flex-1 flex items-center justify-center p-8">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    ),
+    ssr: false,
+  }
+);
+
 const FlashcardPlayer = dynamic(
   () => import("@/components/flashcard-player").then((mod) => mod.FlashcardPlayer),
   { ssr: false }
@@ -80,9 +94,12 @@ export function Workspace(props: WorkspaceProps = {}) {
   const {
     activeSidebarView,
     selectedDeck,
+    setSelectedDeckId,
     playingDeck,
     stopPlayingDeck,
   } = useFlashCards();
+
+  const { selectedLevel } = useTutor();
 
   const [isTranslating, setIstranslating] = useState<boolean>(false);
 
@@ -209,23 +226,44 @@ export function Workspace(props: WorkspaceProps = {}) {
                 </span>
               )
             ) : activeSidebarView === "flashcards" ? (
-              selectedDeck && (
+              selectedDeck ? (
+                <div className="flex items-center gap-1.5 min-w-0 text-sm">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDeckId(null)}
+                    className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer shrink-0"
+                    title="Back to Decks"
+                  >
+                    <Layers size={15} className="text-primary shrink-0" />
+                    <span className="font-medium hidden xs:inline">Decks</span>
+                  </button>
+                  <span className="text-muted-foreground/60 text-xs shrink-0">/</span>
+                  <span className="font-medium text-foreground truncate max-w-[120px] xs:max-w-[160px] sm:max-w-xs">
+                    {selectedDeck.name}
+                  </span>
+                </div>
+              ) : (
                 <span className="text-sm font-medium text-muted-foreground truncate max-w-[140px] xs:max-w-[180px] sm:max-w-sm flex items-center gap-1.5 min-w-0">
                   <Layers size={15} className="text-primary shrink-0" />
-                  <span className="truncate">{selectedDeck.name}</span>
+                  <span>Cards</span>
                 </span>
               )
+            ) : activeSidebarView === "stats" ? (
+              <span className="text-sm font-medium text-muted-foreground truncate max-w-[140px] xs:max-w-[180px] sm:max-w-sm flex items-center gap-1.5 min-w-0">
+                <TrendingUp size={15} className="text-primary shrink-0" />
+                <span>Study Statistics</span>
+              </span>
             ) : (
               <span className="text-sm font-medium text-muted-foreground truncate max-w-[140px] xs:max-w-[180px] sm:max-w-sm flex items-center gap-1.5 min-w-0">
                 <GraduationCap size={15} className="text-primary shrink-0" />
-                <span>AI Tutor</span>
+                <span>AI Tutor ({selectedLevel})</span>
               </span>
             )}
           </div>
         </header>
 
         {activeSidebarView === "notes" ? (
-          <div className="flex-1 p-3 sm:p-6 md:p-8 flex flex-col items-center justify-start w-full min-w-0 max-w-full pb-safe">
+          <div className="flex-1 p-3 sm:p-6 md:p-8 flex flex-col items-center justify-start w-full min-w-0 max-w-full pb-20 sm:pb-safe">
             {!selectedNote ? (
               <Card className="w-full max-w-md text-center shadow-sm my-auto">
                 <CardHeader className="flex flex-col items-center">
@@ -271,14 +309,21 @@ export function Workspace(props: WorkspaceProps = {}) {
             )}
           </div>
         ) : activeSidebarView === "flashcards" ? (
-          <div className="flex-1 flex flex-col items-center justify-start w-full min-w-0 max-w-full">
+          <div className="flex-1 flex flex-col items-center justify-start w-full min-w-0 max-w-full pb-20 sm:pb-safe">
             <DeckWorkspace deck={selectedDeck} />
           </div>
+        ) : activeSidebarView === "stats" ? (
+          <div className="flex-1 flex flex-col items-stretch justify-start w-full min-w-0 max-w-full overflow-x-hidden pb-20 sm:pb-safe">
+            <StatsWorkspace />
+          </div>
         ) : (
-          <div className="flex-1 flex flex-col items-stretch justify-start w-full min-w-0 max-w-full overflow-x-hidden">
+          <div className="flex-1 flex flex-col items-stretch justify-start w-full min-w-0 max-w-full overflow-x-hidden pb-20 sm:pb-safe">
             <TutorWorkspace />
           </div>
         )}
+
+        {/* Mobile Fixed Bottom Navigation */}
+        <BottomNavigation />
       </SidebarInset>
 
       {/* Interactive Modal Play Mode */}

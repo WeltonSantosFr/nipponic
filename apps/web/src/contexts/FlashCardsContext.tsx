@@ -20,7 +20,9 @@ import {
   DeckTabMode,
   DeckCardFilterMode,
   FlashCardsContextData,
+  StudyStats,
 } from "@nipponic/shared";
+import { getStudyStatsAction } from "@/actions/stats";
 import { calculateNextReview, isCardDue } from "@/lib/srs";
 import { APP_DECKS } from "@/data/app-decks";
 import {
@@ -72,6 +74,7 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
   const [activeSidebarView, setActiveSidebarView] =
     useState<SidebarViewMode>("notes");
   const [playingDeck, setPlayingDeck] = useState<Deck | null>(null);
+  const [studyStats, setStudyStats] = useState<StudyStats | null>(null);
 
   const cardsRef = useRef<Card[]>(cards);
   cardsRef.current = cards;
@@ -96,17 +99,29 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
     return decks.some((d) => d.id === selectedDeck.id);
   }, [selectedDeck, decks]);
 
+  const refreshStats = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      const stats = await getStudyStatsAction();
+      if (stats) setStudyStats(stats);
+    } catch (err) {
+      console.error("Error refreshing study stats:", err);
+    }
+  }, [isAuthenticated]);
+
   const refreshAll = useCallback(async () => {
     if (typeof navigator !== "undefined" && !navigator.onLine) {
       return;
     }
     if (isAuthenticated && !isWakingServer) {
       try {
-        const [fetchedCards, fetchedDecks, fetchedPublic] = await Promise.all([
+        const [fetchedCards, fetchedDecks, fetchedPublic, fetchedStats] = await Promise.all([
           getCardsAction(),
           getDecksAction(),
           getPublicDecksAction(),
+          getStudyStatsAction(),
         ]);
+        if (fetchedStats) setStudyStats(fetchedStats);
 
         const renameMap: Record<string, string> = {
           "Hiragana (Básico)": "Hiragana (Basic)",
@@ -452,6 +467,7 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
               cards: prevPlaying.cards.map((c) => (c.id === cardId ? persisted : c)),
             };
           });
+          refreshStats().catch(() => {});
           return persisted;
         }
         // If server returned null, enqueue review to sync later
@@ -465,7 +481,7 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
         return updatedCard;
       }
     },
-    [isAuthenticated, appDecks]
+    [isAuthenticated, appDecks, refreshStats]
   );
 
   const deleteCard = useCallback(
@@ -747,6 +763,8 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
       reorderDeckCards,
       addDeckToMyDecks,
       refreshAll,
+      studyStats,
+      refreshStats,
     }),
     [
       cards,
@@ -777,6 +795,8 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
       reorderDeckCards,
       addDeckToMyDecks,
       refreshAll,
+      studyStats,
+      refreshStats,
     ]
   );
 

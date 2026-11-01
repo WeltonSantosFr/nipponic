@@ -80,7 +80,7 @@ export class CardsService {
       rating
     );
 
-    return await this.prisma.db.orm.public.Card.where({ id, userId }).update({
+    const updated = await this.prisma.db.orm.public.Card.where({ id, userId }).update({
       interval: result.interval,
       easeFactor: result.easeFactor,
       repetitions: result.repetitions,
@@ -88,6 +88,19 @@ export class CardsService {
       nextReviewAt: new Date(result.nextReviewAt),
       lastReviewedAt: new Date(result.lastReviewedAt),
     });
+
+    try {
+      await this.prisma.db.orm.public.StudyLog.create({
+        userId,
+        cardId: id,
+        rating,
+        reviewedAt: new Date(result.lastReviewedAt),
+      });
+    } catch {
+      // Non-blocking: study card review succeeds even if logging table is initializing
+    }
+
+    return updated;
   }
 }
 

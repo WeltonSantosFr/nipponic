@@ -273,4 +273,45 @@ describe('useGlossaryRules', () => {
     // Assert
     expect(result.current.rules).toEqual(newRules);
   });
+
+  it('provides working addRule, updateRule, and removeRule helper methods', () => {
+    localStorage.clear();
+    const { result } = renderHook(() => useGlossaryRules());
+
+    act(() => {
+      result.current.addRule('Kubernetes', 'クーバネティス');
+    });
+
+    expect(result.current.rules).toHaveLength(1);
+    const ruleId = result.current.rules[0]!.id;
+    expect(result.current.rules[0]!.targetTerm).toBe('クーバネティス');
+
+    act(() => {
+      result.current.updateRule(ruleId, 'Kubernetes', 'K8s');
+    });
+
+    expect(result.current.rules[0]!.targetTerm).toBe('K8s');
+
+    act(() => {
+      result.current.removeRule(ruleId);
+    });
+
+    expect(result.current.rules).toHaveLength(0);
+  });
+
+  it('returns empty array when localStorage contains non-array JSON', () => {
+    localStorage.setItem('nipponic:glossary_rules_v1', JSON.stringify({ not: 'an array' }));
+    expect(getGlossaryRules()).toEqual([]);
+  });
+
+  it('warns when saving glossary rules fails', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('Quota exceeded');
+    });
+    saveGlossaryRules([{ id: '1', sourceTerm: 'A', targetTerm: 'B' }]);
+    expect(warnSpy).toHaveBeenCalledWith('Failed to save glossary rules:', expect.any(Error));
+    warnSpy.mockRestore();
+    setItemSpy.mockRestore();
+  });
 });

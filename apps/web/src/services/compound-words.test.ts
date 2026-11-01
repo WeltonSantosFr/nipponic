@@ -172,6 +172,17 @@ describe('compound-words CRUD', () => {
       expect(result.current.compounds).toEqual(['東京都']);
       expect(typeof result.current.addCompound).toBe('function');
       expect(typeof result.current.removeCompound).toBe('function');
+
+      // Test invoking the returned helpers directly
+      act(() => {
+        result.current.addCompound('京都府');
+      });
+      expect(result.current.compounds).toContain('京都府');
+
+      act(() => {
+        result.current.removeCompound('京都府');
+      });
+      expect(result.current.compounds).not.toContain('京都府');
     });
 
     it('should update compounds when a storage event is dispatched', () => {

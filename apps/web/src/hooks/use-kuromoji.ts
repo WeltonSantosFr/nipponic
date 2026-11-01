@@ -4,7 +4,7 @@ import type kuromoji from "kuromoji";
 let cachedTokenizerPromise: Promise<kuromoji.Tokenizer<kuromoji.IpadicFeatures>> | null = null;
 let cachedTokenizer: kuromoji.Tokenizer<kuromoji.IpadicFeatures> | null = null;
 
-function getTokenizerInstance(): Promise<kuromoji.Tokenizer<kuromoji.IpadicFeatures>> {
+export function getTokenizerInstance(): Promise<kuromoji.Tokenizer<kuromoji.IpadicFeatures>> {
   if (cachedTokenizer) {
     return Promise.resolve(cachedTokenizer);
   }

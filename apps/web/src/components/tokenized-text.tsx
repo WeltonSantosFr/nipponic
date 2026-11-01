@@ -551,6 +551,7 @@ function TokenItemBase({
 }: TokenItemProps) {
   const isPunctuation = /^[「」『』、。！？\s()[\]…:;,-]+$/.test(word);
   const hasKanji = /[\u4e00-\u9faf]/.test(word);
+  const hasJapanese = /[\u3040-\u30ff\u4e00-\u9faf]/.test(word);
 
   const [isOpen, setIsOpen] = useState(false);
   const [dictData, setDictData] = useState<DictionaryData | null>(
@@ -563,8 +564,8 @@ function TokenItemBase({
   const enContextRef = useRef(enContext);
   enContextRef.current = enContext;
 
-  if (isPunctuation) {
-    return <span className="text-muted-foreground">{word}</span>;
+  if (isPunctuation || !hasJapanese) {
+    return <span className={isPunctuation ? "text-muted-foreground" : undefined}>{word}</span>;
   }
 
   const furiganaText = toHiragana(reading || dictData?.reading || "");
@@ -574,6 +575,8 @@ function TokenItemBase({
     <>
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger
+          data-testid={`token-${word}`}
+          data-word={word}
           className={
             hasFlashcard
               ? "cursor-pointer transition-all duration-150 bg-amber-500/15 dark:bg-amber-500/25 text-amber-950 dark:text-amber-100 border-b-2 border-amber-500/60 font-medium rounded-sm px-1 py-0.5 mx-0.5 inline-block select-text outline-none shadow-2xs hover:bg-amber-500/30 dark:hover:bg-amber-500/35 hover:border-amber-500 hover:text-amber-950 dark:hover:text-amber-50 data-open:bg-amber-500/35 data-open:border-amber-500"
@@ -641,7 +644,7 @@ function TokenItemBase({
   );
 }
 
-const TokenItem = memo(TokenItemBase, (prev, next) => {
+export const TokenItem = memo(TokenItemBase, (prev, next) => {
   return (
     prev.word === next.word &&
     prev.reading === next.reading &&

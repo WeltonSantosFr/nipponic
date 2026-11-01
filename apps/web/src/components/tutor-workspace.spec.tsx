@@ -15,6 +15,8 @@ vi.mock("@/hooks/use-speech", () => ({
 // Mock TokenizedText
 vi.mock("@/components/tokenized-text", () => ({
   TokenizedText: ({ text }: { text: string }) => <span>{text}</span>,
+  TokenItem: ({ word }: { word: string }) => <span data-testid={`token-${word}`}>{word}</span>,
+  toHiragana: (s: string) => s,
 }));
 
 describe("TutorWorkspace", () => {
@@ -24,6 +26,7 @@ describe("TutorWorkspace", () => {
   const mockSubmitFeedback = vi.fn();
   const mockAddVocabularyToDeck = vi.fn().mockResolvedValue({ createdCount: 2 });
   const mockSetSelectedTopicId = vi.fn();
+  const mockSetSelectedLevel = vi.fn();
   const mockCloseLesson = vi.fn();
 
   beforeEach(() => {
@@ -75,6 +78,40 @@ describe("TutorWorkspace", () => {
     fireEvent.click(startBtn);
 
     expect(mockLoadLesson).toHaveBeenCalledWith("top_1");
+  });
+
+  it("renders JLPT level selector (N5 - N1) and switches level when clicked", () => {
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [],
+      selectedLevel: "N5",
+      setSelectedLevel: mockSetSelectedLevel,
+      currentLesson: null,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+    } as any);
+
+    render(<TutorWorkspace />);
+
+    expect(screen.getByTestId("tutor-level-selector")).toBeDefined();
+    expect(screen.getByText("JLPT Level:")).toBeDefined();
+
+    const n5Tab = screen.getByRole("tab", { name: "N5" });
+    const n3Tab = screen.getByRole("tab", { name: "N3" });
+    const n1Tab = screen.getByRole("tab", { name: "N1" });
+
+    expect(n5Tab).toBeDefined();
+    expect(n3Tab).toBeDefined();
+    expect(n1Tab).toBeDefined();
+    expect(n5Tab.getAttribute("aria-selected")).toBe("true");
+    expect(n3Tab.getAttribute("aria-selected")).toBe("false");
+
+    fireEvent.click(n3Tab);
+    expect(mockSetSelectedLevel).toHaveBeenCalledWith("N3");
   });
 
   it("renders active lesson and navigates through 4 steps", async () => {
@@ -671,6 +708,501 @@ describe("TutorWorkspace", () => {
     expect(finishBtn.className).toContain("break-words");
     expect(addAllBtn.className).toContain("whitespace-normal");
     expect(addAllBtn.className).toContain("break-words");
+  });
+
+  it("handles vocabulary audio playback, negative feedback, and back navigation from summary", async () => {
+    const mockLesson = {
+      id: "les_vocab_test",
+      topicId: "top_vocab",
+      title: "Test Lesson",
+      level: "N5",
+      theoryMarkdown: "# Test",
+      dialogue: [{ speaker: "A", jpText: "テスト", enText: "test" }],
+      vocabulary: [{ jpText: "単語", reading: "たんご", enText: "word" }],
+      exercises: [
+        {
+          order: 1,
+          type: "multiple_choice",
+          prompt: "Choose the correct answer",
+          options: ["A", "B"],
+          correctAnswer: "A",
+          explanation: "Explanation",
+        },
+      ],
+    };
+
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [],
+      selectedLevel: "N5",
+      currentLesson: mockLesson,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+    } as any);
+
+    render(<TutorWorkspace />);
+
+    // Go to Vocabulary step
+    fireEvent.click(screen.getByRole("button", { name: /4\.\s*Vocabulary/i }));
+
+    // Click audio button for vocabulary
+    const listenBtn = screen.getByTitle("Listen");
+    fireEvent.click(listenBtn);
+    expect(mockSpeak).toHaveBeenCalledWith("単語", "ja-JP", 1, expect.any(Function));
+
+    // Click 'Needs improvement' feedback button
+    const needsImprovementBtn = screen.getByRole("button", { name: /Needs improvement/i });
+    fireEvent.click(needsImprovementBtn);
+
+    await waitFor(() => {
+      expect(mockSubmitFeedback).toHaveBeenCalledWith("confusing");
+    });
+
+    // Click 'Back to Exercises' button
+    const backToExercisesBtn = screen.getByRole("button", { name: /Back to Exercises/i });
+    fireEvent.click(backToExercisesBtn);
+
+    // Should now be on Exercises step
+    expect(screen.getByText("Interactive Exercises")).toBeInTheDocument();
+
+    // Click 'Back to Dialogue' button
+    const backToDialogueBtn = screen.getByRole("button", { name: /Back to Dialogue/i });
+    fireEvent.click(backToDialogueBtn);
+    expect(screen.getByText("Contextual Conversation")).toBeInTheDocument();
+
+    // Click 'Back to Theory' button
+    const backToTheoryBtn = screen.getByRole("button", { name: /Back to Theory/i });
+    fireEvent.click(backToTheoryBtn);
+    expect(screen.getByRole("button", { name: /Continue to Dialogue/i })).toBeInTheDocument();
+
+    // Go back to Exercises and test bottom 'Vocabulary & Cards' button
+    fireEvent.click(screen.getByRole("button", { name: /3\.\s*Practice/i }));
+    const toVocabBtn = screen.getByRole("button", { name: /^Vocabulary & Cards/i });
+    fireEvent.click(toVocabBtn);
+    expect(screen.getByText("Lesson Vocabulary")).toBeInTheDocument();
+  });
+
+  it("handles error notification banner and dismiss button", () => {
+    const mockClearError = vi.fn();
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [],
+      selectedLevel: "N5",
+      currentLesson: null,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+      error: "Failed to communicate with tutor service",
+      clearError: mockClearError,
+    } as any);
+
+    render(<TutorWorkspace />);
+
+    expect(screen.getByText("Failed to communicate with tutor service")).toBeInTheDocument();
+    const dismissBtn = screen.getByRole("button", { name: /dismiss/i });
+    fireEvent.click(dismissBtn);
+    expect(mockClearError).toHaveBeenCalled();
+  });
+
+  it("renders practice completion banner and navigates to vocabulary when all exercises are answered", async () => {
+    const mockLesson = {
+      id: "les_practice",
+      topicId: "top_practice",
+      title: "Practice Completion Test",
+      level: "N5",
+      theoryMarkdown: "# Theory",
+      dialogue: [{ speaker: "Teacher", jpText: "こんにちは", enText: "Hello" }],
+      vocabulary: [{ jpText: "今日", reading: "きょう", enText: "Today" }],
+      exercises: [
+        {
+          order: 1,
+          type: "multiple_choice" as const,
+          prompt: "What is the greeting?",
+          options: ["こんにちは", "さようなら"],
+          correctAnswer: "こんにちは",
+          explanation: "Greeting explanation",
+        },
+      ],
+    };
+
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [],
+      selectedLevel: "N5",
+      currentLesson: mockLesson,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+      error: null,
+      clearError: vi.fn(),
+    } as any);
+
+    render(<TutorWorkspace />);
+
+    // Go to Practice step
+    fireEvent.click(screen.getByRole("button", { name: /3\.\s*Practice/i }));
+    expect(screen.getByText("Interactive Exercises")).toBeInTheDocument();
+
+    // Answer the exercise correctly
+    const correctOptionBtn = screen.getByRole("button", { name: /こんにちは/i });
+    fireEvent.click(correctOptionBtn);
+
+    // Verify completion banner appears
+    await waitFor(() => {
+      expect(screen.getByText("Practice Completed!")).toBeInTheDocument();
+      expect(screen.getByText(/Score: 100% • Progress automatically saved\./i)).toBeInTheDocument();
+    });
+
+    // Click "View Vocabulary & Cards →" button inside the completion banner
+    const viewVocabBannerBtn = screen.getByRole("button", { name: /View Vocabulary & Cards →/i });
+    fireEvent.click(viewVocabBannerBtn);
+
+    // Should now be on Vocabulary step
+    expect(screen.getByText("Lesson Vocabulary")).toBeInTheDocument();
+  });
+
+  it("renders curriculum topic list with completed, recommended, and regular status", () => {
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [
+        {
+          id: "top_done",
+          level: "N5",
+          title: "Greetings",
+          objective: "Learn basic hellos",
+          lessonIndex: 1,
+          isCompleted: true,
+        },
+        {
+          id: "top_rec",
+          level: "N5",
+          title: "Numbers",
+          objective: "Learn counting 1-10",
+          lessonIndex: 2,
+          isCompleted: false,
+        },
+        {
+          id: "top_later",
+          level: "N5",
+          title: "Time",
+          objective: "Learn hours and minutes",
+          lessonIndex: 3,
+          isCompleted: false,
+        },
+      ],
+      selectedLevel: "N5",
+      currentLesson: null,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+      setSelectedLevel: mockSetSelectedLevel,
+      error: null,
+      clearError: vi.fn(),
+    } as any);
+
+    render(<TutorWorkspace />);
+
+    expect(screen.getByText("Greetings")).toBeInTheDocument();
+    expect(screen.getAllByText("Numbers")[0]).toBeInTheDocument();
+    expect(screen.getByText("Time")).toBeInTheDocument();
+  });
+
+  it("starts lesson when clicking directly on a topic card in the curriculum roadmap", () => {
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [
+        {
+          id: "top_direct",
+          level: "N5",
+          unitIndex: 1,
+          unitTitle: "Basics",
+          lessonIndex: 1,
+          title: "Direct Topic Test",
+          grammarKey: "direct",
+          objective: "Learn direct selection",
+          isCompleted: false,
+        },
+      ],
+      selectedLevel: "N5",
+      currentLesson: null,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+      setSelectedLevel: mockSetSelectedLevel,
+      error: null,
+      clearError: vi.fn(),
+    } as any);
+
+    render(<TutorWorkspace />);
+
+    // Click the topic card directly in the unit topics list (heading h4)
+    const topicHeading = screen.getByRole("heading", { name: "Direct Topic Test" });
+    fireEvent.click(topicHeading);
+
+    expect(mockLoadLesson).toHaveBeenCalledWith("top_direct");
+  });
+
+  it("navigates across 4 steps using the top step buttons and dismisses lesson error banner", () => {
+    const mockClearError = vi.fn();
+    const mockLesson = {
+      id: "les_nav",
+      topicId: "top_nav",
+      title: "Step Navigation Test",
+      level: "N5",
+      theoryMarkdown: "# Theory Nav Content",
+      dialogue: [{ speaker: "A", jpText: "テスト", enText: "Test" }],
+      vocabulary: [{ jpText: "本", reading: "ほん", enText: "Book" }],
+      exercises: [],
+    };
+
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [],
+      selectedLevel: "N5",
+      currentLesson: mockLesson,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+      error: "Temporary lesson error banner",
+      clearError: mockClearError,
+    } as any);
+
+    render(<TutorWorkspace />);
+
+    // Error banner should be rendered within active lesson view
+    expect(screen.getByText("Temporary lesson error banner")).toBeInTheDocument();
+    const dismissBtn = screen.getByRole("button", { name: /dismiss/i });
+    fireEvent.click(dismissBtn);
+    expect(mockClearError).toHaveBeenCalled();
+
+    // Step 1 is active
+    expect(screen.getByText("Theory Nav Content")).toBeInTheDocument();
+
+    // Click Step 2: Dialogue
+    const step2Btn = screen.getByRole("button", { name: "2. Dialogue" });
+    fireEvent.click(step2Btn);
+    expect(screen.getByText("Contextual Conversation")).toBeInTheDocument();
+
+    // Click Step 3: Practice
+    const step3Btn = screen.getByRole("button", { name: "3. Practice" });
+    fireEvent.click(step3Btn);
+    expect(screen.getByText("Interactive Exercises")).toBeInTheDocument();
+
+    // Click Step 4: Vocabulary
+    const step4Btn = screen.getByRole("button", { name: "4. Vocabulary" });
+    fireEvent.click(step4Btn);
+    expect(screen.getByText("Lesson Vocabulary")).toBeInTheDocument();
+
+    // Click Step 1: Theory again
+    const step1Btn = screen.getByRole("button", { name: "1. Theory" });
+    fireEvent.click(step1Btn);
+    expect(screen.getByText("Theory Nav Content")).toBeInTheDocument();
+  });
+
+  it("handles confusing feedback and toggles furigana with varied vocabulary readings", async () => {
+    const mockLesson = {
+      id: "les_vocab",
+      topicId: "top_vocab",
+      title: "Vocab & Feedback Test",
+      level: "N5",
+      theoryMarkdown: "# Theory",
+      dialogue: [],
+      vocabulary: [
+        { jpText: "食べる", reading: "たべる", enText: "to eat" },
+        { jpText: "パン", reading: "パン", enText: "bread" },
+        { jpText: "猫", reading: "", enText: "cat" },
+      ],
+      exercises: [],
+    };
+
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [],
+      selectedLevel: "N5",
+      currentLesson: mockLesson,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+      error: null,
+      clearError: vi.fn(),
+    } as any);
+
+    render(<TutorWorkspace />);
+
+    // Go to step 4: Vocabulary
+    fireEvent.click(screen.getByRole("button", { name: "4. Vocabulary" }));
+
+    // Verify vocabulary rendering with furigana disabled by default (shows in parentheses)
+    expect(screen.getByText("食べる")).toBeInTheDocument();
+    expect(screen.getByText("(たべる)")).toBeInTheDocument();
+    expect(screen.getByText("パン")).toBeInTheDocument();
+    expect(screen.getByText("猫")).toBeInTheDocument();
+
+    // Toggle furigana on (renders ruby without parentheses)
+    const furiganaToggle = screen.getByTestId("tutor-furigana-toggle");
+    fireEvent.click(furiganaToggle);
+    expect(screen.getByText("たべる")).toBeInTheDocument();
+
+    // Toggle furigana back off
+    fireEvent.click(furiganaToggle);
+    expect(screen.getByText("(たべる)")).toBeInTheDocument();
+
+    // Submit 'confusing' feedback
+    const needsImprovementBtn = screen.getByRole("button", { name: /needs improvement/i });
+    fireEvent.click(needsImprovementBtn);
+    expect(mockSubmitFeedback).toHaveBeenCalledWith("confusing");
+
+    // Clicking again should not trigger further submissions
+    fireEvent.click(needsImprovementBtn);
+    expect(mockSubmitFeedback).toHaveBeenCalledTimes(1);
+  });
+
+  it("handles toggling audio off when already playing in dialogue", async () => {
+    const mockStop = vi.fn();
+    const mockPendingSpeak = vi.fn().mockImplementation(() => new Promise(() => {}));
+
+    vi.mocked(SpeechModule.useSpeech).mockReturnValue({
+      speak: mockPendingSpeak,
+      isPlaying: false,
+      isLoading: false,
+      stop: mockStop,
+      isSupported: true,
+      voices: [],
+    } as any);
+
+    const mockLesson = {
+      id: "les_audio",
+      topicId: "top_audio",
+      title: "Audio Test",
+      level: "N5",
+      theoryMarkdown: "# Theory",
+      dialogue: [{ speaker: "A", jpText: "こんにちは", enText: "Hello" }],
+      vocabulary: [{ jpText: "猫", reading: "ねこ", enText: "Cat" }],
+      exercises: [],
+    };
+
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [],
+      selectedLevel: "N5",
+      currentLesson: mockLesson,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+      error: null,
+      clearError: vi.fn(),
+    } as any);
+
+    render(<TutorWorkspace />);
+
+    // Go to Dialogue
+    fireEvent.click(screen.getByRole("button", { name: "2. Dialogue" }));
+
+    const playBtn = screen.getByRole("button", { name: "Play pronunciation audio" });
+    // First click starts audio
+    fireEvent.click(playBtn);
+    expect(mockPendingSpeak).toHaveBeenCalledWith("こんにちは", "ja-JP", 1, expect.any(Function));
+
+    // Second click on same audio stops it
+    fireEvent.click(playBtn);
+    expect(mockStop).toHaveBeenCalled();
+  });
+
+  it("handles lesson completion with partial exercises and handles submit error", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const mockLesson = {
+      id: "les_score",
+      topicId: "top_score",
+      title: "Score Test",
+      level: "N5",
+      theoryMarkdown: "# Theory",
+      dialogue: [],
+      vocabulary: [{ jpText: "犬", reading: "いぬ", enText: "Dog" }],
+      exercises: [
+        {
+          order: 1,
+          type: "multiple_choice" as const,
+          prompt: "Q1",
+          options: ["Alpha Answer", "Beta Answer"],
+          correctAnswer: "Alpha Answer",
+          explanation: "",
+        },
+        {
+          order: 2,
+          type: "multiple_choice" as const,
+          prompt: "Q2",
+          options: ["Gamma Answer", "Delta Answer"],
+          correctAnswer: "Gamma Answer",
+          explanation: "",
+        },
+      ],
+    };
+
+    const mockFailingSubmitProgress = vi.fn().mockRejectedValue(new Error("Progress submit failure"));
+
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [],
+      selectedLevel: "N5",
+      currentLesson: mockLesson,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockFailingSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+      error: null,
+      clearError: vi.fn(),
+    } as any);
+
+    render(<TutorWorkspace />);
+
+    // Go to practice
+    fireEvent.click(screen.getByRole("button", { name: "3. Practice" }));
+
+    // Answer Q1 correctly
+    const optionBtn = screen.getByRole("button", { name: /Alpha Answer/i });
+    fireEvent.click(optionBtn);
+
+    // Navigate to Vocabulary step
+    fireEvent.click(screen.getByRole("button", { name: "4. Vocabulary" }));
+
+    // Click finish button
+    const finishBtn = screen.getByRole("button", { name: /finish & return to curriculum/i });
+    await fireEvent.click(finishBtn);
+
+    await waitFor(() => {
+      expect(mockFailingSubmitProgress).toHaveBeenCalledWith(50);
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to submit progress on finish:", expect.any(Error));
+      expect(mockCloseLesson).toHaveBeenCalled();
+    });
+
+    consoleErrorSpy.mockRestore();
   });
 });
 

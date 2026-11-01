@@ -12,6 +12,7 @@ model User {
   decks          Deck[]
   sponsorships   Sponsor[]
   lessonProgress UserLessonProgress[]
+  studyLogs      StudyLog[]
   
   createdAt      DateTime @default(now())
   updatedAt      temporal.updatedAt()
@@ -172,4 +173,15 @@ model LessonFeedback {
   rating    String
   comment   String?
   createdAt DateTime @default(now())
+}
+
+model StudyLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cardId     String?
+  rating     Int      // 1 (Again), 2 (Hard), 3 (Good), 4 (Easy)
+  reviewedAt DateTime @default(now())
+  
+  createdAt  DateTime @default(now())
 }

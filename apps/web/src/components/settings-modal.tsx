@@ -53,7 +53,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-3xl md:max-w-4xl h-[620px] max-h-[90vh] p-0 overflow-hidden flex flex-col gap-0 border-border/80">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-3xl md:max-w-4xl h-[620px] max-h-[90vh] p-0 overflow-hidden flex flex-col gap-0 border-border/80 shadow-2xl">
         {/* Modal Header */}
         <div className="w-full min-w-0 border-b border-border/70 bg-muted/20 shrink-0">
           {/* Top Line: Icon & Title */}
