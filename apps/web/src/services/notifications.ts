@@ -193,6 +193,8 @@ export async function scheduleDailyReminder(settings?: NotificationSettings): Pr
   const currentSettings = settings || getNotificationSettings();
 
   try {
+    await initNotificationChannel();
+
     // Cancel existing daily reminder
     await LocalNotifications.cancel({
       notifications: [{ id: NOTIFICATION_ID_DAILY }],
@@ -238,6 +240,8 @@ export async function scheduleOverdueCardsReminder(
   const currentSettings = settings || getNotificationSettings();
 
   try {
+    await initNotificationChannel();
+
     // Cancel previous overdue alert
     await LocalNotifications.cancel({
       notifications: [{ id: NOTIFICATION_ID_OVERDUE }],

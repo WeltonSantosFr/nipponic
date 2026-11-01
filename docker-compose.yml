@@ -62,6 +62,7 @@ services:
       - CI=true
       - NODE_OPTIONS=--max-old-space-size=768
     volumes:
+      - ./apps/web/next.config.js:/app/apps/web/next.config.js
       - ./apps/web/app:/app/apps/web/app
       - ./apps/web/src:/app/apps/web/src
       - ./apps/web/public:/app/apps/web/public

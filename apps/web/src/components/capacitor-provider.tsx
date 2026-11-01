@@ -21,9 +21,10 @@ export function CapacitorProvider({ children }: { children: React.ReactNode }) {
     StatusBar.setBackgroundColor({ color: "#09090b" }).catch(() => {});
     StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});
 
-    // Initialize Notification Channel and ensure daily reminder is scheduled
-    initNotificationChannel().catch(() => {});
-    scheduleDailyReminder().catch(() => {});
+    // Initialize Notification Channel and ensure daily reminder is scheduled sequentially
+    initNotificationChannel()
+      .then(() => scheduleDailyReminder())
+      .catch(() => {});
 
     // Handle Android hardware back button
     const backButtonListenerPromise = App.addListener(

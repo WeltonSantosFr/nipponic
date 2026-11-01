@@ -4,6 +4,15 @@ const nextConfig = {
   // On Vercel, output: 'standalone' conflicts with Vercel's build adapter in Next.js 16.3,
   // causing 'ENOENT: no such file or directory, open .../next-server.js.nft.json'.
   ...(process.env.VERCEL ? {} : { output: "standalone" }),
+  allowedDevOrigins: [
+    "192.168.1.13",
+    "10.0.2.2",
+    "localhost",
+    "127.0.0.1",
+    ...(process.env.ALLOWED_DEV_ORIGINS
+      ? process.env.ALLOWED_DEV_ORIGINS.split(",").map((s) => s.trim())
+      : []),
+  ],
   experimental: {
     optimizePackageImports: [
       "lucide-react",
