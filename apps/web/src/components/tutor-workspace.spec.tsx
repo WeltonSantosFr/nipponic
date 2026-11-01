@@ -24,6 +24,7 @@ describe("TutorWorkspace", () => {
   const mockSubmitFeedback = vi.fn();
   const mockAddVocabularyToDeck = vi.fn().mockResolvedValue({ createdCount: 2 });
   const mockSetSelectedTopicId = vi.fn();
+  const mockSetSelectedLevel = vi.fn();
   const mockCloseLesson = vi.fn();
 
   beforeEach(() => {
@@ -75,6 +76,40 @@ describe("TutorWorkspace", () => {
     fireEvent.click(startBtn);
 
     expect(mockLoadLesson).toHaveBeenCalledWith("top_1");
+  });
+
+  it("renders JLPT level selector (N5 - N1) and switches level when clicked", () => {
+    vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+      curriculum: [],
+      selectedLevel: "N5",
+      setSelectedLevel: mockSetSelectedLevel,
+      currentLesson: null,
+      isLoadingLesson: false,
+      loadLesson: mockLoadLesson,
+      closeLesson: mockCloseLesson,
+      submitProgress: mockSubmitProgress,
+      submitFeedback: mockSubmitFeedback,
+      addVocabularyToDeck: mockAddVocabularyToDeck,
+      setSelectedTopicId: mockSetSelectedTopicId,
+    } as any);
+
+    render(<TutorWorkspace />);
+
+    expect(screen.getByTestId("tutor-level-selector")).toBeDefined();
+    expect(screen.getByText("JLPT Level:")).toBeDefined();
+
+    const n5Tab = screen.getByRole("tab", { name: "N5" });
+    const n3Tab = screen.getByRole("tab", { name: "N3" });
+    const n1Tab = screen.getByRole("tab", { name: "N1" });
+
+    expect(n5Tab).toBeDefined();
+    expect(n3Tab).toBeDefined();
+    expect(n1Tab).toBeDefined();
+    expect(n5Tab.getAttribute("aria-selected")).toBe("true");
+    expect(n3Tab.getAttribute("aria-selected")).toBe("false");
+
+    fireEvent.click(n3Tab);
+    expect(mockSetSelectedLevel).toHaveBeenCalledWith("N3");
   });
 
   it("renders active lesson and navigates through 4 steps", async () => {

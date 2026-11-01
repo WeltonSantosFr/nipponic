@@ -24,6 +24,7 @@ import { BottomNavigation } from "@/components/bottom-navigation";
 import { BookOpen, GraduationCap, Layers, Loader2, TrendingUp } from "lucide-react";
 import { useNotes } from "@/contexts/NotesContext";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
+import { useTutor } from "@/contexts/TutorContext";
 import { getGlossaryRules } from "@/services/glossary";
 
 const TextEditor = dynamic(
@@ -97,6 +98,8 @@ export function Workspace(props: WorkspaceProps = {}) {
     playingDeck,
     stopPlayingDeck,
   } = useFlashCards();
+
+  const { selectedLevel } = useTutor();
 
   const [isTranslating, setIstranslating] = useState<boolean>(false);
 
@@ -253,7 +256,7 @@ export function Workspace(props: WorkspaceProps = {}) {
             ) : (
               <span className="text-sm font-medium text-muted-foreground truncate max-w-[140px] xs:max-w-[180px] sm:max-w-sm flex items-center gap-1.5 min-w-0">
                 <GraduationCap size={15} className="text-primary shrink-0" />
-                <span>AI Tutor</span>
+                <span>AI Tutor ({selectedLevel})</span>
               </span>
             )}
           </div>
