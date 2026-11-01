@@ -34,4 +34,38 @@ describe("SupporterBadge", () => {
     );
     expect(screen.getByText("🍱 Bento (Honorary)")).toBeInTheDocument();
   });
+
+  it("renders honorary supporter badge with fallback text when tierName is null", () => {
+    render(
+      <SupporterBadge
+        isSupporter={true}
+        isActiveSupporter={false}
+      />
+    );
+    expect(screen.getByText("Honorary Supporter")).toBeInTheDocument();
+  });
+
+  it("renders icon only when showText is false", () => {
+    const { container: activeContainer } = render(
+      <SupporterBadge
+        isSupporter={true}
+        isActiveSupporter={true}
+        showText={false}
+        size="md"
+      />
+    );
+    expect(activeContainer.querySelector("svg")).toBeInTheDocument();
+    expect(screen.queryByText("Active Supporter")).not.toBeInTheDocument();
+
+    const { container: honoraryContainer } = render(
+      <SupporterBadge
+        isSupporter={true}
+        isActiveSupporter={false}
+        showText={false}
+        size="md"
+      />
+    );
+    expect(honoraryContainer.querySelector("svg")).toBeInTheDocument();
+    expect(screen.queryByText("Honorary Supporter")).not.toBeInTheDocument();
+  });
 });

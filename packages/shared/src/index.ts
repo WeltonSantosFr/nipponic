@@ -925,3 +925,5 @@ export const StudyStatsSchema = z.object({
 });
 export type StudyStats = z.infer<typeof StudyStatsSchema>;
 
+export * from "./furigana";
+

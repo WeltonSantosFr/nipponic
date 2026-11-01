@@ -399,7 +399,7 @@ export function FlashcardPlayer({ deck, onClose }: FlashcardPlayerProps) {
                   <button
                     type="button"
                     onClick={(e) => handleSpeech(e, currentCard?.jpText || "")}
-                    disabled={isPlaying || isSpeechLoading}
+                    disabled={isSpeechLoading}
                     className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all cursor-pointer text-xs font-semibold mt-1"
                     title={`Pronounce at ${speechRate}x`}
                   >
@@ -423,7 +423,7 @@ export function FlashcardPlayer({ deck, onClose }: FlashcardPlayerProps) {
                       onClick={(e) =>
                         handleSpeech(e, currentCard?.jpText || "")
                       }
-                      disabled={isPlaying || isSpeechLoading}
+                      disabled={isSpeechLoading}
                       className="p-1 rounded-full hover:text-primary hover:bg-primary/10 transition-colors shrink-0"
                       title="Pronounce Japanese"
                     >

@@ -147,4 +147,99 @@ In polite Japanese (*Teineigo*), this pattern is used in everyday conversation t
     expect(ruby).toBeNull();
     expect(container).toHaveTextContent("失礼極まりない態度");
   });
+
+  it("renders tables with headers and rows properly", () => {
+    const tableMarkdown = `
+| Kanji | Reading | English |
+| --- | --- | --- |
+| 食べる | たべる | to eat |
+| 飲む | のむ | to drink |
+`;
+    const { container } = render(<MarkdownContent content={tableMarkdown} />);
+
+    const table = container.querySelector("table");
+    expect(table).not.toBeNull();
+
+    const headers = container.querySelectorAll("th");
+    expect(headers).toHaveLength(3);
+    expect(headers[0]).toHaveTextContent("Kanji");
+    expect(headers[1]).toHaveTextContent("Reading");
+    expect(headers[2]).toHaveTextContent("English");
+
+    const rows = container.querySelectorAll("tbody tr");
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toHaveTextContent("食べる");
+    expect(rows[0]).toHaveTextContent("to eat");
+  });
+
+  it("renders horizontal rules (hr) when separated by triple dashes", () => {
+    const markdown = "Above line\n\n---\n\nBelow line";
+    const { container } = render(<MarkdownContent content={markdown} />);
+
+    const hr = container.querySelector("hr");
+    expect(hr).not.toBeNull();
+  });
+
+  it("renders links, strikethrough, and bold-italic formatted tokens", () => {
+    const markdown = "Check [Nipponic](https://nipponic.app) with ~~wrong word~~ and ***super important***.";
+    const { container } = render(<MarkdownContent content={markdown} />);
+
+    const link = container.querySelector("a");
+    expect(link).not.toBeNull();
+    expect(link).toHaveAttribute("href", "https://nipponic.app");
+    expect(link).toHaveTextContent("Nipponic");
+
+    const del = container.querySelector("del");
+    expect(del).not.toBeNull();
+    expect(del).toHaveTextContent("wrong word");
+
+    const strong = container.querySelector("strong.italic");
+    expect(strong).not.toBeNull();
+    expect(strong).toHaveTextContent("super important");
+  });
+
+  it("handles multiline paragraphs and breaking immediately on markdown delimiters", () => {
+    const markdown = `First paragraph line
+Second paragraph line
+# Next Header`;
+    const { container } = render(<MarkdownContent content={markdown} />);
+    const p = container.querySelector("p");
+    expect(p?.textContent).toContain("First paragraph line");
+    expect(p?.textContent).toContain("Second paragraph line");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Next Header");
+  });
+
+  it("evicts oldest tokens from cache when cache exceeds maximum size", () => {
+    for (let i = 0; i < 505; i++) {
+      render(<MarkdownContent content={`Unique string token ${i}`} />);
+    }
+    expect(screen.getByText("Unique string token 504")).toBeInTheDocument();
+  });
+
+  it("handles underscore formatting, ruby annotations, and malformed inline syntax", () => {
+    const markdown = `
+__bold with underscores__ and _italic with underscores_
+Ruby: {猫|ねこ} and <ruby>犬<rt>いぬ</rt></ruby>
+Malformed ruby: <ruby>Broken</ruby> and {too|many|parts}
+Malformed link: [not a link](
+`;
+    const { container } = render(<MarkdownContent content={markdown} />);
+
+    // Underscores
+    expect(screen.getByText("bold with underscores")).toBeInTheDocument();
+    expect(screen.getByText("italic with underscores")).toBeInTheDocument();
+
+    // Valid Ruby
+    const rubyElements = container.querySelectorAll("ruby");
+    expect(rubyElements.length).toBeGreaterThanOrEqual(2);
+    expect(container.textContent).toContain("猫");
+    expect(container.textContent).toContain("ねこ");
+    expect(container.textContent).toContain("犬");
+    expect(container.textContent).toContain("いぬ");
+
+    // Malformed syntax fallbacks
+    expect(container.textContent).toContain("Broken");
+    expect(container.textContent).toContain("{too|many|parts}");
+    expect(container.textContent).toContain("[not a link](");
+  });
 });

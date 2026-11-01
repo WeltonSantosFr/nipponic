@@ -299,4 +299,240 @@ describe("StatsWorkspace", () => {
       screen.getByText(/sign in to sync your study streaks/i)
     ).toBeInTheDocument();
   });
+
+  it("handles heatmap color variations, resting streak, and card stage calculations", () => {
+    vi.spyOn(AuthContextModule, "useAuth").mockReturnValue(
+      createMockAuth({
+        isAuthenticated: true,
+      })
+    );
+
+    const learningCard: Card = {
+      ...mockDueCard,
+      id: "card-learning",
+      repetitions: 2,
+      interval: 10,
+    };
+    const matureCard: Card = {
+      ...mockDueCard,
+      id: "card-mature",
+      repetitions: 5,
+      interval: 30,
+    };
+
+    const variedHeatmapStats: StudyStats = {
+      ...mockStudyStats,
+      streak: {
+        current: 1,
+        longest: 0,
+        lastStudiedAt: null,
+        isActiveToday: false,
+      },
+      cardsBreakdown: {
+        total: 0,
+        dueToday: 0,
+        newCards: 0,
+        learning: 0,
+        mature: 0,
+      },
+      heatmap: [
+        { date: "2026-05-01", count: 25 },
+        { date: "2026-05-02", count: 12 },
+        { date: "2026-05-03", count: 6 },
+        { date: "2026-05-04", count: 2 },
+        { date: "2026-05-05", count: 0 },
+      ],
+    };
+
+    vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue({
+      cards: [mockDueCard, learningCard, matureCard],
+      decks: [],
+      appDecks: [],
+      publicDecks: [],
+      activeDeckTab: "my",
+      setActiveDeckTab: vi.fn(),
+      selectedDeckId: null,
+      selectedDeck: undefined,
+      isCurrentDeckOwner: false,
+      setSelectedDeckId: vi.fn(),
+      activeSidebarView: "stats",
+      setActiveSidebarView: vi.fn(),
+      playingDeck: null,
+      startPlayingDeck: mockStartPlayingDeck,
+      stopPlayingDeck: vi.fn(),
+      createCard: vi.fn(),
+      updateCard: vi.fn(),
+      deleteCard: vi.fn(),
+      reviewCard: vi.fn(),
+      getDueCards: () => [mockDueCard],
+      createDeck: vi.fn(),
+      updateDeck: vi.fn(),
+      deleteDeck: vi.fn(),
+      addCardsToDeck: vi.fn(),
+      removeCardFromDeck: vi.fn(),
+      reorderDeckCards: vi.fn(),
+      addDeckToMyDecks: vi.fn(),
+      refreshAll: vi.fn(),
+      studyStats: variedHeatmapStats,
+      refreshStats: mockRefreshStats,
+    });
+
+    render(<StatsWorkspace />);
+
+    // Resting badge and 1 day singular streak
+    expect(screen.getByText("Resting")).toBeInTheDocument();
+    expect(screen.getAllByText("1")[0]).toBeInTheDocument();
+    expect(screen.getByText("day streak")).toBeInTheDocument();
+    expect(screen.getByText("Review cards daily to build your streak!")).toBeInTheDocument();
+
+    // Heatmap squares with different count thresholds
+    expect(screen.getByTitle("25 reviews on 2026-05-01")).toHaveClass("bg-emerald-500");
+    expect(screen.getByTitle("12 reviews on 2026-05-02")).toHaveClass("bg-emerald-500/80");
+    expect(screen.getByTitle("6 reviews on 2026-05-03")).toHaveClass("bg-emerald-500/60");
+    expect(screen.getByTitle("2 reviews on 2026-05-04")).toHaveClass("bg-emerald-500/35");
+  });
+
+  it("renders 'Goal Reached! 🎉' when reviews meet target, and handles singular heatmap day title", () => {
+    vi.spyOn(AuthContextModule, "useAuth").mockReturnValue(createMockAuth());
+
+    const goalReachedStats: StudyStats = {
+      ...mockStudyStats,
+      today: {
+        reviewsCount: 25,
+        targetReviews: 20,
+        retentionRate: 96,
+      },
+      heatmap: [
+        { date: "2026-05-05", count: 1 },
+      ],
+    };
+
+    vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue({
+      cards: [],
+      decks: [],
+      appDecks: [],
+      publicDecks: [],
+      activeDeckTab: "my",
+      setActiveDeckTab: vi.fn(),
+      selectedDeckId: null,
+      selectedDeck: undefined,
+      isCurrentDeckOwner: false,
+      setSelectedDeckId: vi.fn(),
+      activeSidebarView: "stats",
+      setActiveSidebarView: vi.fn(),
+      playingDeck: null,
+      startPlayingDeck: mockStartPlayingDeck,
+      stopPlayingDeck: vi.fn(),
+      createCard: vi.fn(),
+      updateCard: vi.fn(),
+      deleteCard: vi.fn(),
+      reviewCard: vi.fn(),
+      getDueCards: () => [],
+      createDeck: vi.fn(),
+      updateDeck: vi.fn(),
+      deleteDeck: vi.fn(),
+      addCardsToDeck: vi.fn(),
+      removeCardFromDeck: vi.fn(),
+      reorderDeckCards: vi.fn(),
+      addDeckToMyDecks: vi.fn(),
+      refreshAll: vi.fn(),
+      studyStats: goalReachedStats,
+      refreshStats: mockRefreshStats,
+    });
+
+    render(<StatsWorkspace />);
+
+    expect(screen.getByText("Goal Reached! 🎉")).toBeInTheDocument();
+    expect(screen.getByTitle("1 review on 2026-05-05")).toBeInTheDocument();
+  });
+
+  it("handles fallback to cards.filter when getDueCards is undefined, and prevents starting review when empty", () => {
+    vi.spyOn(AuthContextModule, "useAuth").mockReturnValue(createMockAuth());
+
+    const duePastCard: Card = {
+      ...mockDueCard,
+      id: "card-past-due",
+      nextReviewAt: "2020-01-01T00:00:00.000Z",
+    };
+
+    vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue({
+      cards: [duePastCard],
+      decks: [],
+      appDecks: [],
+      publicDecks: [],
+      activeDeckTab: "my",
+      setActiveDeckTab: vi.fn(),
+      selectedDeckId: null,
+      selectedDeck: undefined,
+      isCurrentDeckOwner: false,
+      setSelectedDeckId: vi.fn(),
+      activeSidebarView: "stats",
+      setActiveSidebarView: vi.fn(),
+      playingDeck: null,
+      startPlayingDeck: mockStartPlayingDeck,
+      stopPlayingDeck: vi.fn(),
+      createCard: vi.fn(),
+      updateCard: vi.fn(),
+      deleteCard: vi.fn(),
+      reviewCard: vi.fn(),
+      getDueCards: undefined as any,
+      createDeck: vi.fn(),
+      updateDeck: vi.fn(),
+      deleteDeck: vi.fn(),
+      addCardsToDeck: vi.fn(),
+      removeCardFromDeck: vi.fn(),
+      reorderDeckCards: vi.fn(),
+      addDeckToMyDecks: vi.fn(),
+      refreshAll: vi.fn(),
+      studyStats: mockStudyStats,
+      refreshStats: mockRefreshStats,
+    });
+
+    const { rerender } = render(<StatsWorkspace />);
+
+    // Review button should be present because duePastCard is due
+    const reviewBtn = screen.getByRole("button", { name: /Review Due Cards Now/i });
+    expect(reviewBtn).toBeInTheDocument();
+    fireEvent.click(reviewBtn);
+    expect(mockStartPlayingDeck).toHaveBeenCalled();
+
+    // Now test with 0 cards and getDueCards returning empty
+    mockStartPlayingDeck.mockClear();
+    vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue({
+      cards: [],
+      decks: [],
+      appDecks: [],
+      publicDecks: [],
+      activeDeckTab: "my",
+      setActiveDeckTab: vi.fn(),
+      selectedDeckId: null,
+      selectedDeck: undefined,
+      isCurrentDeckOwner: false,
+      setSelectedDeckId: vi.fn(),
+      activeSidebarView: "stats",
+      setActiveSidebarView: vi.fn(),
+      playingDeck: null,
+      startPlayingDeck: mockStartPlayingDeck,
+      stopPlayingDeck: vi.fn(),
+      createCard: vi.fn(),
+      updateCard: vi.fn(),
+      deleteCard: vi.fn(),
+      reviewCard: vi.fn(),
+      getDueCards: () => [],
+      createDeck: vi.fn(),
+      updateDeck: vi.fn(),
+      deleteDeck: vi.fn(),
+      addCardsToDeck: vi.fn(),
+      removeCardFromDeck: vi.fn(),
+      reorderDeckCards: vi.fn(),
+      addDeckToMyDecks: vi.fn(),
+      refreshAll: vi.fn(),
+      studyStats: mockStudyStats,
+      refreshStats: mockRefreshStats,
+    });
+
+    rerender(<StatsWorkspace />);
+    expect(screen.getByText("All caught up! No reviews due right now.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Review Due Cards Now/i })).not.toBeInTheDocument();
+  });
 });

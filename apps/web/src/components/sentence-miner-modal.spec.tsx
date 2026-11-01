@@ -13,19 +13,28 @@ const mockDecks = [
   { id: "deck-3", name: "Kanji Core", cards: [{ id: "c2" }, { id: "c3" }] },
 ];
 
+let currentFlashcardContext = {
+  decks: mockDecks,
+  createCard: mockCreateCard,
+  createDeck: mockCreateDeck,
+  addCardsToDeck: mockAddCardsToDeck,
+  selectedDeckId: "deck-1" as string | null,
+};
+
 vi.mock("@/contexts/FlashCardsContext", () => ({
-  useFlashCards: () => ({
-    decks: mockDecks,
-    createCard: mockCreateCard,
-    createDeck: mockCreateDeck,
-    addCardsToDeck: mockAddCardsToDeck,
-    selectedDeckId: "deck-1",
-  }),
+  useFlashCards: () => currentFlashcardContext,
 }));
 
 describe("SentenceMinerModal", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    currentFlashcardContext = {
+      decks: mockDecks,
+      createCard: mockCreateCard,
+      createDeck: mockCreateDeck,
+      addCardsToDeck: mockAddCardsToDeck,
+      selectedDeckId: "deck-1",
+    };
   });
 
   it("populates front with word, reading, and sentence context, and back with definition ONLY (ignoring sentenceEn / note text)", () => {
@@ -207,6 +216,199 @@ describe("SentenceMinerModal", () => {
           enText: "dog",
         },
         "new-deck-1"
+      );
+    });
+  });
+
+  it("handles successful creation timeout closing the modal", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+
+    render(
+      <SentenceMinerModal
+        isOpen={true}
+        onClose={mockOnClose}
+        word="桜"
+        reading="さくら"
+        meanings={["cherry blossom"]}
+        sentenceJp="桜が綺麗だ。"
+      />
+    );
+
+    const submitBtn = screen.getByRole("button", { name: /create flashcard/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Flashcard created and added/i)).toBeInTheDocument();
+    });
+
+    // Advance 1 second for timeout
+    vi.advanceTimersByTime(1000);
+
+    await waitFor(() => {
+      expect(mockOnClose).toHaveBeenCalled();
+    });
+
+    vi.useRealTimers();
+  });
+
+  it("handles creation error gracefully", async () => {
+    mockCreateCard.mockRejectedValueOnce(new Error("Database error"));
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    render(
+      <SentenceMinerModal
+        isOpen={true}
+        onClose={mockOnClose}
+        word="桜"
+        reading="さくら"
+        meanings={["cherry blossom"]}
+        sentenceJp="桜が綺麗だ。"
+      />
+    );
+
+    const submitBtn = screen.getByRole("button", { name: /create flashcard/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Error creating card:", expect.any(Error));
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("handles word without sentenceJp and blank text submission guard", () => {
+    render(
+      <SentenceMinerModal
+        isOpen={true}
+        onClose={mockOnClose}
+        word="山"
+        reading="やま"
+        meanings={["mountain"]}
+        sentenceJp=""
+      />
+    );
+
+    const frontInput = screen.getByPlaceholderText(/target word and sentence/i) as HTMLTextAreaElement;
+    expect(frontInput.value).toBe("山 (やま)");
+
+    // Blank front input and try submit
+    fireEvent.change(frontInput, { target: { value: "   " } });
+    const submitBtn = screen.getByRole("button", { name: /create flashcard/i });
+    fireEvent.click(submitBtn);
+    expect(mockCreateCard).not.toHaveBeenCalled();
+  });
+
+  it("handles no deck matches for search query and closes on Escape", () => {
+    render(
+      <SentenceMinerModal
+        isOpen={true}
+        onClose={mockOnClose}
+        word="川"
+        reading="かわ"
+        meanings={["river"]}
+        sentenceJp=""
+      />
+    );
+
+    const searchInput = screen.getByPlaceholderText(/search decks by name/i);
+    fireEvent.change(searchInput, { target: { value: "nonexistent query" } });
+
+    expect(screen.getByText(/no decks found matching/i)).toBeInTheDocument();
+
+    // Escape closes dialog
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape", code: "Escape" });
+    expect(mockOnClose).toHaveBeenCalled();
+  });
+
+  it("handles editing back definition, guards against empty back input, and saves to arsenal when no decks selected", async () => {
+    render(
+      <SentenceMinerModal
+        isOpen={true}
+        onClose={mockOnClose}
+        word="星"
+        reading="ほし"
+        meanings={["star"]}
+        sentenceJp="星が綺麗。"
+      />
+    );
+
+    const backInput = screen.getByPlaceholderText(/meaning/i);
+
+    // 1. Edit back definition textarea (line 207)
+    fireEvent.change(backInput, { target: { value: "celestial body, star" } });
+    expect(backInput).toHaveValue("celestial body, star");
+
+    // 2. Clear back input and test guard
+    fireEvent.change(backInput, { target: { value: "   " } });
+    const submitBtn = screen.getByRole("button", { name: /create flashcard/i });
+    fireEvent.click(submitBtn);
+    expect(mockCreateCard).not.toHaveBeenCalled();
+
+    // 3. Uncheck default selected deck (deck-1) so no decks are selected
+    const jlptCheckbox = screen.getByLabelText(/jlpt n5/i);
+    expect(jlptCheckbox).toBeChecked();
+    fireEvent.click(jlptCheckbox);
+    expect(jlptCheckbox).not.toBeChecked();
+
+    // Put valid definition back
+    fireEvent.change(backInput, { target: { value: "star" } });
+
+    // Submit without decks -> saves to Arsenal
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(mockCreateCard).toHaveBeenCalledWith(
+        {
+          jpText: "星 (ほし)\n\n「星が綺麗。」",
+          enText: "star",
+        },
+        undefined
+      );
+      expect(screen.getByText("Flashcard created and added to your Arsenal!")).toBeInTheDocument();
+    });
+  });
+
+  it("handles empty decks list and when new deck creation returns null", async () => {
+    currentFlashcardContext = {
+      decks: [],
+      createCard: mockCreateCard,
+      createDeck: vi.fn().mockResolvedValue(null),
+      addCardsToDeck: mockAddCardsToDeck,
+      selectedDeckId: null,
+    };
+
+    render(
+      <SentenceMinerModal
+        isOpen={true}
+        onClose={mockOnClose}
+        word="月"
+        reading="つき"
+        meanings={["moon"]}
+        sentenceJp="月が綺麗。"
+      />
+    );
+
+    // Notice for empty decks
+    expect(screen.getByText("No decks available yet. The card will be added to your Arsenal.")).toBeInTheDocument();
+
+    // Toggle creating new deck
+    const newDeckBtn = screen.getByRole("button", { name: /create new deck/i });
+    fireEvent.click(newDeckBtn);
+
+    const newDeckInput = screen.getByPlaceholderText(/enter new deck name/i);
+    fireEvent.change(newDeckInput, { target: { value: "Failed Deck" } });
+
+    // Submit
+    const submitBtn = screen.getByRole("button", { name: /create flashcard/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(mockCreateCard).toHaveBeenCalledWith(
+        {
+          jpText: "月 (つき)\n\n「月が綺麗。」",
+          enText: "moon",
+        },
+        undefined
       );
     });
   });

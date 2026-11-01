@@ -139,4 +139,69 @@ describe("BottomNavigation", () => {
     const { container } = render(<BottomNavigation />);
     expect(container).toBeEmptyDOMElement();
   });
+
+  it("resets selected deck when clicking Cards tab while already on flashcards view", () => {
+    const mockSetSelectedDeckId = vi.fn();
+    vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue(
+      createMockFlashcards({
+        activeSidebarView: "flashcards",
+        setSelectedDeckId: mockSetSelectedDeckId,
+      })
+    );
+
+    render(<BottomNavigation />);
+
+    fireEvent.click(screen.getByRole("tab", { name: /cards section/i }));
+    expect(mockSetSelectedDeckId).toHaveBeenCalledWith(null);
+    expect(mockSetActiveSidebarView).toHaveBeenCalledWith("flashcards");
+  });
+
+  it("renders 99+ badge when dueCount exceeds 99 and pluralizes cards in title", () => {
+    vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue(
+      createMockFlashcards({
+        studyStats: {
+          streak: { current: 0, longest: 0, lastStudiedAt: null, isActiveToday: false },
+          today: { reviewsCount: 0, targetReviews: 20, retentionRate: 100 },
+          cardsBreakdown: { total: 150, dueToday: 120, newCards: 2, learning: 3, mature: 5 },
+          ratingsDistribution: { again: 0, hard: 0, good: 0, easy: 0, totalReviews: 0 },
+          heatmap: [],
+          forecast: [],
+        },
+      })
+    );
+
+    render(<BottomNavigation />);
+
+    expect(screen.getByText("99+")).toBeInTheDocument();
+    expect(screen.getByTitle("120 cards due for review")).toBeInTheDocument();
+  });
+
+  it("falls back to cards.filter(isCardDue) when studyStats and getDueCards are undefined", () => {
+    const mockDueCard: Card = {
+      id: "card-fallback-1",
+      jpText: "猫",
+      enText: "Cat",
+      interval: 0,
+      easeFactor: 2.5,
+      repetitions: 0,
+      lapses: 0,
+      nextReviewAt: "2020-01-01T00:00:00.000Z",
+      lastReviewedAt: null,
+      createdAt: "2020-01-01T00:00:00.000Z",
+      updatedAt: "2020-01-01T00:00:00.000Z",
+    };
+
+    vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue(
+      createMockFlashcards({
+        cards: [mockDueCard],
+        studyStats: null,
+        getDueCards: undefined as any,
+      })
+    );
+
+    render(<BottomNavigation />);
+
+    expect(screen.getByText("1")).toBeInTheDocument();
+    expect(screen.getByTitle("1 card due for review")).toBeInTheDocument();
+  });
 });

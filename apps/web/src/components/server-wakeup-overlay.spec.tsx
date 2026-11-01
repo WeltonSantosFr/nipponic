@@ -35,6 +35,7 @@ describe("ServerWakeupOverlay", () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
 
@@ -145,6 +146,54 @@ describe("ServerWakeupOverlay", () => {
 
     unmount();
     vi.useRealTimers();
+  });
+
+  it("stops waking server when browser is offline", async () => {
+    vi.spyOn(navigator, "onLine", "get").mockReturnValueOnce(false);
+    render(<ServerWakeupOverlay />);
+    await waitFor(() => {
+      expect(mockSetIsWakingServer).toHaveBeenCalledWith(false);
+    });
+  });
+
+  it("handles exception thrown during session validation", async () => {
+    const { validateSessionAction } = await import("@/actions/auth");
+    (validateSessionAction as any).mockRejectedValueOnce(new Error("Network drop"));
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+    });
+
+    render(<ServerWakeupOverlay />);
+
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith("Session validation error:", expect.any(Error));
+      expect(mockSetIsWakingServer).toHaveBeenCalledWith(false);
+    });
+    consoleSpy.mockRestore();
+  });
+
+  it("closes overlay without logout when continue anyway clicked while unauthenticated", async () => {
+    vi.useFakeTimers();
+    global.fetch = vi.fn().mockImplementation(() => new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1000)));
+
+    (mockAuthState as any).isAuthenticated = false;
+    (mockAuthState as any).user = null;
+
+    const { unmount } = render(<ServerWakeupOverlay />);
+    await vi.advanceTimersByTimeAsync(80000);
+    vi.useRealTimers();
+
+    expect(screen.getByText(/Server is taking longer to respond/i)).toBeInTheDocument();
+
+    const continueBtn = screen.getByRole("button", { name: /continue anyway/i });
+    fireEvent.click(continueBtn);
+
+    expect(mockLogout).not.toHaveBeenCalled();
+    expect(mockSetIsWakingServer).toHaveBeenCalledWith(false);
+    unmount();
   });
 });
 

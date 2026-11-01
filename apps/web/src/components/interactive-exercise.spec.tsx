@@ -56,7 +56,21 @@ describe("InteractiveExercise", () => {
     };
 
     const onAnswer = vi.fn();
-    const { container } = render(
+    const { container, rerender } = render(
+      <InteractiveExercise
+        exercise={exercise}
+        onAnswer={onAnswer}
+        isAnswered={false}
+      />
+    );
+
+    // Click incorrect option
+    const wrongBtn = screen.getByText("だ");
+    fireEvent.click(wrongBtn);
+    expect(onAnswer).toHaveBeenCalledWith(false);
+
+    // Re-render as answered with incorrect state
+    rerender(
       <InteractiveExercise
         exercise={exercise}
         onAnswer={onAnswer}
@@ -231,6 +245,207 @@ describe("InteractiveExercise", () => {
     const checkOrderBtn = screen.getByRole("button", { name: "Check Order" });
     expect(checkOrderBtn.className).toContain("whitespace-normal");
     expect(checkOrderBtn.className).toContain("break-words");
+  });
+
+  it("handles resetting and removing chips in reorder exercise", () => {
+    const exercise: LessonExercise = {
+      id: "ex_chips",
+      order: 1,
+      type: "reorder",
+      prompt: "Reorder test",
+      options: ["Word1", "Word2"],
+      correctAnswer: "Word1 Word2",
+      explanation: "Test",
+    };
+
+    render(
+      <InteractiveExercise
+        exercise={exercise}
+        onAnswer={vi.fn()}
+        isAnswered={false}
+      />
+    );
+
+    // Tap Word1
+    fireEvent.click(screen.getByRole("button", { name: "Word1" }));
+    expect(screen.getByTitle("Click to remove")).toBeInTheDocument();
+
+    // Remove chip by clicking it in the construction zone
+    fireEvent.click(screen.getByTitle("Click to remove"));
+    expect(screen.queryByTitle("Click to remove")).toBeNull();
+
+    // Tap Word1 again and test Reset button
+    fireEvent.click(screen.getByRole("button", { name: "Word1" }));
+    const resetBtn = screen.getByRole("button", { name: /Reset/i });
+    fireEvent.click(resetBtn);
+    expect(screen.queryByTitle("Click to remove")).toBeNull();
+  });
+
+  it("handles incorrect answer submission in fill in blank and reorder exercises", () => {
+    const fillBlankEx: LessonExercise = {
+      id: "ex_fb_wrong",
+      order: 1,
+      type: "fill_blank",
+      prompt: "Fill blank",
+      correctAnswer: "right",
+      explanation: "Explanation",
+    };
+
+    const onAnswerFb = vi.fn();
+    render(
+      <InteractiveExercise
+        exercise={fillBlankEx}
+        onAnswer={onAnswerFb}
+        isAnswered={false}
+      />
+    );
+
+    fireEvent.change(screen.getByPlaceholderText("Type your answer here..."), {
+      target: { value: "wrong" },
+    });
+    fireEvent.click(screen.getByText("Check Answer"));
+    expect(onAnswerFb).toHaveBeenCalledWith(false);
+
+    // Reorder wrong answer
+    const reorderEx: LessonExercise = {
+      id: "ex_reorder_wrong",
+      order: 2,
+      type: "reorder",
+      prompt: "Reorder",
+      options: ["B", "A"],
+      correctAnswer: "A B",
+      explanation: "Explanation",
+    };
+
+    const onAnswerReorder = vi.fn();
+    render(
+      <InteractiveExercise
+        exercise={reorderEx}
+        onAnswer={onAnswerReorder}
+        isAnswered={false}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "B" }));
+    fireEvent.click(screen.getByRole("button", { name: "A" }));
+    fireEvent.click(screen.getByText("Check Order"));
+    expect(onAnswerReorder).toHaveBeenCalledWith(false);
+  });
+
+  it("guards against empty input and empty chips submission", () => {
+    const onAnswer = vi.fn();
+    const fillEx: LessonExercise = {
+      id: "ex_fill_blank",
+      order: 1,
+      type: "fill_blank",
+      prompt: "Prompt",
+      correctAnswer: "ans",
+      explanation: "Test explanation",
+    };
+
+    render(<InteractiveExercise exercise={fillEx} onAnswer={onAnswer} isAnswered={false} />);
+    fireEvent.click(screen.getByText("Check Answer"));
+    expect(onAnswer).not.toHaveBeenCalled();
+
+    const reorderEx: LessonExercise = {
+      id: "ex_reorder_empty",
+      order: 2,
+      type: "reorder",
+      prompt: "Reorder",
+      options: ["A"],
+      correctAnswer: "A",
+      explanation: "Test explanation",
+    };
+    render(<InteractiveExercise exercise={reorderEx} onAnswer={onAnswer} isAnswered={false} />);
+    fireEvent.click(screen.getByText("Check Order"));
+    expect(onAnswer).not.toHaveBeenCalled();
+  });
+
+  it("resets selected chips back to available chips using Reset button", () => {
+    const onAnswer = vi.fn();
+    const exercise: LessonExercise = {
+      id: "ex_reorder_reset",
+      order: 1,
+      type: "reorder",
+      prompt: "Arrange chips",
+      options: ["A", "B", "C"],
+      correctAnswer: "A B C",
+      explanation: "Test explanation",
+    };
+
+    render(<InteractiveExercise exercise={exercise} onAnswer={onAnswer} isAnswered={false} />);
+
+    // Select chip A and B
+    fireEvent.click(screen.getByRole("button", { name: "A" }));
+    fireEvent.click(screen.getByRole("button", { name: "B" }));
+
+    // Reset button is now enabled
+    const resetBtn = screen.getByRole("button", { name: /Reset/i });
+    expect(resetBtn).not.toBeDisabled();
+
+    fireEvent.click(resetBtn);
+
+    // After reset, all chips are back in available list
+    expect(screen.getByRole("button", { name: "A" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "B" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "C" })).toBeInTheDocument();
+    expect(resetBtn).toBeDisabled();
+  });
+
+  it("handles reorder without options and guarded operations when already answered", () => {
+    const onAnswer = vi.fn();
+    const reorderNoOptions: LessonExercise = {
+      id: "ex_no_opts",
+      order: 1,
+      type: "reorder",
+      prompt: "No options",
+      correctAnswer: "Test",
+      explanation: "Test explanation",
+    };
+
+    // Renders without crashing when options is undefined
+    const { rerender } = render(
+      <InteractiveExercise exercise={reorderNoOptions} onAnswer={onAnswer} isAnswered={false} />
+    );
+    expect(screen.getByText("No options")).toBeInTheDocument();
+
+    // Already answered multiple choice ignores further clicks
+    const mcEx: LessonExercise = {
+      id: "ex_mc",
+      order: 2,
+      type: "multiple_choice",
+      prompt: "MC Prompt",
+      options: ["Opt 1", "Opt 2"],
+      correctAnswer: "Opt 1",
+      explanation: "Test explanation",
+    };
+
+    rerender(
+      <InteractiveExercise exercise={mcEx} onAnswer={onAnswer} isAnswered={true} wasCorrect={true} />
+    );
+
+    fireEvent.click(screen.getByText("Opt 2"));
+    expect(onAnswer).not.toHaveBeenCalled();
+
+    // Form submit on answered fill_blank does not trigger onAnswer
+    const fbEx: LessonExercise = {
+      id: "ex_fb",
+      order: 3,
+      type: "fill_blank",
+      prompt: "FB Prompt",
+      correctAnswer: "Ans",
+      explanation: "Test explanation",
+    };
+
+    rerender(
+      <InteractiveExercise exercise={fbEx} onAnswer={onAnswer} isAnswered={true} wasCorrect={true} />
+    );
+
+    const form = screen.queryByRole("form");
+    if (form) {
+      fireEvent.submit(form);
+    }
+    expect(onAnswer).not.toHaveBeenCalled();
   });
 });
 
