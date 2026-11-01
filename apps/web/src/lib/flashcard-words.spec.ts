@@ -79,8 +79,19 @@ describe("flashcard-words utility", () => {
       expect(isWordInFlashcards("走る", "走る", flashcardWords)).toBe(false);
     });
 
-    it("returns false when flashcardWords is empty", () => {
+    it("returns false when flashcardWords is empty or null", () => {
       expect(isWordInFlashcards("猫", "猫", new Set())).toBe(false);
+      // @ts-expect-error test null
+      expect(isWordInFlashcards("猫", "猫", null)).toBe(false);
+    });
+
+    it("returns false when surfaceForm is empty", () => {
+      expect(isWordInFlashcards("", "猫", flashcardWords)).toBe(false);
+    });
+
+    it("ignores basicForm when it is '*' or identical to surfaceForm", () => {
+      expect(isWordInFlashcards("走る", "*", flashcardWords)).toBe(false);
+      expect(isWordInFlashcards("猫", "猫", flashcardWords)).toBe(true);
     });
   });
 

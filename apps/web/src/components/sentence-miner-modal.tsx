@@ -40,6 +40,13 @@ export function SentenceMinerModal({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const prevIsOpenRef = useRef(false);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    };
+  }, []);
 
   // Initialize fields ONLY when modal opens (transitions from false to true)
   useEffect(() => {
@@ -130,7 +137,7 @@ export function SentenceMinerModal({
             : "to your Arsenal";
 
       setSuccessMessage(`Flashcard created and added ${deckLabel}!`);
-      setTimeout(() => {
+      closeTimeoutRef.current = setTimeout(() => {
         setIsSubmitting(false);
         onClose();
       }, 900);

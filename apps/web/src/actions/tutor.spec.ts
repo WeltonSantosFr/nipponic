@@ -311,7 +311,7 @@ describe("tutor actions", () => {
 
       global.fetch = vi.fn().mockRejectedValue(new Error("Feedback service error"));
 
-      const result = await submitLessonFeedbackAction("les_1", { rating: "not_helpful" });
+      const result = await submitLessonFeedbackAction("les_1", { rating: "confusing" });
 
       expect(result).toEqual({ success: false });
       expect(consoleSpy).toHaveBeenCalledWith(

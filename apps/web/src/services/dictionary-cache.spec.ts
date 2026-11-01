@@ -353,5 +353,73 @@ describe('dictionary-cache', () => {
 
       expect(cached).toEqual(mockData);
     });
+
+    it('should warn when loading dictionary cache from localStorage fails', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      localStorageMock.getItem.mockImplementationOnce(() => {
+        throw new Error('Storage corrupted');
+      });
+
+      const { fetchDictionaryWord } = await import('./dictionary-cache');
+      fetchMock.mockResolvedValueOnce({ ok: false, status: 404 });
+
+      await fetchDictionaryWord('単語');
+      expect(warnSpy).toHaveBeenCalledWith(
+        'Failed to load dictionary cache from localStorage:',
+        expect.any(Error)
+      );
+      warnSpy.mockRestore();
+    });
+
+    it('should evict the oldest entry when localStorage items exceed MAX_LOCAL_STORAGE_ITEMS', async () => {
+      // Pre-fill localStorage with 1001 items to exceed MAX_LOCAL_STORAGE_ITEMS (1000)
+      const existing: Record<string, any> = {};
+      for (let i = 0; i <= 1001; i++) {
+        existing[`word_${i}`] = { reading: `r_${i}`, meanings: ['def'] };
+      }
+      localStorageMock.setItem('nipponic:dict_cache_v1', JSON.stringify(existing));
+
+      const { fetchDictionaryWord } = await import('./dictionary-cache');
+      const mockData = { reading: 'new_reading', meanings: ['new def'], jlpt: null, isCommon: true };
+      fetchMock.mockResolvedValueOnce({ ok: true, json: async () => mockData });
+
+      await fetchDictionaryWord('brand_new_word');
+
+      const saved = JSON.parse(localStorageMock.setItem.mock.calls.at(-1)![1]);
+      // The oldest key 'word_0' should have been evicted
+      expect(saved['word_0']).toBeUndefined();
+      expect(saved['brand_new_word']).toBeDefined();
+    });
+
+    it('should catch and warn when persistToLocalStorage fails', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      localStorageMock.setItem.mockImplementationOnce(() => {
+        throw new Error('Quota exceeded');
+      });
+
+      const { fetchDictionaryWord } = await import('./dictionary-cache');
+      const mockData = { reading: 'r', meanings: ['m'], jlpt: null, isCommon: true };
+      fetchMock.mockResolvedValueOnce({ ok: true, json: async () => mockData });
+
+      await fetchDictionaryWord('test_persist_error');
+      expect(warnSpy).toHaveBeenCalledWith(
+        'Failed to save dictionary word to localStorage:',
+        expect.any(Error)
+      );
+      warnSpy.mockRestore();
+    });
+
+    it('returns null when cached memory item is null', async () => {
+      localStorageMock.setItem(
+        'nipponic:dict_cache_v1',
+        JSON.stringify({
+          'null-cached-word': null,
+        })
+      );
+      const { fetchDictionaryWord } = await import('./dictionary-cache');
+      const result = await fetchDictionaryWord('null-cached-word');
+      expect(result).toBeNull();
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
   });
 });

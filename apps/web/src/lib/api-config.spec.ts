@@ -38,4 +38,27 @@ describe("api-config", () => {
     expect(getApiUrl()).toBe(DEFAULT_LOCAL_API_URL);
     expect(getApiUrl()).toBe("http://localhost:3001");
   });
+
+  it("should prioritize API_URL on server side when window is undefined", () => {
+    const originalWindow = global.window;
+    // @ts-expect-error simulating server
+    delete global.window;
+
+    vi.stubEnv("API_URL", "http://api:3001");
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://public:3001");
+    expect(getApiUrl()).toBe("http://api:3001");
+
+    global.window = originalWindow;
+  });
+
+  it("should fallback to production URL on server side when NODE_ENV is production and no env var is set", () => {
+    const originalWindow = global.window;
+    // @ts-expect-error simulating server
+    delete global.window;
+
+    vi.stubEnv("NODE_ENV", "production");
+    expect(getApiUrl()).toBe(DEFAULT_PROD_API_URL);
+
+    global.window = originalWindow;
+  });
 });

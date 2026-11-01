@@ -43,6 +43,30 @@ describe("api service", () => {
         registerUser({ username: "kenji", email: "exists@example.com", password: "pwd" })
       ).rejects.toThrow("Email already exists");
     });
+
+    it("should throw default 'Registration failed' when error response json lacks message property", async () => {
+      vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: async () => ({ error: "Internal Server Error" }),
+      } as Response);
+
+      await expect(
+        registerUser({ username: "kenji", email: "test@example.com", password: "pwd" })
+      ).rejects.toThrow("Registration failed");
+    });
+
+    it("should throw default 'Registration failed' when error response json parsing throws", async () => {
+      vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+        ok: false,
+        status: 502,
+        json: async () => { throw new Error("Bad gateway"); },
+      } as unknown as Response);
+
+      await expect(
+        registerUser({ username: "kenji", email: "test@example.com", password: "pwd" })
+      ).rejects.toThrow("Registration failed");
+    });
   });
 
   describe("login", () => {
@@ -92,6 +116,30 @@ describe("api service", () => {
       // Act & Assert
       await expect(login({ email: "test@example.com", password: "bad" })).rejects.toThrow(
         "Invalid credentials provided"
+      );
+    });
+
+    it("should throw 'Authentication failed' when error response json lacks message property", async () => {
+      vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        json: async () => ({ error: "Unauthorized" }),
+      } as Response);
+
+      await expect(login({ email: "test@example.com", password: "bad" })).rejects.toThrow(
+        "Authentication failed"
+      );
+    });
+
+    it("should throw 'Authentication failed' when error response json parsing throws", async () => {
+      vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        json: async () => { throw new Error("JSON parse error"); },
+      } as unknown as Response);
+
+      await expect(login({ email: "test@example.com", password: "bad" })).rejects.toThrow(
+        "Authentication failed"
       );
     });
   });
