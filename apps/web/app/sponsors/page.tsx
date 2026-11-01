@@ -134,7 +134,12 @@ export default function SponsorsPage() {
         githubUsername: cleanUsername,
         name: cleanUsername,
         tierName: mockTier,
-        monthlyPriceInCents: mockTier.includes("$5") ? 500 : mockTier.includes("$3") ? 300 : 100,
+        monthlyPriceInCents:
+          mockTier.includes("$5") || mockTier.includes("Ramen")
+            ? 500
+            : mockTier.includes("$3") || mockTier.includes("Bento")
+            ? 300
+            : 100,
         isOneTime: mockTier.includes("One-Time"),
         isActive: true,
       });
