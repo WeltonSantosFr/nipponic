@@ -532,7 +532,12 @@ export function AppSidebar({
 
           <button
             type="button"
-            onClick={() => setActiveSidebarView("flashcards")}
+            onClick={() => {
+              if (activeSidebarView === "flashcards") {
+                setSelectedDeckId(null);
+              }
+              setActiveSidebarView("flashcards");
+            }}
             className={`w-full min-w-0 flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all cursor-pointer ${
               activeSidebarView === "flashcards"
                 ? "bg-primary/10 text-primary font-bold shadow-xs border border-primary/20"

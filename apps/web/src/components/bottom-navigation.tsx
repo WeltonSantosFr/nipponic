@@ -17,6 +17,7 @@ export function BottomNavigation() {
   const {
     activeSidebarView,
     setActiveSidebarView,
+    setSelectedDeckId,
     cards,
     studyStats,
     getDueCards,
@@ -82,9 +83,12 @@ export function BottomNavigation() {
 
   const handleSelectTab = useCallback(
     (view: SidebarViewMode) => {
+      if (view === "flashcards" && activeSidebarView === "flashcards") {
+        setSelectedDeckId(null);
+      }
       setActiveSidebarView(view);
     },
-    [setActiveSidebarView]
+    [setActiveSidebarView, activeSidebarView, setSelectedDeckId]
   );
 
   // When full-screen flashcard study session is active, hide bottom navigation to maximize study focus

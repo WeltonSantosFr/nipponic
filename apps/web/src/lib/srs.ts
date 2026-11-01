@@ -54,7 +54,7 @@ export function formatDueTime(nextReviewAt?: string | Date | null): string {
   const diffMs = new Date(nextReviewAt).getTime() - Date.now();
   if (diffMs <= 0) return "Due today";
 
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffHours = Math.round(diffMs / (1000 * 60 * 60));
   if (diffHours < 24) {
     if (diffHours <= 1) return "Due in <1h";
     return `Due in ${diffHours}h`;

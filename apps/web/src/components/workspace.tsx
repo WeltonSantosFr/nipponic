@@ -93,6 +93,7 @@ export function Workspace(props: WorkspaceProps = {}) {
   const {
     activeSidebarView,
     selectedDeck,
+    setSelectedDeckId,
     playingDeck,
     stopPlayingDeck,
   } = useFlashCards();
@@ -222,10 +223,26 @@ export function Workspace(props: WorkspaceProps = {}) {
                 </span>
               )
             ) : activeSidebarView === "flashcards" ? (
-              selectedDeck && (
+              selectedDeck ? (
+                <div className="flex items-center gap-1.5 min-w-0 text-sm">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDeckId(null)}
+                    className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer shrink-0"
+                    title="Back to Decks"
+                  >
+                    <Layers size={15} className="text-primary shrink-0" />
+                    <span className="font-medium hidden xs:inline">Decks</span>
+                  </button>
+                  <span className="text-muted-foreground/60 text-xs shrink-0">/</span>
+                  <span className="font-medium text-foreground truncate max-w-[120px] xs:max-w-[160px] sm:max-w-xs">
+                    {selectedDeck.name}
+                  </span>
+                </div>
+              ) : (
                 <span className="text-sm font-medium text-muted-foreground truncate max-w-[140px] xs:max-w-[180px] sm:max-w-sm flex items-center gap-1.5 min-w-0">
                   <Layers size={15} className="text-primary shrink-0" />
-                  <span className="truncate">{selectedDeck.name}</span>
+                  <span>Cards</span>
                 </span>
               )
             ) : activeSidebarView === "stats" ? (

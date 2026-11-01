@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { DeckCardGridItem } from "./deck-workspace";
-import type { Card } from "@nipponic/shared";
+import { DeckCardGridItem, DeckWorkspace } from "./deck-workspace";
+import * as FlashCardsContextModule from "@/contexts/FlashCardsContext";
+import type { Card, Deck, FlashCardsContextData } from "@nipponic/shared";
 
 describe("DeckCardGridItem", () => {
   const mockCard: Card = {
@@ -146,3 +147,97 @@ describe("DeckCardGridItem", () => {
     expect(screen.getByTitle("Listen to pronunciation")).toBeDisabled();
   });
 });
+
+describe("DeckWorkspace", () => {
+  const mockSetSelectedDeckId = vi.fn();
+  const mockCreateDeck = vi.fn();
+  const mockUpdateDeck = vi.fn();
+
+  const mockDeck: Deck = {
+    id: "deck-123",
+    name: "Test Vocabulary",
+    cards: [],
+    isPublic: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  const createMockFlashcards = (
+    overrides: Partial<FlashCardsContextData> = {}
+  ): FlashCardsContextData => ({
+    cards: [],
+    decks: [mockDeck],
+    appDecks: [],
+    publicDecks: [],
+    activeDeckTab: "my",
+    setActiveDeckTab: vi.fn(),
+    selectedDeckId: "deck-123",
+    selectedDeck: mockDeck,
+    isCurrentDeckOwner: true,
+    setSelectedDeckId: mockSetSelectedDeckId,
+    activeSidebarView: "flashcards",
+    setActiveSidebarView: vi.fn(),
+    playingDeck: null,
+    startPlayingDeck: vi.fn(),
+    stopPlayingDeck: vi.fn(),
+    createCard: vi.fn(),
+    updateCard: vi.fn(),
+    deleteCard: vi.fn(),
+    reviewCard: vi.fn(),
+    getDueCards: () => [],
+    createDeck: mockCreateDeck,
+    updateDeck: mockUpdateDeck,
+    deleteDeck: vi.fn(),
+    addCardsToDeck: vi.fn(),
+    removeCardFromDeck: vi.fn(),
+    reorderDeckCards: vi.fn(),
+    addDeckToMyDecks: vi.fn(),
+    refreshAll: vi.fn(),
+    studyStats: null,
+    refreshStats: vi.fn(),
+    ...overrides,
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("renders empty state notice when deck is undefined and decks.length === 0", () => {
+    vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue(
+      createMockFlashcards({ decks: [] })
+    );
+
+    render(<DeckWorkspace deck={undefined} />);
+
+    expect(screen.getByText("No deck selected")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Select a deck from the sidebar or create a new pack/i)
+    ).toBeInTheDocument();
+  });
+
+  it("renders DeckGrid when deck is undefined and decks.length > 0", () => {
+    vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue(
+      createMockFlashcards({ decks: [mockDeck] })
+    );
+
+    render(<DeckWorkspace deck={undefined} />);
+
+    expect(screen.getByTestId("decks-grid")).toBeInTheDocument();
+    expect(screen.getByText("Test Vocabulary")).toBeInTheDocument();
+  });
+
+  it("renders Back to Decks button and resets selectedDeckId on click", () => {
+    vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue(
+      createMockFlashcards({ decks: [mockDeck], selectedDeck: mockDeck })
+    );
+
+    render(<DeckWorkspace deck={mockDeck} />);
+
+    const backButton = screen.getByRole("button", { name: /Back to Decks/i });
+    expect(backButton).toBeInTheDocument();
+
+    fireEvent.click(backButton);
+    expect(mockSetSelectedDeckId).toHaveBeenCalledWith(null);
+  });
+});
+

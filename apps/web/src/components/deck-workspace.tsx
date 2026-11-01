@@ -16,6 +16,7 @@ const AddCardsModal = dynamic(
   () => import("@/components/add-cards-modal").then((mod) => mod.AddCardsModal),
   { ssr: false }
 );
+import { DeckGrid } from "@/components/deck-grid";
 import {
   Layers,
   Play,
@@ -49,6 +50,7 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
     startPlayingDeck,
     isCurrentDeckOwner,
     addDeckToMyDecks,
+    setSelectedDeckId,
   } = useFlashCards();
 
   const { speak } = useSpeech();
@@ -139,33 +141,53 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
   };
 
   if (!deck) {
-    return (
-      <div className="flex-1 p-8 flex flex-col items-center justify-center">
-        <div className="w-full max-w-md text-center p-8 bg-card border rounded-xl shadow-xs flex flex-col items-center gap-4">
-          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-            <Layers className="h-6 w-6" />
+    if (decks.length === 0) {
+      return (
+        <div className="flex-1 p-8 flex flex-col items-center justify-center">
+          <div className="w-full max-w-md text-center p-8 bg-card border rounded-xl shadow-xs flex flex-col items-center gap-4">
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+              <Layers className="h-6 w-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold">No deck selected</h3>
+              <p className="text-xs text-muted-foreground">
+                Select a deck from the sidebar or create a new pack to start
+                reviewing your flashcards.
+              </p>
+            </div>
+            <Button
+              onClick={() => createDeck("New Deck")}
+              className="w-full gap-1.5 cursor-pointer justify-center"
+            >
+              <Plus size={16} />
+              <span>Create New Deck</span>
+            </Button>
           </div>
-          <div className="space-y-1">
-            <h3 className="text-lg font-bold">No deck selected</h3>
-            <p className="text-xs text-muted-foreground">
-              Select a deck from the sidebar or create a new pack to start
-              reviewing your flashcards.
-            </p>
-          </div>
-          <Button
-            onClick={() => createDeck("New Deck")}
-            className="w-full gap-1.5 cursor-pointer"
-          >
-            <Plus size={16} />
-            Create New Deck
-          </Button>
         </div>
-      </div>
+      );
+    }
+
+    return (
+      <DeckGrid
+        onSelectDeck={(deckId) => setSelectedDeckId(deckId)}
+        onCreateDeck={() => createDeck("New Deck")}
+      />
     );
   }
 
   return (
-    <div className="w-full max-w-5xl flex-1 flex flex-col gap-5 sm:gap-6 justify-start p-3.5 sm:p-6 md:p-8 min-w-0 max-w-full overflow-x-hidden pb-safe">
+    <div className="w-full max-w-5xl flex-1 flex flex-col gap-4 sm:gap-6 justify-start p-3.5 sm:p-6 md:p-8 min-w-0 max-w-full overflow-x-hidden pb-safe">
+      {/* Back to Decks Button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setSelectedDeckId(null)}
+        className="self-start gap-1.5 text-xs text-muted-foreground hover:text-foreground -ml-2 -mb-1 cursor-pointer"
+      >
+        <ArrowLeft size={14} />
+        <span>Back to Decks</span>
+      </Button>
+
       {/* Deck Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div className="space-y-1 flex-1 min-w-0">
