@@ -30,6 +30,7 @@ function DialogOverlay({
   return (
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
+      forceRender
       className={cn(
         "fixed inset-0 z-50 bg-black/60 backdrop-blur-md transition-all duration-150 data-starting-style:opacity-0 data-ending-style:opacity-0 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className
