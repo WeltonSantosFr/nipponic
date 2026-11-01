@@ -8,6 +8,7 @@ export interface MarkdownContentProps {
   content: string;
   className?: string;
   showFurigana?: boolean;
+  interactive?: boolean;
 }
 
 type Block =
@@ -249,6 +250,7 @@ export const MarkdownContent = memo(function MarkdownContent({
   content,
   className = "",
   showFurigana = true,
+  interactive = true,
 }: MarkdownContentProps) {
   const blocks = useMemo(() => parseMarkdownBlocks(content), [content]);
 
@@ -258,25 +260,35 @@ export const MarkdownContent = memo(function MarkdownContent({
 
   return (
     <div className={`space-y-4 text-foreground ${className}`} data-testid="markdown-content">
-      {blocks.map((block, index) => renderBlock(block, index, showFurigana))}
+      {blocks.map((block, index) => renderBlock(block, index, showFurigana, interactive))}
     </div>
   );
 });
 
-function renderInline(text: string, showFurigana: boolean = true): React.ReactNode {
+function renderInline(
+  text: string,
+  showFurigana: boolean = true,
+  interactive: boolean = true,
+  enContext?: string
+): React.ReactNode {
   const lines = text.split("\n");
   if (lines.length > 1) {
     return lines.map((line, idx) => (
       <React.Fragment key={idx}>
-        {renderInlineSingleLine(line, showFurigana)}
+        {renderInlineSingleLine(line, showFurigana, interactive, enContext)}
         {idx < lines.length - 1 && <br />}
       </React.Fragment>
     ));
   }
-  return renderInlineSingleLine(text, showFurigana);
+  return renderInlineSingleLine(text, showFurigana, interactive, enContext);
 }
 
-function renderInlineSingleLine(text: string, showFurigana: boolean = true): React.ReactNode {
+function renderInlineSingleLine(
+  text: string,
+  showFurigana: boolean = true,
+  interactive: boolean = true,
+  enContext?: string
+): React.ReactNode {
   const tokens = parseInlineTokensCached(text);
   return tokens.map((token, index) => {
     switch (token.type) {
@@ -292,25 +304,25 @@ function renderInlineSingleLine(text: string, showFurigana: boolean = true): Rea
       case "strong_em":
         return (
           <strong key={index} className="font-bold italic text-foreground">
-            {token.value}
+            {renderInlineSingleLine(token.value, showFurigana, interactive, enContext)}
           </strong>
         );
       case "strong":
         return (
           <strong key={index} className="font-bold text-foreground">
-            {token.value}
+            {renderInlineSingleLine(token.value, showFurigana, interactive, enContext)}
           </strong>
         );
       case "em":
         return (
           <em key={index} className="italic text-foreground/90">
-            {token.value}
+            {renderInlineSingleLine(token.value, showFurigana, interactive, enContext)}
           </em>
         );
       case "del":
         return (
           <del key={index} className="line-through text-muted-foreground">
-            {token.value}
+            {renderInlineSingleLine(token.value, showFurigana, interactive, enContext)}
           </del>
         );
       case "link":
@@ -326,28 +338,25 @@ function renderInlineSingleLine(text: string, showFurigana: boolean = true): Rea
           </a>
         );
       case "ruby":
-        if (!showFurigana) {
-          return <span key={index}>{token.kanji}</span>;
-        }
         return (
-          <ruby
+          <FuriganaText
             key={index}
-            className="inline-flex flex-col items-center leading-none text-center mx-0.5 align-baseline"
-          >
-            <span className="text-[10px] font-normal select-none pb-0.5 leading-none text-muted-foreground">
-              {token.reading}
-            </span>
-            <span className="leading-tight">{token.kanji}</span>
-          </ruby>
+            text={`{${token.kanji}|${token.reading}}`}
+            showFurigana={showFurigana}
+            interactive={interactive}
+            enContext={enContext}
+          />
         );
       case "text":
       default:
-        if (showFurigana && /[\u4e00-\u9faf]/.test(token.value)) {
+        if (/[\u3040-\u30ff\u4e00-\u9faf]/.test(token.value)) {
           return (
             <FuriganaText
               key={index}
               text={token.value}
               showFurigana={showFurigana}
+              interactive={interactive}
+              enContext={enContext}
             />
           );
         }
@@ -359,11 +368,12 @@ function renderInlineSingleLine(text: string, showFurigana: boolean = true): Rea
 function renderBlock(
   block: Block,
   key: number | string,
-  showFurigana: boolean = true
+  showFurigana: boolean = true,
+  interactive: boolean = true
 ): React.ReactNode {
   switch (block.type) {
     case "heading": {
-      const inline = renderInline(block.text, showFurigana);
+      const inline = renderInline(block.text, showFurigana, interactive);
       switch (block.level) {
         case 1:
           return (
@@ -409,7 +419,7 @@ function renderBlock(
     case "paragraph":
       return (
         <p key={key} className="text-xs sm:text-sm md:text-base text-foreground/90 leading-relaxed mb-3 last:mb-0 break-words min-w-0">
-          {renderInline(block.text, showFurigana)}
+          {renderInline(block.text, showFurigana, interactive)}
         </p>
       );
 
@@ -428,15 +438,18 @@ function renderBlock(
         </div>
       );
 
-    case "blockquote":
+    case "blockquote": {
+      const lines = block.text.split("\n");
+      const enLine = lines.find((l) => !/[\u3040-\u30ff\u4e00-\u9faf]/.test(l))?.trim();
       return (
         <blockquote
           key={key}
           className="my-3 sm:my-3.5 pl-3.5 sm:pl-4 border-l-4 border-primary/70 bg-primary/5 dark:bg-primary/10 py-2.5 sm:py-3 pr-3.5 sm:pr-4 rounded-r-xl text-xs sm:text-sm text-foreground/90 space-y-2 min-w-0 break-words"
         >
-          {renderInline(block.text, showFurigana)}
+          {renderInline(block.text, showFurigana, interactive, enLine)}
         </blockquote>
       );
+    }
 
     case "list":
       if (block.ordered) {
@@ -447,7 +460,7 @@ function renderBlock(
           >
             {block.items.map((item, idx) => (
               <li key={idx} className="leading-relaxed pl-1 break-words">
-                {renderInline(item, showFurigana)}
+                {renderInline(item, showFurigana, interactive)}
               </li>
             ))}
           </ol>
@@ -460,7 +473,7 @@ function renderBlock(
         >
           {block.items.map((item, idx) => (
             <li key={idx} className="leading-relaxed pl-1 break-words">
-              {renderInline(item, showFurigana)}
+              {renderInline(item, showFurigana, interactive)}
             </li>
           ))}
         </ul>
@@ -474,7 +487,7 @@ function renderBlock(
               <tr>
                 {block.headers.map((header, idx) => (
                   <th key={idx} className="p-2.5 sm:p-3 text-left whitespace-nowrap sm:whitespace-normal">
-                    {renderInline(header, showFurigana)}
+                    {renderInline(header, showFurigana, interactive)}
                   </th>
                 ))}
               </tr>
@@ -484,7 +497,7 @@ function renderBlock(
                 <tr key={rowIdx} className="hover:bg-muted/30 transition-colors">
                   {row.map((cell, colIdx) => (
                     <td key={colIdx} className="p-2.5 sm:p-3 align-top whitespace-nowrap sm:whitespace-normal">
-                      {renderInline(cell ?? "", showFurigana)}
+                      {renderInline(cell ?? "", showFurigana, interactive)}
                     </td>
                   ))}
                 </tr>

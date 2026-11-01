@@ -15,6 +15,8 @@ vi.mock("@/hooks/use-speech", () => ({
 // Mock TokenizedText
 vi.mock("@/components/tokenized-text", () => ({
   TokenizedText: ({ text }: { text: string }) => <span>{text}</span>,
+  TokenItem: ({ word }: { word: string }) => <span data-testid={`token-${word}`}>{word}</span>,
+  toHiragana: (s: string) => s,
 }));
 
 describe("TutorWorkspace", () => {
