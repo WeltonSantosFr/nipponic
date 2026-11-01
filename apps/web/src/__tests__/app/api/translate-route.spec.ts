@@ -11,7 +11,7 @@ vi.mock("deepl-node", () => {
   };
 });
 
-import { POST } from "./route";
+import { POST } from "../../../../app/api/translate/route";
 
 describe("POST /api/translate", () => {
   const originalEnv = process.env.DEEPL_AUTH_KEY;

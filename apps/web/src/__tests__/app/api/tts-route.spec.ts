@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { GET, POST } from "./route";
+import { GET, POST } from "../../../../app/api/tts/route";
 
 describe("TTS API Route (/api/tts)", () => {
   beforeEach(() => {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
-import SponsorsPage from "./page";
+import SponsorsPage from "../../../../app/sponsors/page";
 import * as sponsorsActions from "@/actions/sponsors";
 import type { Sponsor } from "@nipponic/shared";
 

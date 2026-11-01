@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import React from "react";
 import { jwtDecode } from "jwt-decode";
 import { cookies } from "next/headers";
-import RootLayout, { metadata, viewport } from "./layout";
+import RootLayout, { metadata, viewport } from "../../../app/layout";
 
 // Mock fonts
 vi.mock("next/font/google", () => ({

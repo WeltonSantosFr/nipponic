@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import Home, { maxDuration } from "./page";
+import Home, { maxDuration } from "../../../app/page";
 
 vi.mock("@/components/workspace", () => ({
   Workspace: ({ initialNotes }: any) => (

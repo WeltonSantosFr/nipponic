@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { GET } from "./route";
+import { GET } from "../../../../app/api/dictionary/route";
 
 describe("GET /api/dictionary", () => {
   let originalFetch: typeof global.fetch;

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { GET } from "./route";
+import { GET } from "../../../../app/api/kanji/route";
 
 describe("GET /api/kanji", () => {
   beforeEach(() => {
