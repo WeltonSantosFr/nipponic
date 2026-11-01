@@ -41,6 +41,40 @@ describe("getStudyStatsAction", () => {
     expect(result).toEqual(mockStats);
   });
 
+  it("returns null when upstream response is not ok", async () => {
+    const mockCookieStore = { get: vi.fn().mockReturnValue({ value: "jwt-token" }) };
+    vi.mocked(cookies).mockResolvedValue(mockCookieStore as unknown as Awaited<ReturnType<typeof cookies>>);
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+    });
+
+    const result = await getStudyStatsAction();
+    expect(result).toBeNull();
+  });
+
+  it("returns raw data fallback and logs error when schema validation fails", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const invalidSchemaData = { unexpectedKey: 123 };
+
+    const mockCookieStore = { get: vi.fn().mockReturnValue({ value: "jwt-token" }) };
+    vi.mocked(cookies).mockResolvedValue(mockCookieStore as unknown as Awaited<ReturnType<typeof cookies>>);
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(invalidSchemaData),
+    });
+
+    const result = await getStudyStatsAction();
+    expect(result).toEqual(invalidSchemaData);
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "[stats] Invalid stats response schema:",
+      expect.anything()
+    );
+    consoleSpy.mockRestore();
+  });
+
   it("returns null on fetch error", async () => {
     const mockCookieStore = { get: vi.fn().mockReturnValue({ value: "jwt-token" }) };
     vi.mocked(cookies).mockResolvedValue(mockCookieStore as unknown as Awaited<ReturnType<typeof cookies>>);

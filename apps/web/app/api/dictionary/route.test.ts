@@ -214,5 +214,57 @@ describe("GET /api/dictionary", () => {
       isCommon: false,
     });
   });
+
+  it("should match by japanese reading and fallback to cleanWord if japaneseObj has no reading/word and item has no slug", async () => {
+    const mockJishoData = {
+      data: [
+        {
+          // First item is not exact match
+          slug: "other",
+          japanese: [{ word: "他", reading: "ほか" }],
+        },
+        {
+          // Second item has exact match on reading
+          japanese: [{ reading: "さくら" }],
+          senses: [{ english_definitions: ["cherry blossom"] }],
+        },
+      ],
+    };
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockJishoData),
+    });
+
+    const req = mockRequest("http://localhost/api/dictionary?word=さくら");
+    const response = await GET(req);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.reading).toBe("さくら");
+    expect(data.meanings).toEqual(["cherry blossom"]);
+  });
+
+  it("should fallback reading to cleanWord when item has no japanese array and no slug", async () => {
+    const mockJishoData = {
+      data: [
+        {
+          senses: [{ english_definitions: ["something"] }],
+        },
+      ],
+    };
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockJishoData),
+    });
+
+    const req = mockRequest("http://localhost/api/dictionary?word=fallback-raw");
+    const response = await GET(req);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.reading).toBe("fallback-raw");
+  });
 });
 
