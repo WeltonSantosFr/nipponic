@@ -1759,4 +1759,455 @@ $$\\text{[Person]} + \\mathbf{は} + \\text{[Item]} + \\mathbf{が} + \\mathbf{�
       },
     ],
   },
+
+  // ==========================================
+  // JLPT N5 - Unit 5: The Versatile Te-Form (Part 1)
+  // ==========================================
+  "verb-te-form-conjugation": {
+    title: "Te-Form Conjugation (て形)",
+    theoryMarkdown: `### 📘 The Te-Form (て形): The Gateway to Complex Japanese
+
+The **て-form** (te-form) is one of the most versatile verb forms in Japanese. It does not indicate tense on its own; instead, it acts as a grammatical linking pin to connect verbs, make requests, express continuous actions, and state permissions.
+
+---
+
+#### 1. Ichidan Verbs (Group 2)
+
+Drop the final **る** and replace it with **て**:
+
+| Verb | Meaning | Te-Form |
+| :--- | :--- | :--- |
+| <ruby>食<rt>た</rt></ruby>べる | to eat | <ruby>食<rt>た</rt></ruby>べて |
+| <ruby>見<rt>み</rt></ruby>る | to see / watch | <ruby>見<rt>み</rt></ruby>て |
+| <ruby>起<rt>お</rt></ruby>きる | to wake up | <ruby>起<rt>お</rt></ruby>きて |
+
+---
+
+#### 2. Godan Verbs (Group 1)
+
+Godan verbs change their endings based on their final syllable:
+
+| Ending Syllable | Te-Form Change | Example | Meaning |
+| :--- | :--- | :--- | :--- |
+| **う、つ、る** | **〜って** | <ruby>待<rt>ま</rt></ruby>つ → **<ruby>待<rt>ま</rt></ruby>って** | wait |
+| **む、ぶ、ぬ** | **〜んで** | <ruby>飲<rt>の</rt></ruby>む → **<ruby>飲<rt>の</rt></ruby>んで** | drink |
+| **く** | **〜いて** | <ruby>書<rt>か</rt></ruby>く → **<ruby>書<rt>か</rt></ruby>いて** | write |
+| **ぐ** | **〜いで** | <ruby>泳<rt>およ</rt></ruby>ぐ → **<ruby>泳<rt>およ</rt></ruby>いで** | swim |
+| **す** | **〜して** | <ruby>話<rt>はな</rt></ruby>す → **<ruby>話<rt>はな</rt></ruby>して** | speak |
+
+> ⚠️ **Major Exception:** The verb <ruby>行<rt>い</rt></ruby>く (to go) ends in く, but it irregularly conjugates to **<ruby>行<rt>い</rt></ruby>って** (not いいて).
+
+---
+
+#### 3. Irregular Verbs (Group 3)
+
+- **する** (to do) → **して**
+- **<ruby>来<rt>く</rt></ruby>る** (to come) → **<ruby>来<rt>き</rt></ruby>て**`,
+    dialogue: [
+      {
+        speaker: "Ken",
+        jpText: "田中さん、この漢字を読んでください。",
+        enText: "Tanaka-san, please read this kanji.",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "はい、これは「日本語」と読みます。",
+        enText: "Sure, this is read as 'nihongo'.",
+      },
+      {
+        speaker: "Ken",
+        jpText: "ノートに書いてもいいですか。",
+        enText: "May I write it in my notebook?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "ええ、書いて練習してください。",
+        enText: "Yes, please write it down and practice.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "待つ",
+        reading: "まつ",
+        enText: "to wait",
+      },
+      {
+        jpText: "書く",
+        reading: "かく",
+        enText: "to write",
+      },
+      {
+        jpText: "話す",
+        reading: "はなす",
+        enText: "to speak / talk",
+      },
+      {
+        jpText: "読む",
+        reading: "よむ",
+        enText: "to read",
+      },
+      {
+        jpText: "急ぐ",
+        reading: "いそぐ",
+        enText: "to hurry",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt: "Choose the correct て-form of the verb 飲む (to drink):",
+        options: ["飲んで", "飲って", "飲いて", "飲みて"],
+        correctAnswer: "飲んで",
+        explanation:
+          "Godan verbs ending in む change to んで in the て-form (飲む → 飲んで).",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete with the irregular て-form of 行く (to go): 明日東京へ___、買い物をします。(I will go to Tokyo and shop.)",
+        correctAnswer: "行って",
+        explanation:
+          "行く is the sole exception among く-ending verbs, conjugating to 行って instead of いいて.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'Please wait a moment.'",
+        options: ["ちょっと", "待って", "ください"],
+        correctAnswer: "ちょっと待ってください",
+        explanation:
+          "Adverb (ちょっと) + Verb in te-form (待って) + Polite request (ください).",
+      },
+    ],
+  },
+
+  "te-form-kudasai-requests": {
+    title: "Polite Requests (〜てください)",
+    theoryMarkdown: `### 📘 Making Polite Requests: 〜てください
+
+Attaching **ください** directly to the **て-form** of a verb creates a polite request meaning *\"Please do [action]\"*.
+
+$$\\text{[Verb in て-form]} + \\mathbf{ください}$$
+
+---
+
+#### 1. Common Practical Examples
+
+- <ruby>見<rt>み</rt></ruby>る → <ruby>見<rt>み</rt></ruby>て**ください** (Please look.)
+- <ruby>聞<rt>き</rt></ruby>く → <ruby>聞<rt>き</rt></ruby>いて**ください** (Please listen.)
+- <ruby>言<rt>い</rt></ruby>う → <ruby>言<rt>い</rt></ruby>って**ください** (Please say / repeat.)
+- <ruby>食<rt>た</rt></ruby>べる → <ruby>食<rt>た</rt></ruby>べて**ください** (Please eat.)
+
+---
+
+#### 2. Softening Requests with Conversational Adverbs
+
+To make your request sound gentler and less demanding, prepend adverbs such as:
+
+- **ちょっと** (a little / a moment): ちょっと<ruby>待<rt>ま</rt></ruby>ってください。(Please wait a moment.)
+- **どうぞ** (by all means / please go ahead): どうぞ<ruby>入<rt>はい</rt></ruby>ってください。(Please come in.)
+- **もう<ruby>一<rt>いち</rt></ruby><ruby>度<rt>ど</rt></ruby>** (once more): もう<ruby>一<rt>いち</rt></ruby><ruby>度<rt>ど</rt></ruby><ruby>言<rt>い</rt></ruby>ってください。(Please say that once more.)`,
+    dialogue: [
+      {
+        speaker: "Teacher",
+        jpText: "皆さん、教科書の二十ページを開けてください。",
+        enText: "Everyone, please open your textbooks to page twenty.",
+      },
+      {
+        speaker: "Ken",
+        jpText: "先生、もう一度言ってください。",
+        enText: "Teacher, please say that once again.",
+      },
+      {
+        speaker: "Teacher",
+        jpText: "二十ページです。CDをよく聞いてくださいね。",
+        enText: "It is page twenty. Please listen carefully to the CD, okay?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "はい、わかりました。",
+        enText: "Yes, I understand.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "聞く",
+        reading: "きく",
+        enText: "to listen / hear / ask",
+      },
+      {
+        jpText: "言う",
+        reading: "いう",
+        enText: "to say / tell",
+      },
+      {
+        jpText: "開ける",
+        reading: "あける",
+        enText: "to open",
+      },
+      {
+        jpText: "もう一度",
+        reading: "もういちど",
+        enText: "once more / again",
+      },
+      {
+        jpText: "教科書",
+        reading: "きょうかしょ",
+        enText: "textbook",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt: "Choose the correct phrase for 'Please look':",
+        options: ["見てください", "見ってください", "見ないでください", "見ますください"],
+        correctAnswer: "見てください",
+        explanation:
+          "見る is an ichidan verb; drop る and add て, then attach ください to form 見てください.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete the polite request to write: ここに名前を___。(Please write your name here.)",
+        correctAnswer: "書いてください",
+        explanation:
+          "書く becomes 書いて in the te-form; append ください to make the polite request 書いてください.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'Please listen carefully.'",
+        options: ["聞いてください", "よく", "CDを"],
+        correctAnswer: "よくCDを聞いてください",
+        explanation:
+          "Adverb (よく) + Object (CDを) + Verb request (聞いてください).",
+      },
+    ],
+  },
+
+  "te-form-imasu-progressive": {
+    title: "Ongoing Actions (〜ています - Progressive)",
+    theoryMarkdown: `### 📘 Progressive Actions: 〜ています
+
+When combined with action verbs, the pattern **[Verb て-form] + います** describes an action that is currently underway right now, equivalent to the English continuous **\"is doing / am doing\"**.
+
+$$\\text{[Action Verb in て-form]} + \\mathbf{います}$$
+
+---
+
+#### 1. Affirmative & Negative Progressive
+
+| Form | Japanese | Meaning |
+| :--- | :--- | :--- |
+| **Affirmative** | <ruby>本<rt>ほん</rt></ruby>を<ruby>読<rt>よ</rt></ruby>んで**います**。 | I am reading a book. |
+| **Negative** | テレビを<ruby>見<rt>み</rt></ruby>て**いません**。 | I am not watching TV. |
+| **Past Affirmative** | <ruby>昨日<rt>きのう</rt></ruby>、<ruby>勉強<rt>べんきょう</rt></ruby>して**いました**。 | I was studying yesterday. |
+
+---
+
+#### 2. Asking What Someone Is Doing
+
+To ask what someone is doing at the present moment:
+
+- **<ruby>今<rt>いま</rt></ruby>、<ruby>何<rt>なに</rt></ruby>をしていますか。** (What are you doing right now?)
+- <ruby>日本語<rt>にほんご</rt></ruby>を<ruby>勉強<rt>べんきょう</rt></ruby>しています。(I am studying Japanese.)`,
+    dialogue: [
+      {
+        speaker: "Maria",
+        jpText: "もしもし、ケンさん。今何をしていますか。",
+        enText: "Hello, Ken-san. What are you doing right now?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "あ、マリアさん。今、晩ご飯を食べています。",
+        enText: "Ah, Maria-san. I am eating dinner right now.",
+      },
+      {
+        speaker: "Maria",
+        jpText: "そうですか。勉強していませんか。",
+        enText: "I see. You are not studying?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "はい、今は音楽を聞いていますよ。",
+        enText: "Right, right now I am listening to music.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "今",
+        reading: "いま",
+        enText: "now / right now",
+      },
+      {
+        jpText: "音楽",
+        reading: "おんがく",
+        enText: "music",
+      },
+      {
+        jpText: "晩ご飯",
+        reading: "ばんごはん",
+        enText: "dinner",
+      },
+      {
+        jpText: "もしもし",
+        reading: "もしもし",
+        enText: "hello (on the phone)",
+      },
+      {
+        jpText: "電話",
+        reading: "でんわ",
+        enText: "telephone / phone call",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt: "Choose the sentence meaning 'I am studying right now':",
+        options: [
+          "今勉強しています",
+          "今勉強します",
+          "今勉強しました",
+          "今勉強してあります",
+        ],
+        correctAnswer: "今勉強しています",
+        explanation:
+          "勉強する becomes 勉強して in the te-form; adding います creates the ongoing progressive action.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete the negative progressive: 私はテレビを見て___。(I am not watching television.)",
+        correctAnswer: "いません",
+        explanation: "The negative progressive is formed with 〜ていません.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'What are you doing now?'",
+        options: ["何を", "今", "していますか"],
+        correctAnswer: "今何をしていますか",
+        explanation:
+          "Time adverb (今) + Direct object interrogative (何を) + Progressive question (していますか).",
+      },
+    ],
+  },
+
+  "te-form-imasu-resulting-state": {
+    title: "Resulting States & Habits (〜ています - State of Being)",
+    theoryMarkdown: `### 📘 Resulting States with 〜ています
+
+While **〜ています** describes actions in progress with continuous verbs, when used with verbs that express an instantaneous change of state, it indicates that **the change occurred and its resulting state continues to exist**.
+
+---
+
+#### 1. Core State-of-Being Verbs
+
+| Verb | Te-Form + います | Meaning |
+| :--- | :--- | :--- |
+| <ruby>住<rt>す</rt></ruby>む (to take up residence) | <ruby>住<rt>す</rt></ruby>んで**います** | lives in / resides |
+| <ruby>持<rt>も</rt></ruby>つ (to hold / take) | <ruby>持<rt>も</rt></ruby>って**います** | has / owns |
+| <ruby>知<rt>し</rt></ruby>る (to come to know) | <ruby>知<rt>し</rt></ruby>って**います** | knows |
+| <ruby>結婚<rt>けっこん</rt></ruby>する (to marry) | <ruby>結婚<rt>けっこん</rt></ruby>して**います** | is married |
+
+---
+
+#### 2. The Asymmetry of \"To Know\" (知る)
+
+Pay close attention to how affirmative and negative states work with **<ruby>知<rt>し</rt></ruby>る**:
+
+- **Affirmative (\"I know\"):** <ruby>知<rt>し</rt></ruby>って**います**
+- **Negative (\"I do not know\"):** <ruby>知<rt>し</rt></ruby>り**ません** (*NEVER* 知っていません)
+
+> 💡 **Residence Marker:** With <ruby>住<rt>す</rt></ruby>んでいます, mark the location with **に** (e.g., <ruby>東京<rt>とうきょう</rt></ruby>**に**<ruby>住<rt>す</rt></ruby>んでいます = I live in Tokyo).`,
+    dialogue: [
+      {
+        speaker: "Tanaka",
+        jpText: "ケンさんは今どこに住んでいますか。",
+        enText: "Ken-san, where are you living right now?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "私は京都に住んでいます。田中さんは？",
+        enText: "I live in Kyoto. What about you, Tanaka-san?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "私は東京に住んでいます。ケンさんはあの先生を知っていますか。",
+        enText: "I live in Tokyo. Do you know that teacher, Ken-san?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "いいえ、知りません。",
+        enText: "No, I do not know them.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "住む",
+        reading: "すむ",
+        enText: "to live / reside",
+      },
+      {
+        jpText: "知る",
+        reading: "しる",
+        enText: "to come to know",
+      },
+      {
+        jpText: "持つ",
+        reading: "もつ",
+        enText: "to hold / have / own",
+      },
+      {
+        jpText: "東京",
+        reading: "とうきょう",
+        enText: "Tokyo",
+      },
+      {
+        jpText: "京都",
+        reading: "きょうと",
+        enText: "Kyoto",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt: "What is the correct negative form of 'I do not know'?",
+        options: [
+          "知りません",
+          "知っていません",
+          "知りませんでした",
+          "知らなくてです",
+        ],
+        correctAnswer: "知りません",
+        explanation:
+          "The negative counterpart to 知っています is exclusively 知りません.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete with the correct particle for residence: 私は東京___住んでいます。(I live in Tokyo.)",
+        correctAnswer: "に",
+        explanation:
+          "Particle に marks the point of static residence with 住んでいます.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'I have a smartphone.'",
+        options: ["持っています", "スマホを", "私は"],
+        correctAnswer: "私はスマホを持っています",
+        explanation:
+          "Topic (私は) + Direct object (スマホを) + Continuous state (持っています).",
+      },
+    ],
+  },
 };

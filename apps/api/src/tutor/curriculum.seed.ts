@@ -176,6 +176,48 @@ export const SEED_CURRICULUM_N5: SeedTopic[] = [
     objective:
       "Connect multiple adjectives using 〜くて / 〜で and state likes and dislikes using 好き / 嫌い with particle が.",
   },
+
+  // Unit 5: The Versatile Te-Form (Part 1)
+  {
+    level: "N5",
+    unitIndex: 5,
+    unitTitle: "The Versatile Te-Form (Part 1)",
+    lessonIndex: 17,
+    title: "Te-Form Conjugation (て形)",
+    grammarKey: "verb-te-form-conjugation",
+    objective:
+      "Master the fundamental conjugation rules to convert Ichidan, Godan, and Irregular verbs into their て-form.",
+  },
+  {
+    level: "N5",
+    unitIndex: 5,
+    unitTitle: "The Versatile Te-Form (Part 1)",
+    lessonIndex: 18,
+    title: "Polite Requests (〜てください)",
+    grammarKey: "te-form-kudasai-requests",
+    objective:
+      "Make polite requests, instructions, and invitations by attaching ください to the verb て-form.",
+  },
+  {
+    level: "N5",
+    unitIndex: 5,
+    unitTitle: "The Versatile Te-Form (Part 1)",
+    lessonIndex: 19,
+    title: "Ongoing Actions (〜ています - Progressive)",
+    grammarKey: "te-form-imasu-progressive",
+    objective:
+      "Describe actions currently happening in the present moment using the progressive construction 〜ています.",
+  },
+  {
+    level: "N5",
+    unitIndex: 5,
+    unitTitle: "The Versatile Te-Form (Part 1)",
+    lessonIndex: 20,
+    title: "Resulting States & Habits (〜ています - State of Being)",
+    grammarKey: "te-form-imasu-resulting-state",
+    objective:
+      "Express persistent conditions, professions, residence, and resulting states using 〜ています with change-of-state verbs.",
+  },
 ];
 
 export const SEED_CURRICULUM_N4: SeedTopic[] = [];
