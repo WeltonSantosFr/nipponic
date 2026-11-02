@@ -74,7 +74,7 @@ const getStoredProgress = (): LocalProgress => {
   }
 };
 
-const persistProgress = (lessonId: string, score: number) => {
+const persistProgress = (lessonId: string, score: number, topicId?: string) => {
   if (typeof window === "undefined") return;
   try {
     const current = getStoredProgress();
@@ -82,6 +82,12 @@ const persistProgress = (lessonId: string, score: number) => {
       completedAt: new Date().toISOString(),
       score,
     };
+    if (topicId) {
+      current[topicId] = {
+        completedAt: new Date().toISOString(),
+        score,
+      };
+    }
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(current));
   } catch {
     // Ignore storage write errors
@@ -435,7 +441,7 @@ export function TutorProvider({ children }: { children: ReactNode }) {
       if (!currentLesson) return false;
 
       // 1. Save locally for guest resilience
-      persistProgress(currentLesson.id, score);
+      persistProgress(currentLesson.id, score, currentLesson.topicId);
 
       // 2. If authenticated, sync with backend
       if (isAuthenticated) {

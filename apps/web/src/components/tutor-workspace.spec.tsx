@@ -70,7 +70,7 @@ describe("TutorWorkspace", () => {
 
     render(<TutorWorkspace />);
 
-    expect(screen.getByText("Daily AI Tutor")).toBeDefined();
+    expect(screen.getByText("Daily Lessons")).toBeDefined();
     expect(screen.getByText("Start Today's Lesson")).toBeDefined();
     expect(screen.getAllByText("Polite Copula です").length).toBeGreaterThan(0);
 
@@ -208,16 +208,13 @@ describe("TutorWorkspace", () => {
     expect(mockSubmitFeedback).toHaveBeenCalledWith("helpful");
   });
 
-  it("renders empty state with AI generation button when curriculum is empty", () => {
-    const mockGenerateNextUnit = vi.fn();
+  it("renders empty state without AI generation button when curriculum is empty", () => {
     vi.mocked(TutorContextModule.useTutor).mockReturnValue({
       curriculum: [],
       selectedLevel: "N1",
       currentLesson: null,
       isLoadingCurriculum: false,
       isLoadingLesson: false,
-      isGeneratingUnit: false,
-      generateNextUnit: mockGenerateNextUnit,
       loadLesson: mockLoadLesson,
       submitProgress: mockSubmitProgress,
       submitFeedback: mockSubmitFeedback,
@@ -229,19 +226,12 @@ describe("TutorWorkspace", () => {
     render(<TutorWorkspace />);
 
     expect(
-      screen.getByText("No lessons generated for JLPT N1 yet")
+      screen.getByText("No lessons available for JLPT N1 yet")
     ).toBeDefined();
-    const generateBtn = screen.getByRole("button", {
-      name: /Generate JLPT N1 Topics with AI/i,
-    });
-    expect(generateBtn).toBeDefined();
-
-    fireEvent.click(generateBtn);
-    expect(mockGenerateNextUnit).toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: /generate/i })).toBeNull();
   });
 
-  it("triggers generateNextUnit when '+ Generate Next Unit (AI)' is clicked", () => {
-    const mockGenerateNextUnit = vi.fn();
+  it("renders curriculum roadmap without AI generation button", () => {
     vi.mocked(TutorContextModule.useTutor).mockReturnValue({
       curriculum: [
         {
@@ -260,8 +250,6 @@ describe("TutorWorkspace", () => {
       currentLesson: null,
       isLoadingCurriculum: false,
       isLoadingLesson: false,
-      isGeneratingUnit: false,
-      generateNextUnit: mockGenerateNextUnit,
       loadLesson: mockLoadLesson,
       submitProgress: mockSubmitProgress,
       submitFeedback: mockSubmitFeedback,
@@ -272,13 +260,8 @@ describe("TutorWorkspace", () => {
 
     render(<TutorWorkspace />);
 
-    const nextUnitBtn = screen.getByRole("button", {
-      name: /\+ Generate Next Unit \(AI\)/i,
-    });
-    expect(nextUnitBtn).toBeDefined();
-
-    fireEvent.click(nextUnitBtn);
-    expect(mockGenerateNextUnit).toHaveBeenCalled();
+    expect(screen.getByText("Curriculum Roadmap")).toBeDefined();
+    expect(screen.queryByRole("button", { name: /generate/i })).toBeNull();
   });
 
   it("should call closeLesson when top-left '< Curriculum' button is clicked", () => {
@@ -631,11 +614,8 @@ describe("TutorWorkspace", () => {
     expect(emptyStateCard.className).toContain("p-4 sm:p-6 md:p-8");
     expect(emptyStateCard.className).toContain("w-full min-w-0 max-w-full overflow-hidden");
 
-    // Empty state generate button must have whitespace-normal and break-words to avoid single-line blowout
-    const emptyStateBtn = screen.getByRole("button", { name: /Generate JLPT N5 Topics with AI/i });
-    expect(emptyStateBtn.className).toContain("whitespace-normal");
-    expect(emptyStateBtn.className).toContain("break-words");
-    expect(emptyStateBtn.className).toContain("min-w-0 max-w-full");
+    // Empty state card must have no generate button
+    expect(screen.queryByRole("button", { name: /generate/i })).toBeNull();
 
     // Active lesson button wrapping checks across steps
     const mockLesson = {
@@ -1203,6 +1183,154 @@ describe("TutorWorkspace", () => {
     });
 
     consoleErrorSpy.mockRestore();
+  });
+
+  describe("Bug Regression: Lesson switching & state reset isolation", () => {
+    const mockLesson1 = {
+      id: "les_1",
+      topicId: "top_1",
+      title: "Lesson 1: Greetings",
+      level: "N5",
+      theoryMarkdown: "### Greetings Theory",
+      dialogue: [
+        { speaker: "田中", jpText: "こんにちは", enText: "Hello" },
+      ],
+      vocabulary: [
+        { jpText: "こんにちは", reading: "こんにちは", enText: "Hello" },
+      ],
+      exercises: [
+        {
+          order: 1,
+          type: "multiple_choice" as const,
+          prompt: "How to say Hello?",
+          options: ["こんにちは", "さようなら"],
+          correctAnswer: "こんにちは",
+          explanation: "Greeting during daytime",
+        },
+      ],
+    };
+
+    const mockLesson2 = {
+      id: "les_2",
+      topicId: "top_2",
+      title: "Lesson 2: Copula Desu",
+      level: "N5",
+      theoryMarkdown: "### Copula Theory",
+      dialogue: [
+        { speaker: "田中", jpText: "学生です", enText: "I am a student" },
+      ],
+      vocabulary: [
+        { jpText: "学生", reading: "がくせい", enText: "Student" },
+      ],
+      exercises: [
+        {
+          order: 1,
+          type: "multiple_choice" as const,
+          prompt: "Which means 'is/am'?",
+          options: ["です", "じゃない"],
+          correctAnswer: "です",
+          explanation: "Polite copula",
+        },
+      ],
+    };
+
+    it("resets activeStep to Theory and clears exercise answers when switching between lessons", async () => {
+      let currentMockLesson: any = mockLesson1;
+      const mockClose = vi.fn(() => {
+        currentMockLesson = null;
+      });
+
+      vi.mocked(TutorContextModule.useTutor).mockImplementation(() => ({
+        curriculum: [
+          { id: "top_1", level: "N5", unitIndex: 1, unitTitle: "Unit 1", lessonIndex: 1, title: "Lesson 1", grammarKey: "greetings", objective: "", isCompleted: false },
+          { id: "top_2", level: "N5", unitIndex: 1, unitTitle: "Unit 1", lessonIndex: 2, title: "Lesson 2", grammarKey: "desu", objective: "", isCompleted: false },
+        ],
+        selectedLevel: "N5",
+        currentLesson: currentMockLesson,
+        isLoadingLesson: false,
+        loadLesson: mockLoadLesson,
+        closeLesson: mockClose,
+        submitProgress: mockSubmitProgress,
+        submitFeedback: mockSubmitFeedback,
+        addVocabularyToDeck: mockAddVocabularyToDeck,
+        setSelectedTopicId: mockSetSelectedTopicId,
+        clearError: vi.fn(),
+      } as any));
+
+      const { rerender } = render(<TutorWorkspace />);
+
+      // Step 1: In Lesson 1, advance through to Practice
+      fireEvent.click(screen.getByRole("button", { name: "3. Practice" }));
+      expect(screen.getByText("Answered: 0 / 1")).toBeDefined();
+
+      // Answer exercise in Lesson 1
+      const answerBtn = screen.getByRole("button", { name: /A\.\s*こんにちは/i });
+      fireEvent.click(answerBtn);
+      expect(screen.getByText("Answered: 1 / 1")).toBeDefined();
+      expect(screen.getByText("Practice Completed!")).toBeDefined();
+
+      // Advance to Vocabulary
+      fireEvent.click(screen.getByRole("button", { name: "4. Vocabulary" }));
+      expect(screen.getByText("How was this lesson explanation?")).toBeDefined();
+
+      // Finish Lesson 1
+      const finishBtn = screen.getByRole("button", { name: /finish & return to curriculum/i });
+      await fireEvent.click(finishBtn);
+      expect(mockClose).toHaveBeenCalled();
+
+      // Step 2: Now user opens Lesson 2
+      currentMockLesson = mockLesson2;
+      rerender(<TutorWorkspace />);
+
+      // 1. Should NOT be on Vocabulary step!
+      expect(screen.queryByText("How was this lesson explanation?")).toBeNull();
+
+      // 2. Should be on Step 1: Theory
+      expect(screen.getByText("Continue to Dialogue")).toBeDefined();
+      expect(screen.getByText("Lesson 2: Copula Desu")).toBeDefined();
+
+      // 3. When navigating to Practice in Lesson 2, it should NOT be answered or completed!
+      fireEvent.click(screen.getByRole("button", { name: "3. Practice" }));
+      expect(screen.getByText("Answered: 0 / 1")).toBeDefined();
+      expect(screen.queryByText("Practice Completed!")).toBeNull();
+      expect(screen.getByText("Which means 'is/am'?")).toBeDefined();
+
+      // Option in Lesson 2 must be clickable and unselected
+      const lesson2Option = screen.getByRole("button", { name: /A\.\s*です/i });
+      expect(lesson2Option).not.toBeDisabled();
+    });
+
+    it("resets state when switching directly between lessons via loadLesson", () => {
+      let currentMockLesson: any = mockLesson1;
+
+      vi.mocked(TutorContextModule.useTutor).mockImplementation(() => ({
+        curriculum: [],
+        selectedLevel: "N5",
+        currentLesson: currentMockLesson,
+        isLoadingLesson: false,
+        loadLesson: mockLoadLesson,
+        closeLesson: mockCloseLesson,
+        submitProgress: mockSubmitProgress,
+        submitFeedback: mockSubmitFeedback,
+        addVocabularyToDeck: mockAddVocabularyToDeck,
+        setSelectedTopicId: mockSetSelectedTopicId,
+        clearError: vi.fn(),
+      } as any));
+
+      const { rerender } = render(<TutorWorkspace />);
+
+      // Go to Vocabulary directly
+      fireEvent.click(screen.getByRole("button", { name: "4. Vocabulary" }));
+      expect(screen.getByText("How was this lesson explanation?")).toBeDefined();
+
+      // Switch to Lesson 2 directly
+      currentMockLesson = mockLesson2;
+      rerender(<TutorWorkspace />);
+
+      // Must be back at Theory
+      expect(screen.getByText("Continue to Dialogue")).toBeDefined();
+      expect(screen.queryByText("How was this lesson explanation?")).toBeNull();
+    });
   });
 });
 

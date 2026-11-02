@@ -610,7 +610,7 @@ describe("AppSidebar - Views & Full Feature Suite", () => {
   });
 
   describe("Tutor View", () => {
-    it("switches levels, generates next unit, and loads lesson", async () => {
+    it("switches levels and loads lesson", async () => {
       vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue({
         ...getBaseFlashcards(),
         activeSidebarView: "tutor",
@@ -626,13 +626,6 @@ describe("AppSidebar - Views & Full Feature Suite", () => {
       const n2Btn = screen.getByRole("button", { name: "N2" });
       fireEvent.click(n2Btn);
       expect(mockSetSelectedLevel).toHaveBeenCalledWith("N2");
-
-      // Generate next unit
-      const genBtn = screen.getByTitle("Generate next unit with AI");
-      await act(async () => {
-        fireEvent.click(genBtn);
-      });
-      expect(mockGenerateNextUnit).toHaveBeenCalled();
 
       // Click lesson item
       const lessonBtn = screen.getByText(/Basic Greetings/i);
@@ -675,7 +668,7 @@ describe("AppSidebar - Views & Full Feature Suite", () => {
       expect(screen.getByText("Loading JLPT N5 lessons...")).toBeInTheDocument();
     });
 
-    it("renders empty curriculum state and triggers AI generation", async () => {
+    it("renders empty curriculum state without AI generation button", async () => {
       vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue({
         ...getBaseFlashcards(),
         activeSidebarView: "tutor",
@@ -708,14 +701,10 @@ describe("AppSidebar - Views & Full Feature Suite", () => {
       );
 
       expect(screen.getByText("No lessons loaded for JLPT N5.")).toBeInTheDocument();
-      const aiGenerateBtn = screen.getByRole("button", { name: /generate with ai/i });
-      await act(async () => {
-        fireEvent.click(aiGenerateBtn);
-      });
-      expect(mockGenerateNextUnit).toHaveBeenCalled();
+      expect(screen.queryByRole("button", { name: /generate with ai/i })).not.toBeInTheDocument();
     });
 
-    it("switches to tutor view when clicking AI Tutor switcher button", () => {
+    it("switches to tutor view when clicking Lessons switcher button", () => {
       const mockSetActiveSidebarView = vi.fn();
       vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue({
         ...getBaseFlashcards(),
@@ -729,8 +718,8 @@ describe("AppSidebar - Views & Full Feature Suite", () => {
         </SidebarProvider>
       );
 
-      const aiTutorBtn = screen.getByRole("button", { name: /AI Tutor/i });
-      fireEvent.click(aiTutorBtn);
+      const lessonsBtn = screen.getByRole("button", { name: /Lessons/i });
+      fireEvent.click(lessonsBtn);
       expect(mockSetActiveSidebarView).toHaveBeenCalledWith("tutor");
     });
 

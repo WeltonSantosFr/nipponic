@@ -637,7 +637,7 @@ describe("TutorService", () => {
       expect(geminiServiceMock.generateLesson).not.toHaveBeenCalled();
     });
 
-    it("FEEDBACK THRESHOLD: should trigger regeneration when feedbacks >= 3 and confusing ratio >= 60%", async () => {
+    it("FEEDBACK: should NOT trigger regeneration or deletion when feedbacks are negative (ratings are illustrative)", async () => {
       const mockTopic = {
         id: "top_fb_3",
         level: "N1",
@@ -646,12 +646,12 @@ describe("TutorService", () => {
         objective: "Express conduct befitting a status",
       };
 
-      const mockStaleLesson = {
-        id: "les_stale_fb",
+      const mockExistingLesson = {
+        id: "les_existing_fb",
         topicId: "top_fb_3",
         title: "Formal Nuance たるもの",
         level: "N1",
-        theoryMarkdown: "### Brief theory",
+        theoryMarkdown: "### Existing theory",
         dialogueJson: [],
         vocabularyJson: [],
         createdAt: new Date(),
@@ -659,18 +659,17 @@ describe("TutorService", () => {
 
       const deleteLessonMock = vi.fn().mockResolvedValue({});
       const deleteExerciseMock = vi.fn().mockResolvedValue({});
-      const deleteFeedbackMock = vi.fn().mockResolvedValue({});
 
       prismaMock.db.orm.public.CurriculumTopic.where.mockReturnValue({
         first: vi.fn().mockResolvedValue(mockTopic),
       });
 
       prismaMock.db.orm.public.Lesson.where.mockReturnValue({
-        first: vi.fn().mockResolvedValue(mockStaleLesson),
+        first: vi.fn().mockResolvedValue(mockExistingLesson),
         delete: deleteLessonMock,
       });
 
-      // 3 reviews: 2 confusing, 1 helpful = 66.7% confusing (>= 60%)
+      // 3 reviews: 2 confusing, 1 helpful = 66.7% confusing
       prismaMock.db.orm.public.LessonFeedback.where.mockReturnValue({
         all: vi.fn().mockResolvedValue([
           {
@@ -685,84 +684,20 @@ describe("TutorService", () => {
           },
           { id: "fb_3", rating: "helpful", comment: null },
         ]),
-        delete: deleteFeedbackMock,
       });
 
-      const mockUpgradedGenerated = {
-        title: "Upgraded Formal Nuance たるもの",
-        theoryMarkdown: "### Enhanced Step-by-Step Theory for たるもの",
-        dialogue: [
-          {
-            speaker: "社長",
-            jpText: "指導者たるもの、模範を示さねばならない。",
-            enText: "As a leader...",
-          },
-        ],
-        vocabulary: [
-          { jpText: "たるもの", reading: "たるもの", enText: "Befitting" },
-        ],
-        exercises: [
-          {
-            order: 1,
-            type: "multiple_choice" as const,
-            prompt: "Select correct usage",
-            options: ["たるもの", "ごとき"],
-            correctAnswer: "たるもの",
-            explanation: "Befitting status",
-          },
-        ],
-      };
-
-      prismaMock.db.orm.public.Lesson.create.mockResolvedValue({
-        id: "les_upgraded_fb",
-        topicId: "top_fb_3",
-        title: mockUpgradedGenerated.title,
-        level: "N1",
-        theoryMarkdown: mockUpgradedGenerated.theoryMarkdown,
-        dialogueJson: mockUpgradedGenerated.dialogue,
-        vocabularyJson: mockUpgradedGenerated.vocabulary,
-        createdAt: new Date(),
+      prismaMock.db.orm.public.LessonExercise.where.mockReturnValue({
+        all: vi.fn().mockResolvedValue([{ id: "ex_1", order: 1 }]),
+        delete: deleteExerciseMock,
       });
-
-      prismaMock.db.orm.public.LessonExercise.where.mockImplementation(
-        (filter: any) => ({
-          all: vi
-            .fn()
-            .mockResolvedValue(
-              filter.lessonId === "les_stale_fb"
-                ? [{ id: "old_ex_fb" }]
-                : [{ id: "new_ex_fb", order: 1 }],
-            ),
-          delete: deleteExerciseMock,
-        }),
-      );
-
-      vi.mocked(geminiServiceMock.generateLesson).mockResolvedValue(
-        mockUpgradedGenerated,
-      );
 
       const result = await service.getLessonByTopicId("top_fb_3");
 
-      expect(deleteLessonMock).toHaveBeenCalled();
-      expect(deleteExerciseMock).toHaveBeenCalled();
-      expect(deleteFeedbackMock).toHaveBeenCalled();
-      expect(geminiServiceMock.generateLesson).toHaveBeenCalledWith({
-        title: "Formal Nuance たるもの",
-        level: "N1",
-        grammarKey: "tarumono",
-        objective: "Express conduct befitting a status",
-        isRegeneration: true,
-        regenerationReason: expect.stringContaining(
-          "67% confusing ratings (2/3 reviews)",
-        ),
-        previousFeedbackComments: [
-          "Examples were too abstract",
-          "Needs better conjugation explanation",
-        ],
-      });
-
-      expect(result.id).toBe("les_upgraded_fb");
-      expect(result.theoryMarkdown).toContain("Enhanced Step-by-Step Theory");
+      expect(deleteLessonMock).not.toHaveBeenCalled();
+      expect(deleteExerciseMock).not.toHaveBeenCalled();
+      expect(geminiServiceMock.generateLesson).not.toHaveBeenCalled();
+      expect(result.id).toBe("les_existing_fb");
+      expect(result.theoryMarkdown).toBe("### Existing theory");
     });
 
     it("should throw NotFoundException if topic does not exist", async () => {

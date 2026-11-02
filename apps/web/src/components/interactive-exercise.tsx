@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, memo } from "react";
+import { useState, useEffect, memo } from "react";
 import type { LessonExercise } from "@nipponic/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,15 @@ export const InteractiveExercise = memo(function InteractiveExercise({
     }
     return [];
   });
+
+  useEffect(() => {
+    setSelectedOption(null);
+    setInputAnswer("");
+    setSelectedChips([]);
+    setAvailableChips(
+      exercise.type === "reorder" && exercise.options ? [...exercise.options] : []
+    );
+  }, [exercise.prompt, exercise.order, exercise.type]);
 
   const handleSelectOption = (option: string) => {
     if (isAnswered) return;

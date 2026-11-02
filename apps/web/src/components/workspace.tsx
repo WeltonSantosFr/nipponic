@@ -256,7 +256,7 @@ export function Workspace(props: WorkspaceProps = {}) {
             ) : (
               <span className="text-sm font-medium text-muted-foreground truncate max-w-[140px] xs:max-w-[180px] sm:max-w-sm flex items-center gap-1.5 min-w-0">
                 <GraduationCap size={15} className="text-primary shrink-0" />
-                <span>AI Tutor ({selectedLevel})</span>
+                <span>Lessons ({selectedLevel})</span>
               </span>
             )}
           </div>

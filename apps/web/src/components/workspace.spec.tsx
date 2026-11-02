@@ -475,7 +475,7 @@ describe("Workspace Component", () => {
 
       render(<Workspace />);
 
-      expect(screen.getByText("AI Tutor (N3)")).toBeInTheDocument();
+      expect(screen.getByText("Lessons (N3)")).toBeInTheDocument();
       await waitFor(() => {
         expect(screen.getByTestId("mock-tutor-workspace")).toBeInTheDocument();
       });

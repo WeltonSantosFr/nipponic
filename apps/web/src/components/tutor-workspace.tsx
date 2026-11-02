@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTutor } from "@/contexts/TutorContext";
 import { TokenizedText } from "@/components/tokenized-text";
 import { MarkdownContent } from "@/components/markdown-content";
@@ -39,8 +39,6 @@ export function TutorWorkspace() {
     currentLesson,
     isLoadingCurriculum,
     isLoadingLesson,
-    isGeneratingUnit,
-    generateNextUnit,
     loadLesson,
     closeLesson,
     submitProgress,
@@ -60,6 +58,16 @@ export function TutorWorkspace() {
   const [cardsAddedCount, setCardsAddedCount] = useState<number | null>(null);
   const [activeAudioId, setActiveAudioId] = useState<string | null>(null);
   const [isFinishing, setIsFinishing] = useState<boolean>(false);
+
+  // Isolate and reset lesson state whenever switching lessons or returning to curriculum
+  useEffect(() => {
+    setActiveStep("theory");
+    setExerciseAnswers({});
+    setFeedbackSubmitted(false);
+    setCardsAddedCount(null);
+    setActiveAudioId(null);
+    setIsFinishing(false);
+  }, [currentLesson?.id]);
   const [showFurigana, setShowFurigana] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -182,6 +190,10 @@ export function TutorWorkspace() {
       console.error("Failed to submit progress on finish:", err);
     } finally {
       setIsFinishing(false);
+      setActiveStep("theory");
+      setExerciseAnswers({});
+      setFeedbackSubmitted(false);
+      setCardsAddedCount(null);
       closeLesson();
     }
   };
@@ -209,19 +221,19 @@ export function TutorWorkspace() {
     );
   }
 
-  // If a lesson is actively loading (JIT generation by Gemini)
+  // If a lesson is actively loading
   if (isLoadingLesson) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 space-y-3 sm:space-y-4 w-full min-w-0 max-w-full text-center">
         <div className="p-3 sm:p-4 rounded-2xl bg-primary/10 text-primary animate-pulse">
-          <Sparkles size={32} />
+          <BookOpen size={32} />
         </div>
         <div className="text-center space-y-1.5 max-w-sm px-2">
           <h3 className="text-base sm:text-lg font-bold break-words">
-            The AI Tutor is preparing your lesson...
+            Preparing your lesson...
           </h3>
           <p className="text-xs sm:text-sm text-muted-foreground break-words">
-            Generating theory, natural dialogue, audio transcriptions, and interactive exercises.
+            Loading theory, natural dialogue, audio transcriptions, and interactive exercises.
           </p>
         </div>
         <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin text-primary mt-1" />
@@ -301,7 +313,7 @@ export function TutorWorkspace() {
                 </span>
               </div>
               <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold tracking-tight text-foreground break-words">
-                Daily AI Tutor
+                Daily Lessons
               </h1>
               <p className="text-xs sm:text-sm text-muted-foreground max-w-md break-words">
                 Master Japanese grammar, dialogue nuances, and vocabulary step-by-step with structured micro-lessons.
@@ -357,57 +369,21 @@ export function TutorWorkspace() {
                 {curriculum.length} lesson{curriculum.length === 1 ? "" : "s"} across {units.length} unit{units.length === 1 ? "" : "s"}
               </p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => generateNextUnit()}
-              disabled={isGeneratingUnit}
-              className="gap-1.5 cursor-pointer shadow-xs text-xs font-semibold w-full sm:w-auto justify-center min-w-0 max-w-full whitespace-normal break-words h-auto min-h-8 py-2 px-3 text-center"
-            >
-              {isGeneratingUnit ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" />
-                  <span className="break-words">Generating Unit with AI...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles size={13} className="text-primary shrink-0" />
-                  <span className="break-words">+ Generate Next Unit (AI)</span>
-                </>
-              )}
-            </Button>
           </div>
 
           {curriculum.length === 0 ? (
             <div className="rounded-xl sm:rounded-2xl border border-dashed border-border p-4 sm:p-6 md:p-8 text-center space-y-3 sm:space-y-4 bg-card/40 w-full min-w-0 max-w-full overflow-hidden">
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-primary/10 text-primary mx-auto flex items-center justify-center shrink-0">
-                <Sparkles size={20} />
+                <BookOpen size={20} />
               </div>
               <div className="space-y-1.5 max-w-md mx-auto w-full min-w-0">
                 <h3 className="text-sm sm:text-base font-bold text-foreground break-words">
-                  No lessons generated for JLPT {selectedLevel} yet
+                  No lessons available for JLPT {selectedLevel} yet
                 </h3>
                 <p className="text-xs text-muted-foreground break-words">
-                  The AI Tutor can generate a tailored study unit for JLPT {selectedLevel} with grammar explanations, natural dialogues, audio, and exercises.
+                  Curated study lessons for JLPT {selectedLevel} will appear here soon.
                 </p>
               </div>
-              <Button
-                onClick={() => generateNextUnit()}
-                disabled={isGeneratingUnit}
-                className="gap-2 cursor-pointer font-semibold shadow-xs w-full sm:w-auto justify-center min-w-0 max-w-full whitespace-normal break-words h-auto min-h-10 py-2.5 px-4 text-xs sm:text-sm text-center"
-              >
-                {isGeneratingUnit ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin shrink-0" />
-                    <span className="break-words">Generating JLPT {selectedLevel} Topics with AI...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={15} className="shrink-0" />
-                    <span className="break-words">Generate JLPT {selectedLevel} Topics with AI</span>
-                  </>
-                )}
-              </Button>
             </div>
           ) : (
             <div className="space-y-3 sm:space-y-4 w-full min-w-0 max-w-full">
@@ -481,6 +457,14 @@ export function TutorWorkspace() {
     );
   }
 
+  const handleCloseLesson = () => {
+    setActiveStep("theory");
+    setExerciseAnswers({});
+    setFeedbackSubmitted(false);
+    setCardsAddedCount(null);
+    closeLesson();
+  };
+
   // Active Lesson View
   return (
     <div className="flex-1 flex flex-col h-full w-full min-w-0 max-w-full overflow-hidden">
@@ -490,7 +474,7 @@ export function TutorWorkspace() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={closeLesson}
+            onClick={handleCloseLesson}
             className="gap-1 sm:gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer shrink-0 px-2 sm:px-3"
           >
             <ChevronLeft size={16} />
@@ -737,7 +721,7 @@ export function TutorWorkspace() {
 
                 return (
                   <InteractiveExercise
-                    key={exercise.order}
+                    key={`${currentLesson.id}-exercise-${exercise.order}`}
                     exercise={exercise}
                     isAnswered={isAnswered}
                     wasCorrect={wasCorrect}

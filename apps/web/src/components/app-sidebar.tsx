@@ -308,8 +308,6 @@ export function AppSidebar({
     selectedTopicId,
     loadLesson,
     isLoadingCurriculum,
-    isGeneratingUnit,
-    generateNextUnit,
   } = useTutor();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -581,7 +579,7 @@ export function AppSidebar({
                 size={16}
                 className={activeSidebarView === "tutor" ? "text-primary shrink-0" : "text-muted-foreground shrink-0"}
               />
-              <span className="truncate">AI Tutor</span>
+              <span className="truncate">Lessons</span>
             </div>
             <Badge
               variant="outline"
@@ -919,20 +917,6 @@ export function AppSidebar({
               <SidebarGroupLabel className="p-0">
                 JLPT {selectedLevel} Lessons {!isLoadingCurriculum && `(${curriculum.length})`}
               </SidebarGroupLabel>
-              <button
-                type="button"
-                onClick={() => generateNextUnit()}
-                disabled={isGeneratingUnit || isLoadingCurriculum}
-                title="Generate next unit with AI"
-                className="text-[11px] text-muted-foreground hover:text-primary flex items-center gap-1 cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {isGeneratingUnit ? (
-                  <Loader2 size={12} className="animate-spin text-primary" />
-                ) : (
-                  <Sparkles size={12} className="text-primary" />
-                )}
-                <span>+ Unit</span>
-              </button>
             </div>
             {isLoadingCurriculum ? (
               <div className="px-2 py-3 space-y-2">
@@ -951,24 +935,10 @@ export function AppSidebar({
                 ))}
               </div>
             ) : curriculum.length === 0 ? (
-              <div className="p-6 text-center space-y-3">
+              <div className="p-6 text-center space-y-2">
                 <p className="text-xs text-muted-foreground">
                   No lessons loaded for JLPT {selectedLevel}.
                 </p>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => generateNextUnit()}
-                  disabled={isGeneratingUnit}
-                  className="w-full text-xs gap-1.5 cursor-pointer font-medium"
-                >
-                  {isGeneratingUnit ? (
-                    <Loader2 size={13} className="animate-spin text-primary" />
-                  ) : (
-                    <Sparkles size={13} className="text-primary" />
-                  )}
-                  Generate with AI
-                </Button>
               </div>
             ) : (
               <SidebarMenu>
