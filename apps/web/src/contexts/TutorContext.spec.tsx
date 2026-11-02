@@ -215,29 +215,48 @@ describe("TutorContext", () => {
       expect(result.current.curriculum).toEqual(mockN5Topics);
     });
 
-    it("provides foundational seed topic when no cache exists and backend returns empty", async () => {
+    it("leaves curriculum empty and clears cache when backend returns empty array (e.g. unseeded N4..N1 levels)", async () => {
+      // Pre-populate old cache for N1
+      localStorage.setItem(
+        "nipponic.tutor_curriculum_cache",
+        JSON.stringify({ N1: [{ id: "old_n1", title: "Old N1" }] })
+      );
+
       vi.mocked(getCurriculumAction).mockResolvedValue([]);
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockImplementation(async (url: string) => {
+          if (url.includes("/tutor/curriculum")) {
+            return {
+              ok: true,
+              json: async () => [],
+            };
+          }
+          return { ok: false };
+        })
+      );
 
       const { result } = renderHook(() => useTutor(), {
         wrapper: ({ children }) => <TutorProvider>{children}</TutorProvider>,
       });
 
       await waitFor(() => {
-        expect(result.current.curriculum).toHaveLength(1);
-        expect(result.current.curriculum[0]?.title).toBe("Core Grammar Foundations");
-        expect(result.current.curriculum[0]?.grammarKey).toBe("copula-desu");
+        expect(result.current.curriculum).toEqual([]);
       });
 
-      // Switch to N1 with empty cache & server
+      // Switch to N1 with empty server response
       act(() => {
         result.current.setSelectedLevel("N1");
       });
 
       await waitFor(() => {
-        expect(result.current.curriculum).toHaveLength(1);
-        expect(result.current.curriculum[0]?.title).toBe("Classical Nuance (ざるを得ない)");
-        expect(result.current.curriculum[0]?.grammarKey).toBe("zaru-o-enai");
+        expect(result.current.curriculum).toEqual([]);
       });
+
+      // Assert that localStorage cache for N1 was cleared
+      const raw = localStorage.getItem("nipponic.tutor_curriculum_cache");
+      const parsed = raw ? JSON.parse(raw) : {};
+      expect(parsed["N1"]).toBeUndefined();
     });
 
     it("falls back to direct API when getCurriculumAction throws or returns empty and merges local progress", async () => {

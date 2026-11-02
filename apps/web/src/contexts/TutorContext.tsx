@@ -107,11 +107,15 @@ const getStoredCurriculum = (level: CurriculumLevel): CurriculumTopic[] => {
 };
 
 const persistCurriculum = (level: CurriculumLevel, topics: CurriculumTopic[]) => {
-  if (typeof window === "undefined" || !topics || topics.length === 0) return;
+  if (typeof window === "undefined" || !topics) return;
   try {
     const raw = localStorage.getItem(CURRICULUM_CACHE_KEY);
     const current: LocalCurriculumCache = raw ? JSON.parse(raw) : {};
-    current[level] = topics;
+    if (topics.length === 0) {
+      delete current[level];
+    } else {
+      current[level] = topics;
+    }
     localStorage.setItem(CURRICULUM_CACHE_KEY, JSON.stringify(current));
   } catch {
     // Ignore storage write errors
@@ -166,14 +170,19 @@ export function TutorProvider({ children }: { children: ReactNode }) {
       setError(null);
       try {
         let data: CurriculumTopic[] = [];
+        let serverActionSucceeded = false;
         try {
           data = await getCurriculumAction(level);
+          if (data && data.length > 0) {
+            serverActionSucceeded = true;
+          }
         } catch (fetchErr) {
           console.warn("Failed to fetch curriculum action, trying direct API:", fetchErr);
         }
 
-        // Direct API fallback if server action failed or returned empty
-        if ((!data || data.length === 0) && (typeof navigator === "undefined" || navigator.onLine)) {
+        let fetchSucceeded = false;
+        // Direct API fallback if server action returned empty (could be empty or 500)
+        if (!serverActionSucceeded && (typeof navigator === "undefined" || navigator.onLine)) {
           try {
             const authHeaders = getClientAuthHeaders();
             const res = await fetch(`${API_URL}/tutor/curriculum?level=${level}`, {
@@ -181,16 +190,37 @@ export function TutorProvider({ children }: { children: ReactNode }) {
               headers: authHeaders,
             });
             if (res.ok) {
-              data = await res.json();
+              const resData = await res.json();
+              if (resData && !Array.isArray(resData)) {
+                throw new Error("Invalid curriculum response format");
+              }
+              data = resData;
+              fetchSucceeded = true;
             }
           } catch (directErr) {
             console.warn("Direct API getCurriculum fallback failed:", directErr);
+            if (
+              directErr instanceof Error &&
+              directErr.message === "Invalid curriculum response format"
+            ) {
+              throw directErr;
+            }
           }
         }
 
         const localProgress = getStoredProgress();
 
-        if (data && data.length > 0) {
+        if (fetchSucceeded && Array.isArray(data) && data.length === 0) {
+          // Server directly confirmed 200 OK with empty curriculum for this level
+          persistCurriculum(level, []);
+
+          setCurriculumCache((prev) => ({
+            ...prev,
+            [level]: [],
+          }));
+
+          setCurriculum([]);
+        } else if (Array.isArray(data) && data.length > 0) {
           // Merge server progress with local storage for guests
           const merged = data.map((topic) => {
             if (topic.isCompleted) return topic;
@@ -214,7 +244,7 @@ export function TutorProvider({ children }: { children: ReactNode }) {
 
           setCurriculum(merged);
         } else {
-          // Fallback to locally stored curriculum
+          // Server could not be reached or failed: fall back to locally stored cache
           const stored = getStoredCurriculum(level);
           if (stored && stored.length > 0) {
             const merged = stored.map((topic) => {
@@ -236,22 +266,11 @@ export function TutorProvider({ children }: { children: ReactNode }) {
             }));
             setCurriculum(merged);
           } else {
-            // No local cache yet and server returned empty: provide initial foundational seed
-            const fallbackSeed: CurriculumTopic[] = [
-              {
-                id: `seed-${level}-1-1`,
-                level,
-                unitIndex: 1,
-                unitTitle: "Foundations & Essentials",
-                lessonIndex: 1,
-                title: level === "N1" ? "Classical Nuance (ざるを得ない)" : "Core Grammar Foundations",
-                grammarKey: level === "N1" ? "zaru-o-enai" : "copula-desu",
-                objective: "Learn foundational grammar concepts and core sentence patterns.",
-                hasLesson: false,
-                isCompleted: false,
-              },
-            ];
-            setCurriculum(fallbackSeed);
+            setCurriculumCache((prev) => ({
+              ...prev,
+              [level]: [],
+            }));
+            setCurriculum([]);
           }
         }
       } catch (err) {
@@ -260,6 +279,7 @@ export function TutorProvider({ children }: { children: ReactNode }) {
         if (stored.length > 0) {
           setCurriculum(stored);
         } else {
+          setCurriculum([]);
           setError("Failed to load curriculum topics. Please check your network and try again.");
         }
       } finally {
@@ -287,7 +307,20 @@ export function TutorProvider({ children }: { children: ReactNode }) {
       } else {
         const stored = getStoredCurriculum(level);
         if (stored && stored.length > 0) {
-          setCurriculum(stored);
+          const localProgress = getStoredProgress();
+          const merged = stored.map((topic) => {
+            if (topic.isCompleted) return topic;
+            const local = localProgress[topic.id];
+            if (local) {
+              return {
+                ...topic,
+                isCompleted: true,
+                completedScore: local.score,
+              };
+            }
+            return topic;
+          });
+          setCurriculum(merged);
           loadCurriculum(level, true);
         } else {
           setCurriculum([]);
