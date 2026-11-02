@@ -50,6 +50,48 @@ export const SEED_CURRICULUM_N5: SeedTopic[] = [
     objective:
       "Identify objects using demonstrative pronouns and show possession/attribution with particle の.",
   },
+
+  // Unit 2: Daily Life & Basic Verbs
+  {
+    level: "N5",
+    unitIndex: 2,
+    unitTitle: "Daily Life & Basic Verbs",
+    lessonIndex: 5,
+    title: "Polite Verbs Present & Negative (〜ます / 〜ません)",
+    grammarKey: "verb-masu-masen",
+    objective:
+      "Learn how to conjugate verbs into the polite present affirmative (〜ます) and negative (〜ません) forms for routine actions.",
+  },
+  {
+    level: "N5",
+    unitIndex: 2,
+    unitTitle: "Daily Life & Basic Verbs",
+    lessonIndex: 6,
+    title: "Direct Objects (を) & Destinations (へ / に)",
+    grammarKey: "particle-wo-he-ni",
+    objective:
+      "Use particle を to mark direct objects and particles へ/に to mark destinations with movement verbs.",
+  },
+  {
+    level: "N5",
+    unitIndex: 2,
+    unitTitle: "Daily Life & Basic Verbs",
+    lessonIndex: 7,
+    title: "Time Expressions & Time Marker (に)",
+    grammarKey: "particle-ni-time",
+    objective:
+      "Express when actions take place using particle に with specific times, and distinguish relative vs. specific time words.",
+  },
+  {
+    level: "N5",
+    unitIndex: 2,
+    unitTitle: "Daily Life & Basic Verbs",
+    lessonIndex: 8,
+    title: "Polite Past Tense (〜ました / 〜ませんでした)",
+    grammarKey: "verb-mashita-masendeshita",
+    objective:
+      "Describe completed and non-completed past actions using polite past forms 〜ました and 〜ませんでした.",
+  },
 ];
 
 export const SEED_CURRICULUM_N4: SeedTopic[] = [];

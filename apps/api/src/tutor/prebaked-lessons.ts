@@ -410,4 +410,457 @@ Particle **の** connects two nouns (\`Noun 1 の Noun 2\`), where Noun 1 qualif
       },
     ],
   },
+
+  "verb-masu-masen": {
+    title: "Polite Verbs Present & Negative (〜ます / 〜ません)",
+    theoryMarkdown: `### 📘 The Polite Present Form (〜ます / 〜ません)
+
+In Japanese, verbs conjugate to indicate politeness and tense. The **〜ます** ending is the standard polite form used when speaking to teachers, colleagues, or acquaintances.
+
+Japanese has no distinct future tense: the present tense covers both **habitual actions** and **future intentions**.
+
+---
+
+#### 1. Verb Groups & Conjugation Rules
+
+Japanese verbs fall into three distinct groups:
+
+| Verb Group | Dictionary Form | Masu Stem | Affirmative (〜ます) | Negative (〜ません) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Ichidan (Group 2)** | <ruby>食<rt>た</rt></ruby>べる | 食べ- | <ruby>食<rt>た</rt></ruby>べます (eat / will eat) | <ruby>食<rt>た</rt></ruby>べません (do not / will not eat) |
+| **Godan (Group 1)** | <ruby>飲<rt>の</rt></ruby>む | 飲み- | <ruby>飲<rt>の</rt></ruby>みます (drink / will drink) | <ruby>飲<rt>の</rt></ruby>みません (do not / will not drink) |
+| **Irregular (Group 3)** | する | し- | します (do / will do) | しません (do not / will not do) |
+| **Irregular (Group 3)** | <ruby>来<rt>く</rt></ruby>る | 来 (き)- | <ruby>来<rt>き</rt></ruby>ます (come / will come) | <ruby>来<rt>き</rt></ruby>ません (do not / will not come) |
+
+---
+
+#### 2. Key Rules
+
+- **Ichidan Verbs:** Drop the final **る** and attach **ます** or **ません**.
+- **Godan Verbs:** Shift the final **-u** syllable to its corresponding **-i** syllable on the kana chart (e.g., む → み, く → き, す → し), then attach **ます** or **ません**.
+
+> 💡 **Usage Example:** <ruby>私<rt>わたし</rt></ruby>は<ruby>毎日<rt>まいにち</rt></ruby>お<ruby>茶<rt>ちゃ</rt></ruby>を<ruby>飲<rt>の</rt></ruby>みます。(I drink green tea every day.)`,
+    dialogue: [
+      {
+        speaker: "Ken",
+        jpText: "田中さんは毎日朝ご飯を食べますか。",
+        enText: "Tanaka-san, do you eat breakfast every day?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "はい、食べます。パンを食べます。",
+        enText: "Yes, I do. I eat bread.",
+      },
+      {
+        speaker: "Ken",
+        jpText: "コーヒーも飲みますか。",
+        enText: "Do you drink coffee too?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "いいえ、コーヒーは飲みません。お茶を飲みます。",
+        enText: "No, I don't drink coffee. I drink green tea.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "食べる",
+        reading: "たべる",
+        enText: "to eat",
+      },
+      {
+        jpText: "飲む",
+        reading: "のむ",
+        enText: "to drink",
+      },
+      {
+        jpText: "毎日",
+        reading: "まいにち",
+        enText: "every day",
+      },
+      {
+        jpText: "朝ご飯",
+        reading: "あさごはん",
+        enText: "breakfast",
+      },
+      {
+        jpText: "お茶",
+        reading: "おちゃ",
+        enText: "green tea / tea",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt:
+          "Choose the correct polite affirmative form for the godan verb 飲む (to drink):",
+        options: ["飲みます", "飲みません", "飲まます", "飲めます"],
+        correctAnswer: "飲みます",
+        explanation:
+          "飲む is a godan verb ending in む; shift む to the い-row sound み and add ます to form 飲みます.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete with the polite negative of 食べる: 私は朝ご飯を___。(I do not eat breakfast.)",
+        correctAnswer: "食べません",
+        explanation:
+          "食べる is an ichidan verb. Dropping る and adding ません forms the polite negative 食べません.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'I drink green tea every day.'",
+        options: ["お茶を", "私は", "飲みます", "毎日"],
+        correctAnswer: "私は毎日お茶を飲みます",
+        explanation:
+          "Natural Japanese order places Topic (私は) and Time adverb (毎日) first, followed by Object (お茶を) and Verb (飲みます).",
+      },
+    ],
+  },
+
+  "particle-wo-he-ni": {
+    title: "Direct Objects (を) & Destinations (へ / に)",
+    theoryMarkdown: `### 📘 Action Objects & Motion Destinations
+
+---
+
+#### 1. Direct Object Marker を (Pronounced *o*)
+
+- The particle written as **を** is pronounced **o**.
+- It immediately follows the noun that directly receives the action of a transitive verb.
+
+$$\\text{[Noun]} + \\mathbf{を} + \\text{[Transitive Verb]}$$
+
+- <ruby>本<rt>ほん</rt></ruby>**を**<ruby>読<rt>よ</rt></ruby>みます。(I read a book.)
+- <ruby>水<rt>みず</rt></ruby>**を**<ruby>飲<rt>の</rt></ruby>みます。(I drink water.)
+
+---
+
+#### 2. Destination Markers へ (Pronounced *e*) and に
+
+When using movement verbs like <ruby>行<rt>い</rt></ruby>く (to go), <ruby>来<rt>く</rt></ruby>る (to come), and <ruby>帰<rt>かえ</rt></ruby>る (to return home), specify the destination with **へ** or **に**:
+
+- **へ (pronounced *e*):** Emphasizes the direction/heading towards a place.
+- **に:** Emphasizes the specific arrival point or target destination.
+
+| Example | Meaning |
+| :--- | :--- |
+| <ruby>学校<rt>がっこう</rt></ruby>**へ**<ruby>行<rt>い</rt></ruby>きます。 | I go to school. |
+| <ruby>家<rt>うち</rt></ruby>**に**<ruby>帰<rt>かえ</rt></ruby>ります。 | I return home. |
+
+> 💡 *Note:* In everyday conversation, へ and に are often interchangeable when indicating destinations.`,
+    dialogue: [
+      {
+        speaker: "Aoi",
+        jpText: "ケンさん、今日どこへ行きますか。",
+        enText: "Ken-san, where are you going today?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "私は図書館へ行きます。本を読みます。",
+        enText: "I am going to the library. I will read a book.",
+      },
+      {
+        speaker: "Aoi",
+        jpText: "日本語の本ですか。",
+        enText: "Is it a Japanese book?",
+      },
+      {
+        speaker: "Ken",
+        jpText:
+          "はい、日本語を勉強します。あおいさんは家へ帰りますか。",
+        enText:
+          "Yes, I will study Japanese. Are you going home, Aoi-san?",
+      },
+      {
+        speaker: "Aoi",
+        jpText: "はい、家に帰ります。",
+        enText: "Yes, I will return home.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "行く",
+        reading: "いく",
+        enText: "to go",
+      },
+      {
+        jpText: "帰る",
+        reading: "かえる",
+        enText: "to return / to go home",
+      },
+      {
+        jpText: "図書館",
+        reading: "としょかん",
+        enText: "library",
+      },
+      {
+        jpText: "家",
+        reading: "うち",
+        enText: "house / home",
+      },
+      {
+        jpText: "勉強する",
+        reading: "べんきょうする",
+        enText: "to study",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt:
+          "Which particle marks the direct object in: 水___飲みます (I drink water)?",
+        options: ["を", "は", "へ", "に"],
+        correctAnswer: "を",
+        explanation:
+          "Particle を marks the direct object of the transitive verb 飲みます.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete the destination sentence: 明日東京___行きます。(I will go to Tokyo tomorrow.)",
+        correctAnswer: "へ",
+        explanation:
+          "Particle へ (read 'e') marks the direction or destination of movement.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'Ken goes to the library.'",
+        options: ["ケンさんは", "図書館へ", "行きます"],
+        correctAnswer: "ケンさんは図書館へ行きます",
+        explanation:
+          "Topic (ケンさんは) + Destination (図書館へ) + Motion Verb (行きます).",
+      },
+    ],
+  },
+
+  "particle-ni-time": {
+    title: "Time Expressions & Time Marker (に)",
+    theoryMarkdown: `### 📘 Expressing Time with Particle に
+
+To state the specific time at which an event happens, place the particle **に** directly after the time word.
+
+---
+
+#### 1. When to Use に vs. When NOT to Use に
+
+| Category | Examples | Use に? |
+| :--- | :--- | :---: |
+| **Specific Times (Numbers / Days / Dates)** | <ruby>七時<rt>しちじ</rt></ruby> (7:00), <ruby>月曜日<rt>げつようび</rt></ruby> (Monday), <ruby>五月<rt>ごがつ</rt></ruby> (May) | **YES** (七時に) |
+| **Relative Times (No Numbers)** | <ruby>今日<rt>きょう</rt></ruby> (today), <ruby>明日<rt>あした</rt></ruby> (tomorrow), <ruby>毎日<rt>まいにち</rt></ruby> (every day), <ruby>今<rt>いま</rt></ruby> (now) | **NO** (never add に) |
+| **General Periods of the Day** | <ruby>朝<rt>あさ</rt></ruby> (morning), <ruby>夜<rt>よる</rt></ruby> (night) | **OPTIONAL** |
+
+---
+
+#### 2. Telling Time: Hours (〜時 / 〜じ)
+
+- <ruby>一時<rt>いちじ</rt></ruby> (1:00), <ruby>二時<rt>にじ</rt></ruby> (2:00), <ruby>三時<rt>さんじ</rt></ruby> (3:00)
+- **Irregular Readings:**
+  - 4:00 is <ruby>四時<rt>よじ</rt></ruby> (*yoji*, NOT *yonji*)
+  - 7:00 is <ruby>七時<rt>しちじ</rt></ruby> (*shichiji*, NOT *nanaji*)
+  - 9:00 is <ruby>九時<rt>くじ</rt></ruby> (*kuji*, NOT *kyuuji*)
+- Add **<ruby>半<rt>はん</rt></ruby>** for half past: <ruby>七時半<rt>しちじはん</rt></ruby> (7:30)`,
+    dialogue: [
+      {
+        speaker: "Tanaka",
+        jpText: "ケンさんは毎朝何時に起きますか。",
+        enText: "Ken-san, what time do you wake up every morning?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "私は七時に起きます。田中さんは？",
+        enText: "I wake up at seven o'clock. How about you, Tanaka-san?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "私は六時半に起きます。",
+        enText: "I wake up at six-thirty.",
+      },
+      {
+        speaker: "Ken",
+        jpText: "早いですね。夜は何時に寝ますか。",
+        enText: "That's early. What time do you go to bed at night?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "十一時に寝ます。",
+        enText: "I go to bed at eleven o'clock.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "起きる",
+        reading: "おきる",
+        enText: "to wake up / to get up",
+      },
+      {
+        jpText: "寝る",
+        reading: "ねる",
+        enText: "to sleep / to go to bed",
+      },
+      {
+        jpText: "何時",
+        reading: "なんじ",
+        enText: "what time",
+      },
+      {
+        jpText: "七時",
+        reading: "しちじ",
+        enText: "seven o'clock",
+      },
+      {
+        jpText: "半",
+        reading: "はん",
+        enText: "half (past the hour)",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt: "Which time word must NEVER be followed by particle に?",
+        options: ["明日", "七時", "月曜日", "三日"],
+        correctAnswer: "明日",
+        explanation:
+          "Relative time words like 明日 (tomorrow) or 今日 (today) do not take the particle に.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete with the time marker: 私は毎朝七時___起きます。(I wake up at 7 o'clock every morning.)",
+        correctAnswer: "に",
+        explanation:
+          "Specific numerical times (like 七時) require particle に to denote the point of time.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'I go to bed at eleven o'clock.'",
+        options: ["寝ます", "十一時に", "私は"],
+        correctAnswer: "私は十一時に寝ます",
+        explanation:
+          "Topic (私は) + Specific Time (十一時に) + Verb (寝ます).",
+      },
+    ],
+  },
+
+  "verb-mashita-masendeshita": {
+    title: "Polite Past Tense (〜ました / 〜ませんでした)",
+    theoryMarkdown: `### 📘 Expressing the Past: 〜ました & 〜ませんでした
+
+To talk about actions that occurred in the past, change the polite verb ending **〜ます**.
+
+---
+
+#### 1. The Conjugation Pattern
+
+| Tense | Affirmative | Negative |
+| :--- | :--- | :--- |
+| **Present / Future** | 〜ます (e.g., <ruby>食<rt>た</rt></ruby>べます - eat) | 〜ません (e.g., <ruby>食<rt>た</rt></ruby>べません - do not eat) |
+| **Past** | **〜ました** (e.g., <ruby>食<rt>た</rt></ruby>べました - ate) | **〜ませんでした** (e.g., <ruby>食<rt>た</rt></ruby>べませんでした - did not eat) |
+
+---
+
+#### 2. Common Past Time Words
+
+These relative past time expressions do **not** take the particle に:
+
+- <ruby>昨日<rt>きのう</rt></ruby> (yesterday)
+- <ruby>今朝<rt>けさ</rt></ruby> (this morning)
+- <ruby>先週<rt>せんしゅう</rt></ruby> (last week)
+
+> 💡 **Example:** <ruby>昨日<rt>きのう</rt></ruby>、<ruby>日本語<rt>にほんご</rt></ruby>を<ruby>勉強<rt>べんきょう</rt></ruby>しました。(Yesterday, I studied Japanese.)`,
+    dialogue: [
+      {
+        speaker: "Maria",
+        jpText: "ケンさん、昨日は何をしましたか。",
+        enText: "Ken-san, what did you do yesterday?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "私は図書館へ行きました。日本語を勉強しました。",
+        enText: "I went to the library. I studied Japanese.",
+      },
+      {
+        speaker: "Maria",
+        jpText: "そうですか。私も昨日勉強しました。",
+        enText: "I see. I also studied yesterday.",
+      },
+      {
+        speaker: "Ken",
+        jpText: "マリアさんはテレビを見ましたか。",
+        enText: "Did you watch TV, Maria-san?",
+      },
+      {
+        speaker: "Maria",
+        jpText: "いいえ、テレビは見ませんでした。",
+        enText: "No, I did not watch TV.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "昨日",
+        reading: "きのう",
+        enText: "yesterday",
+      },
+      {
+        jpText: "見る",
+        reading: "みる",
+        enText: "to see / to watch",
+      },
+      {
+        jpText: "テレビ",
+        reading: "てれび",
+        enText: "television / TV",
+      },
+      {
+        jpText: "しました",
+        reading: "しました",
+        enText: "did (polite past of する)",
+      },
+      {
+        jpText: "今朝",
+        reading: "けさ",
+        enText: "this morning",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt:
+          "Choose the polite past affirmative form of 行きます (to go):",
+        options: ["行きました", "行きませんでした", "行きます", "行きましたん"],
+        correctAnswer: "行きました",
+        explanation:
+          "Replace suffix 〜ます with 〜ました to form the polite past affirmative (行きました = went).",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete with the polite past negative: 昨日は勉強___。(I did not study yesterday.)",
+        correctAnswer: "しませんでした",
+        explanation:
+          "The past negative of します (to do) is しませんでした (did not do).",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt:
+          "Arrange the words to say: 'Yesterday, I did not watch television.'",
+        options: ["見ませんでした", "テレビは", "昨日は"],
+        correctAnswer: "昨日はテレビは見ませんでした",
+        explanation:
+          "Time topic (昨日は) + Object contrast (テレビは) + Past negative verb (見ませんでした).",
+      },
+    ],
+  },
 };

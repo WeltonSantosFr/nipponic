@@ -167,14 +167,12 @@ export class TutorService implements OnModuleInit {
         }
       }
 
-      // Sync prebaked unit 1 topics and lessons to guarantee the latest content is active
-      for (const topic of ALL_SEED_CURRICULA.N5.filter(
-        (t) => t.unitIndex === 1,
-      )) {
+      // Sync prebaked topics and lessons to guarantee the latest content is active
+      for (const topic of ALL_SEED_CURRICULA.N5) {
         try {
           let dbTopic = await this.prisma.db.orm.public.CurriculumTopic.where({
-            level: "N5",
-            unitIndex: 1,
+            level: topic.level,
+            unitIndex: topic.unitIndex,
             lessonIndex: topic.lessonIndex,
           })
             .first()
