@@ -544,6 +544,65 @@ describe("TutorService", () => {
       expect(result.theoryMarkdown).toContain("極まりない");
     });
 
+    it("REGRESSION: should NOT delete lesson or UserLessonProgress when theory contains hyphenated words like Tanaka-san or self-propelled", async () => {
+      const mockTopic = {
+        id: "top_wa_desu_reg",
+        level: "N5",
+        title: "Identity & The Copula (〜は〜です)",
+        grammarKey: "particle-wa-desu",
+        objective: "Learn identity",
+      };
+
+      const mockExistingLesson = {
+        id: "les_existing_1",
+        topicId: "top_wa_desu_reg",
+        title: "Identity & The Copula (〜は〜です)",
+        level: "N5",
+        theoryMarkdown: "### A は B です\nExample with Tanaka-san and non-living objects.",
+        dialogueJson: [],
+        vocabularyJson: [],
+        createdAt: new Date(),
+      };
+
+      const deleteLessonMock = vi.fn().mockResolvedValue({});
+      const deleteProgressMock = vi.fn().mockResolvedValue({});
+
+      prismaMock.db.orm.public.CurriculumTopic.where.mockReturnValue({
+        first: vi.fn().mockResolvedValue(mockTopic),
+      });
+
+      prismaMock.db.orm.public.Lesson.where.mockReturnValue({
+        first: vi.fn().mockResolvedValue(mockExistingLesson),
+        update: vi.fn().mockResolvedValue({}),
+        delete: deleteLessonMock,
+      });
+
+      prismaMock.db.orm.public.UserLessonProgress.where.mockReturnValue({
+        first: vi.fn().mockResolvedValue({
+          id: "prog_1",
+          userId: "usr_1",
+          lessonId: "les_existing_1",
+          completedAt: new Date(),
+          score: 100,
+        }),
+        delete: deleteProgressMock,
+      });
+
+      prismaMock.db.orm.public.LessonExercise.where.mockReturnValue({
+        all: vi.fn().mockResolvedValue([{ id: "ex_1", order: 1 }]),
+        delete: vi.fn().mockResolvedValue({}),
+      });
+      prismaMock.db.orm.public.LessonExercise.create.mockResolvedValue({});
+
+      const result = await service.getLessonByTopicId("top_wa_desu_reg", "usr_1");
+
+      expect(deleteLessonMock).not.toHaveBeenCalled();
+      expect(deleteProgressMock).not.toHaveBeenCalled();
+      expect(result.id).toBe("les_existing_1");
+      expect(result.isCompleted).toBe(true);
+      expect(result.score).toBe(100);
+    });
+
     it("FEEDBACK THRESHOLD: should NOT regenerate if total feedbacks < 3 even if 100% are confusing", async () => {
       const mockTopic = {
         id: "top_fb_1",

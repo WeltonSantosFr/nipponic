@@ -434,21 +434,25 @@ export class TutorService implements OnModuleInit {
       topicId,
     }).first();
 
+    const isPrebaked = Boolean(PREBAKED_LESSONS[topic.grammarKey]);
+    const prebaked = PREBAKED_LESSONS[topic.grammarKey];
+
     const hasRomajiSlugLeak = Boolean(
+      !isPrebaked &&
       lesson &&
       ((lesson.theoryMarkdown &&
-        (/[a-zA-Z]{3,}-[a-zA-Z]{3,}/.test(lesson.theoryMarkdown) ||
-          lesson.theoryMarkdown.includes("kiwamarinai-extreme"))) ||
+        lesson.theoryMarkdown.includes("kiwamarinai-extreme")) ||
         (Array.isArray(lesson.vocabularyJson) &&
           (lesson.vocabularyJson as any[]).some(
             (v) =>
-              /^[a-zA-Z0-9\-_ ]+$/.test(v.jpText) ||
-              /[a-zA-Z]{3,}-[a-zA-Z]{3,}/.test(v.jpText) ||
-              /[a-zA-Z]{3,}-[a-zA-Z]{3,}/.test(v.reading),
+              v.jpText === "kiwamarinai-extreme" ||
+              v.reading === "kiwamarinai-extreme" ||
+              v.jpText === topic.grammarKey,
           ))),
     );
 
     const isStaleBogusFallback = Boolean(
+      !isPrebaked &&
       lesson &&
       (hasRomajiSlugLeak ||
         (topic.grammarKey !== "desu" &&
@@ -457,26 +461,57 @@ export class TutorService implements OnModuleInit {
             lesson.title === "Polite Copula です"))),
     );
 
-    const isPrebaked = Boolean(PREBAKED_LESSONS[topic.grammarKey]);
-    const needsPrebakedSync =
-      isPrebaked &&
-      lesson &&
-      (lesson.title !== PREBAKED_LESSONS[topic.grammarKey].title ||
-        isStaleBogusFallback);
+    // Sync prebaked lessons in-place to preserve lesson ID and user progress
+    if (isPrebaked && prebaked && lesson) {
+      const needsSync =
+        lesson.title !== prebaked.title ||
+        lesson.theoryMarkdown !== prebaked.theoryMarkdown;
 
-    if (
-      !lesson ||
-      isStaleBogusFallback ||
-      needsPrebakedSync
-    ) {
-      if (
-        (isStaleBogusFallback || needsPrebakedSync) &&
-        lesson
-      ) {
+      if (needsSync) {
         this.logger.log(
-          needsPrebakedSync
-            ? `Syncing prebaked lesson for topic "${topic.title}" (${topic.id})...`
-            : `Replacing stale bogus fallback lesson for topic "${topic.title}" (${topic.id}) with fresh Gemini generation...`,
+          `Syncing prebaked lesson in-place for topic "${topic.title}" (${lesson.id})...`,
+        );
+        try {
+          await this.prisma.db.orm.public.Lesson.where({ id: lesson.id }).update({
+            title: prebaked.title,
+            level: topic.level,
+            theoryMarkdown: prebaked.theoryMarkdown,
+            dialogueJson: prebaked.dialogue,
+            vocabularyJson: prebaked.vocabulary,
+          });
+        } catch {}
+
+        lesson.title = prebaked.title;
+        lesson.theoryMarkdown = prebaked.theoryMarkdown;
+        lesson.dialogueJson = prebaked.dialogue;
+        lesson.vocabularyJson = prebaked.vocabulary;
+
+        try {
+          await this.prisma.db.orm.public.LessonExercise.where({
+            lessonId: lesson.id,
+          }).delete();
+        } catch {}
+
+        for (const ex of prebaked.exercises) {
+          try {
+            await this.prisma.db.orm.public.LessonExercise.create({
+              lessonId: lesson.id,
+              order: ex.order,
+              type: ex.type,
+              prompt: ex.prompt,
+              optionsJson: ex.options ?? null,
+              correctAnswer: ex.correctAnswer,
+              explanation: ex.explanation,
+            });
+          } catch {}
+        }
+      }
+    }
+
+    if (!lesson || isStaleBogusFallback) {
+      if (isStaleBogusFallback && lesson) {
+        this.logger.log(
+          `Replacing stale bogus fallback lesson for topic "${topic.title}" (${topic.id}) with fresh Gemini generation...`,
         );
         const oldExercises =
           await this.prisma.db.orm.public.LessonExercise.where({
@@ -485,15 +520,6 @@ export class TutorService implements OnModuleInit {
         for (const ex of oldExercises) {
           await this.prisma.db.orm.public.LessonExercise.where({
             id: ex.id,
-          }).delete();
-        }
-        const oldProgress =
-          await this.prisma.db.orm.public.UserLessonProgress.where({
-            lessonId: lesson.id,
-          }).all();
-        for (const p of oldProgress) {
-          await this.prisma.db.orm.public.UserLessonProgress.where({
-            id: p.id,
           }).delete();
         }
         await this.prisma.db.orm.public.Lesson.where({
