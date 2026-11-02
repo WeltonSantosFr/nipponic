@@ -302,6 +302,48 @@ export const SEED_CURRICULUM_N5: SeedTopic[] = [
     objective:
       "Offer assistance, help, or initiative to someone using the constructive pattern 〜ましょうか.",
   },
+
+  // Unit 8: Casual Speech & Complex Sentences
+  {
+    level: "N5",
+    unitIndex: 8,
+    unitTitle: "Casual Speech & Complex Sentences",
+    lessonIndex: 29,
+    title: "Plain Form & Casual Speech (普通体)",
+    grammarKey: "plain-form-casual-speech",
+    objective:
+      "Understand the basics of plain (short) form and converse informally with close friends and family members.",
+  },
+  {
+    level: "N5",
+    unitIndex: 8,
+    unitTitle: "Casual Speech & Complex Sentences",
+    lessonIndex: 30,
+    title: "Expressing Thoughts & Opinions (〜と思います)",
+    grammarKey: "to-omoimasu-thoughts-opinions",
+    objective:
+      "Express personal opinions, guesses, and thoughts using plain form clauses followed by particle と and 思います.",
+  },
+  {
+    level: "N5",
+    unitIndex: 8,
+    unitTitle: "Casual Speech & Complex Sentences",
+    lessonIndex: 31,
+    title: "Quoting Speech (〜と言いました)",
+    grammarKey: "particle-to-quotation-iimashita",
+    objective:
+      "Quote direct and indirect speech using the quotation particle と followed by the speech verb 言いました.",
+  },
+  {
+    level: "N5",
+    unitIndex: 8,
+    unitTitle: "Casual Speech & Complex Sentences",
+    lessonIndex: 32,
+    title: "Noun Modification with Verbs (名詞修飾)",
+    grammarKey: "noun-modification-relative-clauses",
+    objective:
+      "Modify nouns using plain form verb clauses to create basic relative clauses describing people, things, and actions.",
+  },
 ];
 
 export const SEED_CURRICULUM_N4: SeedTopic[] = [];

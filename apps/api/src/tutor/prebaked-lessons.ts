@@ -3109,4 +3109,471 @@ When you see someone who might need assistance:
       },
     ],
   },
+
+  // ==========================================
+  // JLPT N5 - Unit 8: Casual Speech & Complex Sentences
+  // ==========================================
+  "plain-form-casual-speech": {
+    title: "Plain Form & Casual Speech (普通体)",
+    theoryMarkdown: `### 📘 Casual Speech: The Plain Form (普通体)
+
+In Japanese, language formality is divided into **Polite Form (丁寧語 - ます / です)**, used with teachers, strangers, and coworkers, and **Plain Form (普通体 - short form)**, used with close friends, peers, and family.
+
+---
+
+#### 1. Verb Plain Forms
+
+| Verb Type | Present Affirmative | Present Negative | Past Affirmative | Past Negative |
+| :--- | :--- | :--- | :--- | :--- |
+| **Dictionary / Stem** | Dictionary Form | 〜ない | 〜た / 〜だ | 〜なかった |
+| **食べる (Ichidan)** | <ruby>食<rt>た</rt></ruby>べる | <ruby>食<rt>た</rt></ruby>べない | <ruby>食<rt>た</rt></ruby>べた | <ruby>食<rt>た</rt></ruby>べなかった |
+| **飲む (Godan)** | <ruby>飲<rt>の</rt></ruby>む | <ruby>飲<rt>の</rt></ruby>まない | <ruby>飲<rt>の</rt></ruby>んだ | <ruby>飲<rt>の</rt></ruby>まなかった |
+| **行く (Godan)** | <ruby>行<rt>い</rt></ruby>く | <ruby>行<rt>い</rt></ruby>かない | <ruby>行<rt>い</rt></ruby>った | <ruby>行<rt>い</rt></ruby>かなかった |
+| **する (Irregular)** | する | しない | した | しなかった |
+| **来る (Irregular)** | <ruby>来<rt>く</rt></ruby>る | <ruby>来<rt>こ</rt></ruby>ない | <ruby>来<rt>き</rt></ruby>た | <ruby>来<rt>こ</rt></ruby>なかった |
+
+---
+
+#### 2. Casual Copula (Replaces です)
+
+- **Present Affirmative:** **だ** (e.g., <ruby>学生<rt>がくせい</rt></ruby>だ - I am a student)
+- **Present Negative:** **じゃない** (e.g., <ruby>学生<rt>がくせい</rt></ruby>じゃない - I am not a student)
+- **Past Affirmative:** **だった** (e.g., <ruby>学生<rt>がくせい</rt></ruby>だった - I was a student)
+- **Past Negative:** **じゃなかった** (e.g., <ruby>学生<rt>がくせい</rt></ruby>じゃなかった - I was not a student)
+
+> 💡 **Casual Questions:** In casual conversations, the question particle **か** is usually omitted and replaced simply by **rising intonation** at the end of the clause (e.g., <ruby>行<rt>い</rt></ruby>く？ = Are you going?).`,
+    dialogue: [
+      {
+        speaker: "Ken",
+        jpText: "蓮、明日東京に行く？",
+        enText: "Ren, are you going to Tokyo tomorrow?",
+      },
+      {
+        speaker: "Ren",
+        jpText: "うん、行くよ。ケンも行く？",
+        enText: "Yeah, I'm going. Are you going too, Ken?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "ううん、行かない。明日は家で日本語を勉強する。",
+        enText:
+          "No, I'm not going. Tomorrow I'll study Japanese at home.",
+      },
+      {
+        speaker: "Ren",
+        jpText: "そうなんだ。テスト、頑張ってね！",
+        enText: "I see. Good luck on the test!",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "行く",
+        reading: "いく",
+        enText: "to go (dictionary form)",
+      },
+      {
+        jpText: "行かない",
+        reading: "いかない",
+        enText: "not go (plain negative)",
+      },
+      {
+        jpText: "うん",
+        reading: "うん",
+        enText: "yeah / yes (casual)",
+      },
+      {
+        jpText: "ううん",
+        reading: "ううん",
+        enText: "nope / no (casual)",
+      },
+      {
+        jpText: "頑張る",
+        reading: "がんばる",
+        enText: "to do one's best / persevere",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt: "Choose the plain negative form of 飲む (to drink):",
+        options: [
+          "飲まない",
+          "飲みません",
+          "飲まなかった",
+          "飲まないでした",
+        ],
+        correctAnswer: "飲まない",
+        explanation:
+          "Godan verbs ending in む shift to the あ-row (ま) and attach ない to form the plain negative (飲む → 飲まない).",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete the casual affirmative copula equivalent of です: 彼は私の友達___。(He is my friend.)",
+        correctAnswer: "だ",
+        explanation:
+          "だ is the plain / casual equivalent of the polite copula です.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt:
+          "Arrange the words to ask casually: 'Are you eating breakfast?'",
+        options: ["朝ご飯を", "食べる？"],
+        correctAnswer: "朝ご飯を食べる？",
+        explanation:
+          "Direct Object (朝ご飯を) + Plain verb with rising intonation (食べる？).",
+      },
+    ],
+  },
+
+  "to-omoimasu-thoughts-opinions": {
+    title: "Expressing Thoughts & Opinions (〜と思います)",
+    theoryMarkdown: `### 📘 Expressing Thoughts & Opinions: 〜と思います
+
+To say *\"I think that...\"*, convert the thought or opinion into **plain (short) form** and follow it with **と<ruby>思<rt>おも</rt></ruby>います**.
+
+$$\\text{[Plain Form Clause]} + \\mathbf{と} + \\mathbf{思います}$$
+
+---
+
+#### 1. Plain Form Requirements
+
+| Word Category | Pattern Before と思います | Example |
+| :--- | :--- | :--- |
+| **Verbs** | Plain Form (Present / Past / Neg) | <ruby>明日<rt>あした</rt></ruby><ruby>雨<rt>あめ</rt></ruby>が**<ruby>降<rt>ふ</rt></ruby>る**と思います。(I think it will rain tomorrow.) |
+| **い-Adjectives** | Plain Form + と思います | 日本語は**<ruby>面白<rt>おもしろ</rt></ruby>い**と思います。(I think Japanese is interesting.) |
+| **な-Adjectives** | Stem + **だ** + と思います | この<ruby>町<rt>まち</rt></ruby>は**<ruby>静<rt>しず</rt></ruby>かだ**と思います。(I think this town is quiet.) |
+| **Nouns** | Noun + **だ** + と思います | あの<ruby>人<rt>ひと</rt></ruby>は**<ruby>先生<rt>せんせい</rt></ruby>だ**と思います。(I think that person is a teacher.) |
+
+> ⚠️ **The だ Requirement:** Do not forget to insert **だ** after な-adjectives and nouns before attaching the quotation particle と.
+
+---
+
+#### 2. Asking for Opinions
+
+- 日本の<ruby>生活<rt>せいかつ</rt></ruby>について**どう<ruby>思<rt>おも</rt></ruby>いますか**。(What do you think about life in Japan?)
+- <ruby>便利<rt>べんり</rt></ruby>だと思います。(I think it is convenient.)`,
+    dialogue: [
+      {
+        speaker: "Ken",
+        jpText: "田中さん、明日は雨が降ると思いますか。",
+        enText: "Tanaka-san, do you think it will rain tomorrow?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText:
+          "いいえ、雨は降らないと思います。天気がいいですよ。",
+        enText:
+          "No, I don't think it will rain. The weather will be good.",
+      },
+      {
+        speaker: "Ken",
+        jpText: "日本の物価はどう思いますか。",
+        enText: "What do you think of commodity prices in Japan?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText:
+          "少し高いと思いますが、生活はとても便利だと思います。",
+        enText:
+          "I think they are a bit high, but I think life is very convenient.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "思う",
+        reading: "おもう",
+        enText: "to think",
+      },
+      {
+        jpText: "雨",
+        reading: "あめ",
+        enText: "rain",
+      },
+      {
+        jpText: "降る",
+        reading: "ふる",
+        enText: "to precipitate / to fall (rain/snow)",
+      },
+      {
+        jpText: "物価",
+        reading: "ぶっか",
+        enText: "commodity prices / cost of living",
+      },
+      {
+        jpText: "便利",
+        reading: "べんり",
+        enText: "convenient",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt:
+          "Choose the correct sentence to say: 'I think that person is a teacher':",
+        options: [
+          "あの人は先生だと思います",
+          "あの人は先生と思います",
+          "あの人は先生ですと思います",
+          "あの人は先生なと思います",
+        ],
+        correctAnswer: "あの人は先生だと思います",
+        explanation:
+          "Nouns require the plain copula だ before the quotation particle と with 思います.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete with the quotation particle: 明日はいい天気になる___思います。(I think tomorrow's weather will be good.)",
+        correctAnswer: "と",
+        explanation:
+          "Particle と functions as the quote marker linking the clause to 思います.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'I think Japanese is interesting.'",
+        options: ["日本語は", "面白いと", "思います"],
+        correctAnswer: "日本語は面白いと思います",
+        explanation:
+          "Topic (日本語は) + Plain adjective with quote particle (面白いと) + Verb (思います).",
+      },
+    ],
+  },
+
+  "particle-to-quotation-iimashita": {
+    title: "Quoting Speech (〜と言いました)",
+    theoryMarkdown: `### 📘 Quoting Speech: 〜と言いました
+
+To report what someone else said, use the quotation particle **と** followed by **<ruby>言<rt>い</rt></ruby>いました** (said).
+
+---
+
+#### 1. Direct Quotation (Verbatim Speech)
+
+Place the speaker's exact words inside Japanese brackets **「……」**:
+
+- <ruby>田中<rt>たなか</rt></ruby>さんは**「<ruby>明日<rt>あした</rt></ruby><ruby>休<rt>やす</rt></ruby>みます」**と<ruby>言<rt>い</rt></ruby>いました。(Tanaka-san said, \"I will take a day off tomorrow.\")
+- ケンさんは**「ありがとうございます」**と<ruby>言<rt>い</rt></ruby>いました。(Ken said, \"Thank you very much.\")
+
+---
+
+#### 2. Indirect Quotation (Reported Speech)
+
+In indirect quotations, change the verb or predicate inside the quotation into its **plain form** without using quotation brackets:
+
+- <ruby>田中<rt>たなか</rt></ruby>さんは<ruby>明日<rt>あした</rt></ruby>**<ruby>休<rt>やす</rt></ruby>む**と<ruby>言<rt>い</rt></ruby>いました。(Tanaka-san said that he would take tomorrow off.)
+- マリアさんはパーティーに**<ruby>行<rt>い</rt></ruby>かない**と<ruby>言<rt>い</rt></ruby>いました。(Maria said that she would not go to the party.)
+
+---
+
+#### 3. Inquiring What Someone Said
+
+- <ruby>先生<rt>せんせい</rt></ruby>は**<ruby>何<rt>なん</rt></ruby>と<ruby>言<rt>い</rt></ruby>いましたか**。(What did the teacher say?)`,
+    dialogue: [
+      {
+        speaker: "Maria",
+        jpText: "ケンさん、先生は何と言いましたか。",
+        enText: "Ken-san, what did the teacher say?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "先生は「来週テストがあります」と言いました。",
+        enText: "The teacher said, 'There will be a test next week.'",
+      },
+      {
+        speaker: "Maria",
+        jpText:
+          "ええっ、本当ですか。テストは難しいと言いましたか。",
+        enText:
+          "Eh, really? Did the teacher say that the test would be difficult?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "いいえ、あまり難しくないと言いましたよ。",
+        enText: "No, the teacher said it would not be very difficult.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "言う",
+        reading: "いう",
+        enText: "to say / tell",
+      },
+      {
+        jpText: "来週",
+        reading: "らいしゅう",
+        enText: "next week",
+      },
+      {
+        jpText: "テスト",
+        reading: "てすと",
+        enText: "test / exam",
+      },
+      {
+        jpText: "本当",
+        reading: "ほんとう",
+        enText: "truth / reality",
+      },
+      {
+        jpText: "難しい",
+        reading: "むずかしい",
+        enText: "difficult",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt:
+          "Which particle marks quotations before 言いました (said)?",
+        options: ["と", "を", "に", "で"],
+        correctAnswer: "と",
+        explanation:
+          "Particle と marks direct or indirect quotations preceding speech verbs like 言いました.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete the reported speech: 田中さんはパーティーに行かない___言いました。(Tanaka-san said he would not go to the party.)",
+        correctAnswer: "と",
+        explanation:
+          "Quotation particle と links the quoted clause (行かない) to 言いました.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'What did Tanaka-san say?'",
+        options: ["田中さんは", "何と", "言いましたか"],
+        correctAnswer: "田中さんは何と言いましたか",
+        explanation:
+          "Topic (田中さんは) + Interrogative quote (何と) + Speech verb (言いましたか).",
+      },
+    ],
+  },
+
+  "noun-modification-relative-clauses": {
+    title: "Noun Modification with Verbs (名詞修飾)",
+    theoryMarkdown: `### 📘 Modifying Nouns with Verbs (Relative Clauses)
+
+In English, a modifying clause comes *after* the noun (e.g., \"the book *that I bought yesterday*\"). In Japanese, **modifying clauses always precede the noun directly**.
+
+$$\\text{[Verb Clause in Plain Form]} + \\mathbf{[Noun]}$$
+
+---
+
+#### 1. Verb in Plain Form Before Noun
+
+Regardless of politeness elsewhere in the sentence, the verb inside the qualifying clause **must be in the plain form**:
+
+- <ruby>昨日<rt>きのう</rt></ruby><ruby>買<rt>か</rt></ruby>った**<ruby>本<rt>ほん</rt></ruby>** (the book that I bought yesterday)
+- <ruby>明日<rt>あした</rt></ruby><ruby>行<rt>い</rt></ruby>く**<ruby>所<rt>ところ</rt></ruby>** (the place where I will go tomorrow)
+- <ruby>肉<rt>にく</rt></ruby>を<ruby>食<rt>た</rt></ruby>べない**<ruby>人<rt>ひと</rt></ruby>** (a person who does not eat meat)
+
+---
+
+#### 2. Clause Subject Marker: Particle が
+
+The subject *inside* the modifying clause is marked with **が**, not は:
+
+- <ruby>母<rt>はは</rt></ruby>**が**<ruby>作<rt>つく</rt></ruby>った<ruby>料理<rt>りょうり</rt></ruby> (the food that my mother cooked)
+- <ruby>友達<rt>ともだち</rt></ruby>**が**くれたプレゼント (the present that a friend gave me)
+
+---
+
+#### 3. Complete Sentence Examples
+
+- これは**<ruby>昨日<rt>きのう</rt></ruby><ruby>買<rt>か</rt></ruby>った**<ruby>本<rt>ほん</rt></ruby>です。(This is the book I bought yesterday.)
+- **あそこで<ruby>本<rt>ほん</rt></ruby>を<ruby>読<rt>よ</rt></ruby>んでいる**<ruby>人<rt>ひと</rt></ruby>は<ruby>誰<rt>だれ</rt></ruby>ですか。(Who is that person reading a book over there?)`,
+    dialogue: [
+      {
+        speaker: "Ken",
+        jpText: "田中さん、その机の上にある本は何ですか。",
+        enText: "Tanaka-san, what is that book on the desk?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "これは私が昨日買った日本の小説です。",
+        enText: "This is a Japanese novel that I bought yesterday.",
+      },
+      {
+        speaker: "Ken",
+        jpText: "面白そうですね。田中さんがよく読む本ですか。",
+        enText: "Looks interesting. Is it a book that you read often?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "ええ、私が大好きな作家が書いた本ですよ。",
+        enText: "Yes, it is a book written by an author I love.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "所",
+        reading: "ところ",
+        enText: "place / spot",
+      },
+      {
+        jpText: "小説",
+        reading: "しょうせつ",
+        enText: "novel / story",
+      },
+      {
+        jpText: "作家",
+        reading: "さっか",
+        enText: "author / writer",
+      },
+      {
+        jpText: "母",
+        reading: "はは",
+        enText: "mother (humble / one's own mother)",
+      },
+      {
+        jpText: "料理",
+        reading: "りょうり",
+        enText: "cooking / cuisine / food",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt: "Choose the correct phrase for 'the food my mother made':",
+        options: [
+          "母が作った料理",
+          "母が作りました料理",
+          "母が作って料理",
+          "母は作るの料理",
+        ],
+        correctAnswer: "母が作った料理",
+        explanation:
+          "Verbs modifying nouns directly must be in plain form (作った), with the subject of the clause marked by が.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete the subject marker inside the clause: これは友達___くれた本です。(This is a book that a friend gave me.)",
+        correctAnswer: "が",
+        explanation:
+          "Inside a relative modifying clause, the subject is marked with particle が.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt:
+          "Arrange the words to say: 'This is the book I bought yesterday.'",
+        options: ["これは", "昨日買った", "本です"],
+        correctAnswer: "これは昨日買った本です",
+        explanation:
+          "Topic (これは) + Modifying verb clause (昨日買った) + Head noun predicate (本です).",
+      },
+    ],
+  },
 };
