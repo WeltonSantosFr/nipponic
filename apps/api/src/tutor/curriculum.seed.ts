@@ -260,6 +260,48 @@ export const SEED_CURRICULUM_N5: SeedTopic[] = [
     objective:
       "Specify that an event occurs strictly after another action finishes using the construction 〜てから.",
   },
+
+  // Unit 7: Desires, Invitations & Offers
+  {
+    level: "N5",
+    unitIndex: 7,
+    unitTitle: "Desires, Invitations & Offers",
+    lessonIndex: 25,
+    title: "Personal Desires (〜たいです)",
+    grammarKey: "verb-tai-desu-desires",
+    objective:
+      "Express first-person wants, desires, and wishes using verb stem + たいです and its negative form たくないです.",
+  },
+  {
+    level: "N5",
+    unitIndex: 7,
+    unitTitle: "Desires, Invitations & Offers",
+    lessonIndex: 26,
+    title: "Purpose of Movement (〜に行きます / 来ます)",
+    grammarKey: "movement-purpose-ni-ikimasu",
+    objective:
+      "Express going, coming, or returning somewhere in order to do something using the purpose particle に with movement verbs.",
+  },
+  {
+    level: "N5",
+    unitIndex: 7,
+    unitTitle: "Desires, Invitations & Offers",
+    lessonIndex: 27,
+    title: "Invitations & Suggestions (〜ませんか / 〜ましょう)",
+    grammarKey: "invitations-masenka-mashou",
+    objective:
+      "Politely invite someone to do an activity using 〜ませんか and make or accept suggestions enthusiastically using 〜ましょう.",
+  },
+  {
+    level: "N5",
+    unitIndex: 7,
+    unitTitle: "Desires, Invitations & Offers",
+    lessonIndex: 28,
+    title: "Offering Assistance (〜ましょうか)",
+    grammarKey: "offering-help-mashouka",
+    objective:
+      "Offer assistance, help, or initiative to someone using the constructive pattern 〜ましょうか.",
+  },
 ];
 
 export const SEED_CURRICULUM_N4: SeedTopic[] = [];

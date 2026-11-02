@@ -2657,4 +2657,456 @@ $$\\text{[Verb 1 in て-form]} + \\mathbf{から}、\\text{[Verb 2]}$$
       },
     ],
   },
+
+  // ==========================================
+  // JLPT N5 - Unit 7: Desires, Invitations & Offers
+  // ==========================================
+  "verb-tai-desu-desires": {
+    title: "Personal Desires (〜たいです)",
+    theoryMarkdown: `### 📘 Expressing Personal Desires: 〜たいです
+
+To express that you want to do something, take the **masu-stem** of a verb and attach **たいです**.
+
+$$\\text{[Masu-Stem]} + \\mathbf{たいです}$$
+
+---
+
+#### 1. Conjugation Pattern (Acts Like an い-Adjective)
+
+Once **〜たい** is attached, the entire compound conjugates identically to an **い-adjective**:
+
+| Tense | Pattern | Example (<ruby>行<rt>い</rt></ruby>く - to go) | Meaning |
+| :--- | :--- | :--- | :--- |
+| **Present Affirmative** | 〜たいです | <ruby>行<rt>い</rt></ruby>き**たいです** | I want to go |
+| **Present Negative** | 〜たくないです | <ruby>行<rt>い</rt></ruby>き**たくないです** | I do not want to go |
+| **Past Affirmative** | 〜たかったです | <ruby>行<rt>い</rt></ruby>き**たかったです** | I wanted to go |
+| **Past Negative** | 〜たくなかったです | <ruby>行<rt>い</rt></ruby>き**たくなかったです** | I did not want to go |
+
+---
+
+#### 2. Particle Choice: を vs. が
+
+When using **〜たいです**, the direct object can be marked with either **を** or **が**:
+
+- お<ruby>茶<rt>ちゃ</rt></ruby>**を**<ruby>飲<rt>の</rt></ruby>みたいです。(I want to drink tea. — *focus on the action*)
+- お<ruby>茶<rt>ちゃ</rt></ruby>**が**<ruby>飲<rt>の</rt></ruby>みたいです。(I want to drink tea. — *focus on the desired object*)
+
+> ⚠️ **First-Person Rule:** **〜たいです** is used only for yourself (*I want*) or for the listener in a direct question (*Do you want...?*). Do not use it directly to state what a third person wants.`,
+    dialogue: [
+      {
+        speaker: "Maria",
+        jpText: "ケンさん、今週末は何をしたいですか。",
+        enText: "Ken-san, what do you want to do this weekend?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "私はおいしい日本料理が食べたいです。寿司を食べに行きたいです。",
+        enText: "I want to eat delicious Japanese food. I want to go eat sushi.",
+      },
+      {
+        speaker: "Maria",
+        jpText: "いいですね。私も寿司が食べたいです。",
+        enText: "Sounds great. I want to eat sushi too.",
+      },
+      {
+        speaker: "Ken",
+        jpText: "じゃあ、土曜日に行きましょう。",
+        enText: "Well then, let's go on Saturday.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "今週末",
+        reading: "こんしゅうまつ",
+        enText: "this weekend",
+      },
+      {
+        jpText: "寿司",
+        reading: "すし",
+        enText: "sushi",
+      },
+      {
+        jpText: "旅行する",
+        reading: "りょこうする",
+        enText: "to travel",
+      },
+      {
+        jpText: "欲しい",
+        reading: "ほしい",
+        enText: "wanted / desirable (for objects)",
+      },
+      {
+        jpText: "週末",
+        reading: "しゅうまつ",
+        enText: "weekend",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt: "Choose the correct form to express 'I want to go':",
+        options: [
+          "行きたいです",
+          "行きますたいです",
+          "行きたくないです",
+          "行ってたいです",
+        ],
+        correctAnswer: "行きたいです",
+        explanation:
+          "Take the masu-stem of 行く (行き) and attach たいです to form 行きたいです.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete the negative desire: 今日は何も食べ___。(I do not want to eat anything today.)",
+        correctAnswer: "たくないです",
+        explanation:
+          "Drop い from たい and add くないです to form the negative desire 食べたくないです.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'I want to go to Japan.'",
+        options: ["行きたいです", "日本へ", "私は"],
+        correctAnswer: "私は日本へ行きたいです",
+        explanation:
+          "Topic (私は) + Destination (日本へ) + Desired action (行きたいです).",
+      },
+    ],
+  },
+
+  "movement-purpose-ni-ikimasu": {
+    title: "Purpose of Movement (〜に行きます / 来ます)",
+    theoryMarkdown: `### 📘 Expressing the Purpose of Movement: 〜に行きます
+
+When you go, come, or return somewhere **for a specific purpose**, use the particle **に** directly after the verb stem or an action noun.
+
+$$\\text{[Place]} + \\mathbf{へ / に} + \\text{[Masu-Stem / Action Noun]} + \\mathbf{に} + \\mathbf{行きます / 来ます / 帰ります}$$
+
+---
+
+#### 1. With Verb Stems
+
+Drop **ます** from the verb and attach **に**:
+
+- デパートへ<ruby>服<rt>ふく</rt></ruby>を**<ruby>買<rt>か</rt></ruby>い**に<ruby>行<rt>い</rt></ruby>きます。(I go to the department store **to buy** clothes.)
+- レストランへご飯を**<ruby>食<rt>た</rt></ruby>べ**に<ruby>行<rt>い</rt></ruby>きます。(I go to a restaurant **to eat** a meal.)
+- <ruby>図書館<rt>としょかん</rt></ruby>へ<ruby>本<rt>ほん</rt></ruby>を**<ruby>読<rt>よ</rt></ruby>み**に<ruby>行<rt>い</rt></ruby>きました。(I went to the library **to read** books.)
+
+---
+
+#### 2. With Action Nouns (Noun of Activity)
+
+Nouns that inherently denote activities (such as <ruby>買<rt>か</rt></ruby>い<ruby>物<rt>もの</rt></ruby>, <ruby>勉強<rt>べんきょう</rt></ruby>, <ruby>散歩<rt>さんぽ</rt></ruby>) can attach **に** directly without a verb stem:
+
+- スーパーへ**<ruby>買<rt>か</rt></ruby>い<ruby>物<rt>もの</rt></ruby>に**<ruby>行<rt>い</rt></ruby>きます。(I go to the supermarket **for shopping**.)
+- <ruby>公園<rt>こうえん</rt></ruby>へ**<ruby>散歩<rt>さんぽ</rt></ruby>に**<ruby>行<rt>い</rt></ruby>きます。(I go to the park **for a walk**.)`,
+    dialogue: [
+      {
+        speaker: "Ken",
+        jpText: "田中さん、今からどこへ行きますか。",
+        enText: "Tanaka-san, where are you going now?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "郵便局へ切手を買いに行きます。",
+        enText: "I am going to the post office to buy stamps.",
+      },
+      {
+        speaker: "Ken",
+        jpText: "そうですか。私は駅へ友達を迎えに行きます。",
+        enText: "I see. I am going to the station to meet a friend.",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "気をつけて行ってくださいね。",
+        enText: "Please take care and have a safe trip.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "郵便局",
+        reading: "ゆうびんきょく",
+        enText: "post office",
+      },
+      {
+        jpText: "切手",
+        reading: "きって",
+        enText: "postage stamp",
+      },
+      {
+        jpText: "買い物",
+        reading: "かいもの",
+        enText: "shopping",
+      },
+      {
+        jpText: "迎える",
+        reading: "むかえる",
+        enText: "to meet / welcome / pick up",
+      },
+      {
+        jpText: "駅",
+        reading: "えき",
+        enText: "train station",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt:
+          "Choose the particle that marks the purpose of movement: デパートへ服を買い___行きます。",
+        options: ["に", "で", "を", "へ"],
+        correctAnswer: "に",
+        explanation:
+          "Particle に attaches to the verb stem (買い) to indicate the purpose of going.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete the purpose sentence: 図書館へ本を___に行きます。(I am going to the library to read books.)",
+        correctAnswer: "読み",
+        explanation:
+          "Use the masu-stem of 読む (which is 読み) before に行きます.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt:
+          "Arrange the words to say: 'I go to the post office to buy stamps.'",
+        options: ["買いに行きます", "郵便局へ", "切手を"],
+        correctAnswer: "郵便局へ切手を買いに行きます",
+        explanation:
+          "Destination (郵便局へ) + Object of purpose (切手を) + Purpose verb (買いに行きます).",
+      },
+    ],
+  },
+
+  "invitations-masenka-mashou": {
+    title: "Invitations & Suggestions (〜ませんか / 〜ましょう)",
+    theoryMarkdown: `### 📘 Making Invitations & Suggestions
+
+When proposing an activity to someone else, Japanese distinguishes between inviting someone politely and proposing an enthusiastic joint action.
+
+---
+
+#### 1. Polite Invitation: 〜ませんか (Won't you... / Would you like to...?)
+
+Attaching **ませんか** to the verb stem creates a polite invitation that gives the listener comfortable room to decline without feeling pressured:
+
+- 一緒にコーヒーを**<ruby>飲<rt>の</rt></ruby>みませんか**。(Won't you drink coffee with me?)
+- <ruby>明日<rt>あした</rt></ruby>、映画を**<ruby>見<rt>み</rt></ruby>ませんか**。(Would you like to watch a movie tomorrow?)
+
+---
+
+#### 2. Suggestion & Agreement: 〜ましょう (Let's...)
+
+Attaching **ましょう** to the verb stem expresses an active proposal (*"Let's do..."*) or an enthusiastic acceptance of an invitation:
+
+- ちょっと**<ruby>休<rt>やす</rt></ruby>みましょう**。(Let's take a short rest.)
+- ええ、**<ruby>行<rt>い</rt></ruby>きましょう**！ (Yes, let's go!)
+
+---
+
+#### 3. Useful Companion Word
+
+- **<ruby>一緒<rt>いっしょ</rt></ruby>に** (together): Frequently placed at the beginning of invitations.
+  - <ruby>一緒<rt>いっしょ</rt></ruby>にご飯を<ruby>食<rt>た</rt></ruby>べませんか。(Won't you have a meal together?)`,
+    dialogue: [
+      {
+        speaker: "Aoi",
+        jpText: "ケンさん、昼休みに一緒にお弁当を食べませんか。",
+        enText: "Ken-san, won't you eat bento together during lunch break?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "ええ、食べましょう！どこで食べますか。",
+        enText: "Yes, let's eat! Where shall we eat?",
+      },
+      {
+        speaker: "Aoi",
+        jpText: "天気がいいですから、公園で食べましょう。",
+        enText: "Because the weather is nice, let's eat at the park.",
+      },
+      {
+        speaker: "Ken",
+        jpText: "いいですね。お茶を買いに行きましょう。",
+        enText: "Sounds great. Let's go buy some tea.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "一緒に",
+        reading: "いっしょに",
+        enText: "together",
+      },
+      {
+        jpText: "お弁当",
+        reading: "おべんとう",
+        enText: "boxed lunch / bento",
+      },
+      {
+        jpText: "昼休み",
+        reading: "ひるやすみ",
+        enText: "lunch break",
+      },
+      {
+        jpText: "カフェ",
+        reading: "かふぇ",
+        enText: "cafe",
+      },
+      {
+        jpText: "休む",
+        reading: "やすむ",
+        enText: "to rest / take time off",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt:
+          "Which ending is used to politely invite someone: 'Won't you drink coffee?':",
+        options: ["飲みませんか", "飲みましょう", "飲みますか", "飲んでください"],
+        correctAnswer: "飲みませんか",
+        explanation:
+          "〜ませんか is the standard polite invitation form ('Won't you...?').",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete the suggestion to start: さあ、勉強を始め___。(Come on, let's begin studying.)",
+        correctAnswer: "ましょう",
+        explanation:
+          "Attach ましょう to the verb stem (始め-) to express 'let's do'.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'Won't you eat a meal together?'",
+        options: ["食べませんか", "ご飯を", "一緒に"],
+        correctAnswer: "一緒にご飯を食べませんか",
+        explanation:
+          "Adverb (一緒に) + Direct object (ご飯を) + Invitation verb (食べませんか).",
+      },
+    ],
+  },
+
+  "offering-help-mashouka": {
+    title: "Offering Assistance (〜ましょうか)",
+    theoryMarkdown: `### 📘 Offering Assistance: 〜ましょうか
+
+Attaching **か** to **〜ましょう** creates the pattern **〜ましょうか**, which means *\"Shall I...?\"* or *\"Shall we...?\"* when proactively offering help to someone.
+
+$$\\text{[Masu-Stem]} + \\mathbf{ましょうか}$$
+
+---
+
+#### 1. Offering Help to Another Person (\"Shall I...?\")
+
+When you see someone who might need assistance:
+
+- <ruby>荷物<rt>にもつ</rt></ruby>を**<ruby>持<rt>も</rt></ruby>ちましょうか**。(Shall I carry your luggage?)
+- <ruby>手伝<rt>てつだ</rt></ruby>い**ましょうか**。(Shall I help you?)
+- <ruby>窓<rt>まど</rt></ruby>を**<ruby>開<rt>あ</rt></ruby>けましょうか**。(Shall I open the window?)
+
+---
+
+#### 2. Responding to an Offer
+
+| Response | Meaning | Note |
+| :--- | :--- | :--- |
+| **はい、お願いします。** | Yes, please. | Polite and grateful acceptance |
+| **ありがとうございます。** | Thank you very much. | Warm acknowledgment |
+| **いいえ、結構です。** | No, thank you. | Formal declination |
+| **大丈夫です。** | I am fine / No need. | Everyday soft declination |`,
+    dialogue: [
+      {
+        speaker: "Ken",
+        jpText: "田中さん、その荷物は重そうですね。持ちましょうか。",
+        enText: "Tanaka-san, that luggage looks heavy. Shall I carry it?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "ありがとうございます。お願いします。",
+        enText: "Thank you very much. Please do.",
+      },
+      {
+        speaker: "Ken",
+        jpText: "部屋のドアも開けましょうか。",
+        enText: "Shall I open the room's door too?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "すみません、助かります。",
+        enText: "Thank you, that is a great help.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "荷物",
+        reading: "にもつ",
+        enText: "luggage / baggage",
+      },
+      {
+        jpText: "重い",
+        reading: "おもい",
+        enText: "heavy",
+      },
+      {
+        jpText: "手伝う",
+        reading: "てつだう",
+        enText: "to help / assist",
+      },
+      {
+        jpText: "窓",
+        reading: "まど",
+        enText: "window",
+      },
+      {
+        jpText: "閉める",
+        reading: "しめる",
+        enText: "to close / shut",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt:
+          "Choose the sentence to offer: 'Shall I carry your luggage?':",
+        options: [
+          "荷物を持ちましょうか",
+          "荷物を持ってください",
+          "荷物を持ちませんか",
+          "荷物を持ちますか",
+        ],
+        correctAnswer: "荷物を持ちましょうか",
+        explanation:
+          "Stem + ましょうか is used to proactively offer assistance ('Shall I...?').",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete the polite response to an offer: はい、___。(Yes, please.)",
+        correctAnswer: "お願いします",
+        explanation:
+          "お願いします (おねがいします) is the standard polite response meaning 'Yes, please' when accepting help.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'Shall I open the window?'",
+        options: ["開けましょうか", "窓を"],
+        correctAnswer: "窓を開けましょうか",
+        explanation:
+          "Direct object (窓を) + Verb offer (開けましょうか).",
+      },
+    ],
+  },
 };
