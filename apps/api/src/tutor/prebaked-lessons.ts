@@ -1316,4 +1316,447 @@ Use **や** when giving representative examples from a larger group of items:
       },
     ],
   },
+
+  // ==========================================
+  // JLPT N5 - Unit 4: Describing the World (Adjectives)
+  // ==========================================
+  "i-adjectives-present-negative": {
+    title: "い-Adjectives: Present Affirmative & Negative",
+    theoryMarkdown: `### 📘 い-Adjectives (True Adjectives)
+
+Japanese has two categories of adjectives: **い-adjectives** (i-keiyoushi) and **な-adjectives** (na-keiyoushi). い-adjectives always end with the plain kana **い** in their dictionary form and conjugate directly.
+
+---
+
+#### 1. Polite Present Affirmative & Negative
+
+To make an い-adjective polite in the present tense, add **です** after the dictionary form. To make it negative, drop the final **い** and attach **くないです** (or the more formal **くありません**).
+
+| Dictionary Form | Meaning | Polite Affirmative | Polite Negative |
+| :--- | :--- | :--- | :--- |
+| <ruby>高<rt>たか</rt></ruby>い | expensive / tall | <ruby>高<rt>たか</rt></ruby>いです | <ruby>高<rt>たか</rt></ruby>くないです |
+| <ruby>安<rt>やす</rt></ruby>い | cheap / inexpensive | <ruby>安<rt>やす</rt></ruby>いです | <ruby>安<rt>やす</rt></ruby>くないです |
+| <ruby>大<rt>おお</rt></ruby>きい | big / large | <ruby>大<rt>おお</rt></ruby>きいです | <ruby>大<rt>おお</rt></ruby>きくないです |
+| <ruby>小<rt>ちい</rt></ruby>さい | small | <ruby>小<rt>ちい</rt></ruby>さいです | <ruby>小<rt>ちい</rt></ruby>さくないです |
+
+---
+
+#### 2. The Irregular Adjective いい (Good)
+
+- The adjective meaning "good" is **いい**, but all of its conjugations derive from its original stem **よい (良い)**.
+- Affirmative: **いいです** (It is good)
+- Negative: **よくないです** / **よくありません** (It is not good — *never* いいくないです)`,
+    dialogue: [
+      {
+        speaker: "Ken",
+        jpText: "このレストランの料理はおいしいですか。",
+        enText: "Is the food at this restaurant delicious?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "はい、とてもおいしいですよ。でも、少し高いです。",
+        enText: "Yes, it is very delicious. But it is a little expensive.",
+      },
+      {
+        speaker: "Ken",
+        jpText: "あの店はどうですか。高くありませんか。",
+        enText: "How about that shop over there? Is it not expensive?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "ええ、あの店はあまり高くありませんよ。安いです。",
+        enText: "Right, that shop is not very expensive. It is cheap.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "おいしい",
+        reading: "おいしい",
+        enText: "delicious / tasty",
+      },
+      {
+        jpText: "高い",
+        reading: "たかい",
+        enText: "expensive / high",
+      },
+      {
+        jpText: "安い",
+        reading: "やすい",
+        enText: "cheap / inexpensive",
+      },
+      {
+        jpText: "大きい",
+        reading: "おおきい",
+        enText: "big / large",
+      },
+      {
+        jpText: "小さい",
+        reading: "ちいさい",
+        enText: "small",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt: "Choose the correct polite negative form of 高い (expensive):",
+        options: ["高くないです", "高いじゃないです", "高くないでした", "高いました"],
+        correctAnswer: "高くないです",
+        explanation:
+          "い-adjectives form the negative by dropping the final い and adding くないです.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete the irregular negative for いい (good): この本は___。(This book is not good.)",
+        correctAnswer: "よくないです",
+        explanation:
+          "いい is irregular and conjugates based on よい, becoming よくないです in the negative.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'This dictionary is not expensive.'",
+        options: ["この辞書は", "高くないです"],
+        correctAnswer: "この辞書は高くないです",
+        explanation:
+          "Topic (この辞書は) + Negative Adjective Predicate (高くないです).",
+      },
+    ],
+  },
+
+  "na-adjectives-noun-modification": {
+    title: "な-Adjectives & Noun Modification",
+    theoryMarkdown: `### 📘 な-Adjectives (Adjectival Nouns)
+
+Unlike い-adjectives, **な-adjectives** behave grammatically like nouns when stating predicates, but require the connector **な** when modifying nouns directly.
+
+---
+
+#### 1. End of Sentence (Predicate Position)
+
+When placed at the end of a sentence, な-adjectives take **です** (affirmative) and **じゃありません / ではありません** (negative):
+
+- この<ruby>町<rt>まち</rt></ruby>は<ruby>静<rt>しず</rt></ruby>かです。(This town is quiet.)
+- この<ruby>町<rt>まち</rt></ruby>は<ruby>有名<rt>ゆうめい</rt></ruby>じゃありません。(This town is not famous.)
+
+---
+
+#### 2. Before a Noun (Direct Modification)
+
+When describing a noun directly, attach **な** to the adjective stem:
+
+$$\\text{[な-Adjective]} + \\mathbf{な} + \\text{[Noun]}$$
+
+- <ruby>静<rt>しず</rt></ruby>か**な**<ruby>町<rt>まち</rt></ruby> (a quiet town)
+- <ruby>有名<rt>ゆうめい</rt></ruby>**な**<ruby>人<rt>ひと</rt></ruby> (a famous person)
+
+---
+
+#### ⚠️ Common Traps
+
+Certain words look like い-adjectives because they end with an "i" sound, but they are actually **な-adjectives**:
+
+- <ruby>綺麗<rt>きれい</rt></ruby> (pretty / clean) → きれい**な**<ruby>花<rt>はな</rt></ruby>
+- <ruby>有名<rt>ゆうめい</rt></ruby> (famous) → ゆうめい**な**<ruby>先生<rt>せんせい</rt></ruby>`,
+    dialogue: [
+      {
+        speaker: "Maria",
+        jpText: "ケンさんの町はどんな町ですか。",
+        enText: "Ken-san, what kind of town is your town?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "静かな町ですよ。あまり有名じゃありません。",
+        enText: "It is a quiet town. It is not very famous.",
+      },
+      {
+        speaker: "Maria",
+        jpText: "きれいな公園がありますか。",
+        enText: "Is there a pretty park?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "はい、とてもきれいな公園があります。",
+        enText: "Yes, there is a very pretty park.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "静か",
+        reading: "しずか",
+        enText: "quiet / peaceful",
+      },
+      {
+        jpText: "有名",
+        reading: "ゆうめい",
+        enText: "famous",
+      },
+      {
+        jpText: "綺麗",
+        reading: "きれい",
+        enText: "pretty / clean",
+      },
+      {
+        jpText: "町",
+        reading: "まち",
+        enText: "town / city",
+      },
+      {
+        jpText: "公園",
+        reading: "こうえん",
+        enText: "park",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt: "Choose the correct phrase to say 'a quiet room':",
+        options: ["静かな部屋", "静か部屋", "静かい部屋", "静かので部屋"],
+        correctAnswer: "静かな部屋",
+        explanation:
+          "な-adjectives require particle な when placed directly before a noun.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete the negative sentence: あの人は有名___。(That person is not famous.)",
+        correctAnswer: "じゃありません",
+        explanation:
+          "な-adjectives take じゃありません or ではありません for their polite negative form.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'This is a pretty park.'",
+        options: ["きれいな", "公園です", "これは"],
+        correctAnswer: "これはきれいな公園です",
+        explanation:
+          "Topic (これは) + Adjectival modifier (きれいな) + Noun predicate (公園です).",
+      },
+    ],
+  },
+
+  "adjectives-past-tense": {
+    title: "Past Tense of Adjectives (い & な)",
+    theoryMarkdown: `### 📘 Past Tense with Adjectives
+
+Adjectives in Japanese change form to indicate the past tense. The rules depend on whether the adjective is an **い-adjective** or a **な-adjective**.
+
+---
+
+#### 1. い-Adjectives Past Forms
+
+Drop the final **い** and add:
+
+- **Past Affirmative:** 〜**かったです**
+- **Past Negative:** 〜**くなかったです** (or 〜くありませんでした)
+
+| Adjective | Present | Past Affirmative | Past Negative |
+| :--- | :--- | :--- | :--- |
+| <ruby>楽<rt>たの</rt></ruby>しい (fun) | 楽しいです | <ruby>楽<rt>たの</rt></ruby>しかったです | <ruby>楽<rt>たの</rt></ruby>しくなかったです |
+| <ruby>寒<rt>さむ</rt></ruby>い (cold) | 寒いです | <ruby>寒<rt>さむ</rt></ruby>かったです | <ruby>寒<rt>さむ</rt></ruby>くなかったです |
+| いい (good) | いいです | **よかったです** | **よくなかったです** |
+
+---
+
+#### 2. な-Adjectives Past Forms
+
+Since な-adjectives use copula endings, change **です** to its past forms:
+
+- **Past Affirmative:** 〜**でした**
+- **Past Negative:** 〜**じゃありませんでした** (or 〜ではありませんでした)
+
+| Adjective | Present | Past Affirmative | Past Negative |
+| :--- | :--- | :--- | :--- |
+| <ruby>静<rt>しず</rt></ruby>か (quiet) | 静かです | <ruby>静<rt>しず</rt></ruby>かでした | <ruby>静<rt>しず</rt></ruby>かじゃありませんでした |
+| <ruby>暇<rt>ひま</rt></ruby> (free / idle) | 暇です | <ruby>暇<rt>ひま</rt></ruby>でした | <ruby>暇<rt>ひま</rt></ruby>じゃありませんでした |`,
+    dialogue: [
+      {
+        speaker: "Aoi",
+        jpText: "ケンさん、昨日の旅行はどうでしたか。",
+        enText: "Ken-san, how was the trip yesterday?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "とても楽しかったです。でも、少し寒かったです。",
+        enText: "It was very fun. But it was a bit cold.",
+      },
+      {
+        speaker: "Aoi",
+        jpText: "天気はよかったですか。",
+        enText: "Was the weather good?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "いいえ、あまりよくなかったです。",
+        enText: "No, it was not very good.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "楽しい",
+        reading: "たのしい",
+        enText: "fun / enjoyable",
+      },
+      {
+        jpText: "寒い",
+        reading: "さむい",
+        enText: "cold (weather)",
+      },
+      {
+        jpText: "難しい",
+        reading: "むずかしい",
+        enText: "difficult",
+      },
+      {
+        jpText: "天気",
+        reading: "てんき",
+        enText: "weather",
+      },
+      {
+        jpText: "旅行",
+        reading: "りょこう",
+        enText: "trip / travel",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt: "Choose the past affirmative form of 楽しい (fun):",
+        options: ["楽しかったです", "楽しいでした", "楽しかった", "楽しくないです"],
+        correctAnswer: "楽しかったです",
+        explanation:
+          "い-adjectives become past affirmative by dropping い and adding かったです.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete with the past negative of いい: 昨日のテストは___。(Yesterday's test was not good.)",
+        correctAnswer: "よくなかったです",
+        explanation:
+          "いい conjugates irregularly based on よい, forming the past negative よくなかったです.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'Yesterday was cold.'",
+        options: ["寒かったです", "昨日は", "とても"],
+        correctAnswer: "昨日はとても寒かったです",
+        explanation:
+          "Topic/Time (昨日は) + Degree adverb (とても) + Past Adjective (寒かったです).",
+      },
+    ],
+  },
+
+  "connecting-adjectives-suki-kirai": {
+    title: "Connecting Adjectives & Preferences (〜が好き / 嫌い)",
+    theoryMarkdown: `### 📘 Connecting Adjectives & Expressing Preferences
+
+---
+
+#### 1. Connecting Multiple Adjectives
+
+To combine adjectives within a sentence (meaning "and"), use their connecting forms:
+
+- **い-Adjectives:** Drop **い** and add **くて**.
+  - <ruby>安<rt>やす</rt></ruby>い + おいしい → このパンは**<ruby>安<rt>やす</rt></ruby>くて**おいしいです。(This bread is cheap **and** delicious.)
+- **な-Adjectives:** Add **で**.
+  - <ruby>静<rt>しず</rt></ruby>か + きれい → この<ruby>町<rt>まち</rt></ruby>は**<ruby>静<rt>しず</rt></ruby>かで**きれいです。(This town is quiet **and** pretty.)
+
+---
+
+#### 2. Expressing Likes and Dislikes (好き / 嫌い)
+
+In Japanese, **<ruby>好<rt>す</rt></ruby>き** (like) and **<ruby>嫌<rt>きら</rt></ruby>い** (dislike) are **な-adjectives**, not verbs. The object of preference is marked by particle **が** (not を):
+
+$$\\text{[Person]} + \\mathbf{は} + \\text{[Item]} + \\mathbf{が} + \\mathbf{好きです / 嫌いです}$$
+
+- <ruby>私<rt>わたし</rt></ruby>は<ruby>日本語<rt>にほんご</rt></ruby>**が**<ruby>好<rt>す</rt></ruby>きです。(I like Japanese.)
+- <ruby>肉<rt>にく</rt></ruby>はあまり<ruby>好<rt>す</rt></ruby>きじゃありません。(I don't like meat very much.)`,
+    dialogue: [
+      {
+        speaker: "Maria",
+        jpText: "田中さんはどんな日本料理が好きですか。",
+        enText: "Tanaka-san, what kind of Japanese food do you like?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "私は寿司が大好きです。安くておいしいですから。",
+        enText: "I love sushi. Because it is cheap and delicious.",
+      },
+      {
+        speaker: "Maria",
+        jpText: "納豆も好きですか。",
+        enText: "Do you like natto too?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "いいえ、納豆はあまり好きじゃありません。",
+        enText: "No, I don't like natto very much.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "好き",
+        reading: "すき",
+        enText: "like / fond of",
+      },
+      {
+        jpText: "嫌い",
+        reading: "きらい",
+        enText: "dislike / hate",
+      },
+      {
+        jpText: "大好き",
+        reading: "だいすき",
+        enText: "love / very fond of",
+      },
+      {
+        jpText: "料理",
+        reading: "りょうり",
+        enText: "cuisine / cooking",
+      },
+      {
+        jpText: "肉",
+        reading: "にく",
+        enText: "meat",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt:
+          "Choose the particle that marks the object of preference: 私は魚___好きです。",
+        options: ["が", "を", "に", "で"],
+        correctAnswer: "が",
+        explanation:
+          "好き is a な-adjective, so the item that is liked must be marked with particle が.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Connect 安い (cheap) with おいしい: この店は___おいしいです。(This shop is cheap and delicious.)",
+        correctAnswer: "安くて",
+        explanation:
+          "い-adjectives connect to another adjective by dropping い and adding くて.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'I love Japanese food.'",
+        options: ["日本料理が", "私は", "大好きです"],
+        correctAnswer: "私は日本料理が大好きです",
+        explanation:
+          "Topic (私は) + Object of affection (日本料理が) + Predicate (大好きです).",
+      },
+    ],
+  },
 };

@@ -134,6 +134,48 @@ export const SEED_CURRICULUM_N5: SeedTopic[] = [
     objective:
       "Use particle も to express 'also/too' and connect nouns using exhaustive と and non-exhaustive や.",
   },
+
+  // Unit 4: Describing the World (Adjectives)
+  {
+    level: "N5",
+    unitIndex: 4,
+    unitTitle: "Describing the World (Adjectives)",
+    lessonIndex: 13,
+    title: "い-Adjectives: Present Affirmative & Negative",
+    grammarKey: "i-adjectives-present-negative",
+    objective:
+      "Learn how to describe things and express negative qualities using い-adjectives in polite present forms.",
+  },
+  {
+    level: "N5",
+    unitIndex: 4,
+    unitTitle: "Describing the World (Adjectives)",
+    lessonIndex: 14,
+    title: "な-Adjectives & Noun Modification",
+    grammarKey: "na-adjectives-noun-modification",
+    objective:
+      "Use な-adjectives to describe nouns and form polite present affirmative and negative statements.",
+  },
+  {
+    level: "N5",
+    unitIndex: 4,
+    unitTitle: "Describing the World (Adjectives)",
+    lessonIndex: 15,
+    title: "Past Tense of Adjectives (い & な)",
+    grammarKey: "adjectives-past-tense",
+    objective:
+      "Express past affirmative and past negative states for both い-adjectives and な-adjectives.",
+  },
+  {
+    level: "N5",
+    unitIndex: 4,
+    unitTitle: "Describing the World (Adjectives)",
+    lessonIndex: 16,
+    title: "Connecting Adjectives & Preferences (〜が好き / 嫌い)",
+    grammarKey: "connecting-adjectives-suki-kirai",
+    objective:
+      "Connect multiple adjectives using 〜くて / 〜で and state likes and dislikes using 好き / 嫌い with particle が.",
+  },
 ];
 
 export const SEED_CURRICULUM_N4: SeedTopic[] = [];
