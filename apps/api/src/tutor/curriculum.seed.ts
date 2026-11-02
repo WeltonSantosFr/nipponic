@@ -92,6 +92,48 @@ export const SEED_CURRICULUM_N5: SeedTopic[] = [
     objective:
       "Describe completed and non-completed past actions using polite past forms 〜ました and 〜ませんでした.",
   },
+
+  // Unit 3: Locations, Existence & Quantities
+  {
+    level: "N5",
+    unitIndex: 3,
+    unitTitle: "Locations, Existence & Quantities",
+    lessonIndex: 9,
+    title: "Existence of Inanimate & Animate (あります / います)",
+    grammarKey: "existence-arimasu-imasu",
+    objective:
+      "Distinguish between inanimate existence (あります) and animate existence (います) with location marker に.",
+  },
+  {
+    level: "N5",
+    unitIndex: 3,
+    unitTitle: "Locations, Existence & Quantities",
+    lessonIndex: 10,
+    title: "Action Location (で) vs. Existence Location (に)",
+    grammarKey: "particles-de-vs-ni-location",
+    objective:
+      "Distinguish between particle で for where dynamic actions occur and particle に for where entities exist.",
+  },
+  {
+    level: "N5",
+    unitIndex: 3,
+    unitTitle: "Locations, Existence & Quantities",
+    lessonIndex: 11,
+    title: "Basic Counters & Quantifiers (一つ、二つ、〜人)",
+    grammarKey: "japanese-counters-quantifiers",
+    objective:
+      "Count general items using native Japanese numbers and count people, placing quantifiers naturally in sentences.",
+  },
+  {
+    level: "N5",
+    unitIndex: 3,
+    unitTitle: "Locations, Existence & Quantities",
+    lessonIndex: 12,
+    title: "Inclusive Particle も & Listing Nouns (と / や)",
+    grammarKey: "particle-mo-to-ya",
+    objective:
+      "Use particle も to express 'also/too' and connect nouns using exhaustive と and non-exhaustive や.",
+  },
 ];
 
 export const SEED_CURRICULUM_N4: SeedTopic[] = [];

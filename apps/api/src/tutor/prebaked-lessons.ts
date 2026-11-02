@@ -863,4 +863,457 @@ These relative past time expressions do **not** take the particle に:
       },
     ],
   },
+
+  "existence-arimasu-imasu": {
+    title: "Existence of Inanimate & Animate (あります / います)",
+    theoryMarkdown: `### 📘 Expressing Existence: あります vs. います
+
+Japanese uses two completely different verbs to express "to exist", "there is", or "to have", depending on whether the subject is capable of self-propelled movement.
+
+---
+
+#### 1. Inanimate Objects & Plants: あります
+
+Use **あります** (plain form: ある) for non-living objects, plants, events, and abstract things:
+
+- <ruby>机<rt>つくえ</rt></ruby>が**あります**。(There is a desk.)
+- <ruby>部屋<rt>へや</rt></ruby>にテレビが**あります**。(There is a television in the room.)
+
+---
+
+#### 2. Living Beings (Humans & Animals): います
+
+Use **います** (plain form: いる) for people and animals:
+
+- <ruby>先生<rt>せんせい</rt></ruby>が**います**。(There is a teacher.)
+- <ruby>庭<rt>にわ</rt></ruby>に<ruby>猫<rt>ねこ</rt></ruby>が**います**。(There is a cat in the garden.)
+
+---
+
+#### 3. Sentence Structure
+
+$$\\text{[Location]} + \\mathbf{に} + \\text{[Entity]} + \\mathbf{が} + \\mathbf{あります / います}$$`,
+    dialogue: [
+      {
+        speaker: "Ken",
+        jpText: "田中さんの部屋に何がありますか。",
+        enText: "Tanaka-san, what is in your room?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "机とベッドがあります。テレビはありません。",
+        enText: "There is a desk and a bed. There is no television.",
+      },
+      {
+        speaker: "Ken",
+        jpText: "ペットはいますか。",
+        enText: "Do you have pets?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "はい、白い猫がいます。",
+        enText: "Yes, I have a white cat.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "あります",
+        reading: "あります",
+        enText: "to exist (inanimate items, plants)",
+      },
+      {
+        jpText: "います",
+        reading: "います",
+        enText: "to exist (living beings, humans, animals)",
+      },
+      {
+        jpText: "部屋",
+        reading: "へや",
+        enText: "room",
+      },
+      {
+        jpText: "机",
+        reading: "つくえ",
+        enText: "desk",
+      },
+      {
+        jpText: "猫",
+        reading: "ねこ",
+        enText: "cat",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt:
+          "Choose the correct verb for a living person: あそこに学生が___。",
+        options: ["います", "あります", "します", "行きます"],
+        correctAnswer: "います",
+        explanation:
+          "学生 (student) is a human being, so the existence verb います must be used.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete with the correct existence verb: 部屋に本が___。(There is a book in the room.)",
+        correctAnswer: "あります",
+        explanation:
+          "本 (book) is an inanimate object, so あります is the correct verb.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'There is a cat in the garden.'",
+        options: ["います", "庭に", "猫が"],
+        correctAnswer: "庭に猫がいます",
+        explanation:
+          "Location with に (庭に) + Subject with が (猫が) + Animate verb (います).",
+      },
+    ],
+  },
+
+  "particles-de-vs-ni-location": {
+    title: "Action Location (で) vs. Existence Location (に)",
+    theoryMarkdown: `### 📘 Action Location (で) vs. Static Location (に)
+
+Both **で** and **に** attach to location nouns, but they describe fundamentally different relationships with the verb that follows.
+
+---
+
+#### 1. Particle で: Location of Dynamic Action
+
+Use **で** when specifying the physical site where an event or activity takes place:
+
+- <ruby>図書館<rt>としょかん</rt></ruby>**で**<ruby>勉強<rt>べんきょう</rt></ruby>します。(I study **at** the library.)
+- レストラン**で**ご飯を<ruby>食<rt>た</rt></ruby>べます。(I eat a meal **at** a restaurant.)
+
+---
+
+#### 2. Particle に: Location of Static Existence
+
+Use **に** with existence verbs like **あります** and **います** to mark where something resides:
+
+- <ruby>机<rt>つくえ</rt></ruby>の<ruby>上<rt>うえ</rt></ruby>**に**<ruby>本<rt>ほん</rt></ruby>があります。(There is a book **on** the desk.)
+- <ruby>教室<rt>きょうしつ</rt></ruby>**に**<ruby>田中<rt>たなか</rt></ruby>さんがいます。(Tanaka-san is **in** the classroom.)
+
+---
+
+#### 3. Summary Rule
+
+| Verb Type | Particle | Example |
+| :--- | :---: | :--- |
+| **Action verbs** (食べる, 読む, 勉強する) | **で** | <ruby>家<rt>うち</rt></ruby>**で**<ruby>本<rt>ほん</rt></ruby>を<ruby>読<rt>よ</rt></ruby>みます。 |
+| **Existence verbs** (ある, いる) | **に** | <ruby>家<rt>うち</rt></ruby>**に**<ruby>本<rt>ほん</rt></ruby>があります。 |`,
+    dialogue: [
+      {
+        speaker: "Aoi",
+        jpText: "ケンさんはいつもどこで勉強しますか。",
+        enText: "Ken-san, where do you usually study?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "私は図書館で勉強します。",
+        enText: "I study at the library.",
+      },
+      {
+        speaker: "Aoi",
+        jpText: "図書館に日本の辞書がありますか。",
+        enText: "Are there Japanese dictionaries in the library?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "はい、辞書がたくさんありますよ。",
+        enText: "Yes, there are many dictionaries.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "どこ",
+        reading: "どこ",
+        enText: "where",
+      },
+      {
+        jpText: "上",
+        reading: "うえ",
+        enText: "on / above / top",
+      },
+      {
+        jpText: "下",
+        reading: "した",
+        enText: "under / below",
+      },
+      {
+        jpText: "教室",
+        reading: "きょうしつ",
+        enText: "classroom",
+      },
+      {
+        jpText: "たくさん",
+        reading: "たくさん",
+        enText: "many / a lot",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt:
+          "Choose the correct particle for action location: レストラン___パンを食べます。",
+        options: ["で", "に", "を", "へ"],
+        correctAnswer: "で",
+        explanation:
+          "Eating (食べます) is a dynamic action, so the location takes particle で.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete with the static location particle: 机の上___ペンがあります。(There is a pen on the desk.)",
+        correctAnswer: "に",
+        explanation:
+          "Existence verbs like あります require particle に to mark the location of existence.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'I read books at the library.'",
+        options: ["図書館で", "本を", "読みます"],
+        correctAnswer: "図書館で本を読みます",
+        explanation:
+          "Action Location (図書館で) + Direct Object (本を) + Verb (読みます).",
+      },
+    ],
+  },
+
+  "japanese-counters-quantifiers": {
+    title: "Basic Counters & Quantifiers (一つ、二つ、〜人)",
+    theoryMarkdown: `### 📘 Counting Things & People
+
+Japanese uses counter suffixes attached to numbers. For general items without a specialized counter, use the **Native Japanese Number System** (Hitotsu, Futatsu...).
+
+---
+
+#### 1. General Item Counters (Native Japanese)
+
+| Kanji | Kana Reading | Meaning |
+| :--- | :--- | :--- |
+| **一つ** | ひとつ | One item |
+| **二つ** | ふたつ | Two items |
+| **三つ** | みっつ | Three items |
+| **四つ** | よっつ | Four items |
+| **五つ** | いつつ | Five items |
+| **幾つ** | いくつ | How many? |
+
+---
+
+#### 2. People Counter (〜人 / にん)
+
+Notice the irregular readings for 1 and 2 people:
+
+- **一人 (ひとり):** One person
+- **二人 (ふたり):** Two people
+- **三人 (さんにん):** Three people
+- **四人 (よにん):** Four people (*irregular pronunciation*)
+- **何人 (なんにん):** How many people?
+
+---
+
+#### 3. Sentence Placement
+
+Quantifiers typically sit directly before the verb **without** any particle:
+
+$$\\text{[Noun]} + \\mathbf{を} + \\mathbf{[Quantifier]} + \\text{[Verb]}$$
+
+- りんごを**二つ**<ruby>買<rt>か</rt></ruby>いました。(I bought two apples.)`,
+    dialogue: [
+      {
+        speaker: "Clerk",
+        jpText: "いらっしゃいませ。何名様ですか。",
+        enText: "Welcome. How many people in your party?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "二人です。",
+        enText: "Two people.",
+      },
+      {
+        speaker: "Clerk",
+        jpText: "ご注文は何にしますか。",
+        enText: "What would you like to order?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "コーヒーを二つと、ケーキを一つください。",
+        enText: "Two coffees and one cake, please.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "一つ",
+        reading: "ひとつ",
+        enText: "one (general item)",
+      },
+      {
+        jpText: "二つ",
+        reading: "ふたつ",
+        enText: "two (general items)",
+      },
+      {
+        jpText: "一人",
+        reading: "ひとり",
+        enText: "one person",
+      },
+      {
+        jpText: "二人",
+        reading: "ふたり",
+        enText: "two people",
+      },
+      {
+        jpText: "ください",
+        reading: "ください",
+        enText: "please give me",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt:
+          "Choose the correct reading for counting two people (二人):",
+        options: ["ふたり", "ひとり", "ににん", "ふたつ"],
+        correctAnswer: "ふたり",
+        explanation:
+          "二人 uses the special native reading ふたり (futari).",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete the sentence to ask for one item: りんごを___ください。(One apple, please.)",
+        correctAnswer: "一つ",
+        explanation:
+          "一つ (ひとつ) is the counter for one general object.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'I bought two coffees.'",
+        options: ["二つ", "買いました", "コーヒーを"],
+        correctAnswer: "コーヒーを二つ買いました",
+        explanation:
+          "Object (コーヒーを) + Quantifier (二つ) + Verb (買いました).",
+      },
+    ],
+  },
+
+  "particle-mo-to-ya": {
+    title: "Inclusive Particle も & Listing Nouns (と / や)",
+    theoryMarkdown: `### 📘 Inclusion (も) & Listing Nouns (と / や)
+
+---
+
+#### 1. Inclusive Particle も (Also / Too)
+
+Particle **も** replaces **は**, **が**, or **を** to mean "also" or "too":
+
+- <ruby>私<rt>わたし</rt></ruby>**も**<ruby>学生<rt>がくせい</rt></ruby>です。(I am **also** a student.)
+- お<ruby>茶<rt>ちゃ</rt></ruby>**も**<ruby>飲<rt>の</rt></ruby>みます。(I **also** drink tea.)
+
+---
+
+#### 2. Exhaustive Listing with と (And)
+
+Use **と** between nouns when naming an exhaustive list where no items are omitted:
+
+- ペン**と**ノートを<ruby>買<rt>か</rt></ruby>いました。(I bought a pen and a notebook [and nothing else].)
+
+---
+
+#### 3. Non-Exhaustive Listing with や (And... among others)
+
+Use **や** when giving representative examples from a larger group of items:
+
+- <ruby>机<rt>つくえ</rt></ruby>の<ruby>上<rt>うえ</rt></ruby>に<ruby>本<rt>ほん</rt>**や**ペンがあります。(On the desk there are books and pens [among other things].)`,
+    dialogue: [
+      {
+        speaker: "Maria",
+        jpText: "昨日、ノートとペンを買いました。",
+        enText: "Yesterday, I bought a notebook and a pen.",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "私も昨日ノートを買いました。",
+        enText: "I also bought a notebook yesterday.",
+      },
+      {
+        speaker: "Maria",
+        jpText: "田中さんは辞書も買いましたか。",
+        enText: "Did you also buy a dictionary, Tanaka-san?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "いいえ、辞書は買いませんでした。",
+        enText: "No, I didn't buy a dictionary.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "買う",
+        reading: "かう",
+        enText: "to buy",
+      },
+      {
+        jpText: "ノート",
+        reading: "のーと",
+        enText: "notebook",
+      },
+      {
+        jpText: "ペン",
+        reading: "ぺん",
+        enText: "pen",
+      },
+      {
+        jpText: "友達",
+        reading: "ともだち",
+        enText: "friend",
+      },
+      {
+        jpText: "雑誌",
+        reading: "ざっし",
+        enText: "magazine",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt:
+          "Choose the particle meaning 'also/too' that replaces は: 私___学生です。",
+        options: ["も", "と", "や", "で"],
+        correctAnswer: "も",
+        explanation:
+          "Particle も replaces は to indicate inclusion ('I am also a student').",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete the exhaustive list of items: ペン___ノートを買いました。(I bought a pen and a notebook.)",
+        correctAnswer: "と",
+        explanation:
+          "Particle と connects nouns exhaustively to mean 'and'.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'I also study Japanese.'",
+        options: ["勉強します", "日本語を", "私も"],
+        correctAnswer: "私も日本語を勉強します",
+        explanation:
+          "Topic with inclusive particle (私も) + Object (日本語を) + Verb (勉強します).",
+      },
+    ],
+  },
 };
