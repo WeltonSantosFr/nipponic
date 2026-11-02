@@ -2210,4 +2210,451 @@ Pay close attention to how affirmative and negative states work with **<ruby>知
       },
     ],
   },
+
+  // ==========================================
+  // JLPT N5 - Unit 6: Permissions, Prohibitions & Sequences
+  // ==========================================
+  "te-form-mo-ii-desu-permission": {
+    title: "Asking & Granting Permission (〜てもいいです)",
+    theoryMarkdown: `### 📘 Asking & Granting Permission: 〜てもいいです
+
+To say that someone *\"may\"* do something, or that it is *\"okay to do\"*, attach **もいいです** to the **て-form** of a verb.
+
+$$\\text{[Verb in て-form]} + \\mathbf{もいいです}$$
+
+---
+
+#### 1. Asking for Permission (〜てもいいですか)
+
+Add the question particle **か** to ask *\"May I...?\"* or *\"Is it okay if I...?\"*:
+
+- ここに<ruby>座<rt>すわ</rt></ruby>っ**てもいいですか**。(May I sit here?)
+- <ruby>写真<rt>しゃしん</rt></ruby>を<ruby>撮<rt>と</rt></ruby>っ**てもいいですか**。(May I take photos?)
+
+---
+
+#### 2. Responding to Permission Requests
+
+| Response | Meaning | Tone |
+| :--- | :--- | :--- |
+| **はい、いいですよ。** / **どうぞ。** | Yes, please go ahead. | Friendly & Welcoming |
+| **ええ、〜てもいいです。** | Yes, you may. | Formal Affirmative |
+| **すみません、ちょっと…** | I am sorry, but... | Polite & Indirect Refusal |
+
+> 💡 **Polite Refusal Culture:** In Japan, declining a request with a direct *\"No\"* (いいえ) can feel overly harsh. Speakers usually soften the refusal with **すみません、ちょっと…** (Excuse me, but that's a bit difficult...).`,
+    dialogue: [
+      {
+        speaker: "Ken",
+        jpText: "すみません、この席に座ってもいいですか。",
+        enText: "Excuse me, may I sit in this seat?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "ええ、どうぞ。空いていますよ。",
+        enText: "Yes, please go ahead. It is unoccupied.",
+      },
+      {
+        speaker: "Ken",
+        jpText: "ありがとうございます。ここで写真を撮ってもいいですか。",
+        enText: "Thank you very much. May I take photos here?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "はい、撮ってもいいですよ。",
+        enText: "Yes, you may take photos.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "座る",
+        reading: "すわる",
+        enText: "to sit",
+      },
+      {
+        jpText: "写真",
+        reading: "しゃしん",
+        enText: "photograph / picture",
+      },
+      {
+        jpText: "撮る",
+        reading: "とる",
+        enText: "to take (a photo)",
+      },
+      {
+        jpText: "使う",
+        reading: "つかう",
+        enText: "to use",
+      },
+      {
+        jpText: "席",
+        reading: "せき",
+        enText: "seat",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt: "Choose the correct phrase to ask 'May I use this pen?':",
+        options: [
+          "このペンを使ってもいいですか",
+          "このペンを使いてもいいですか",
+          "このペンを使ってはいけません",
+          "このペンを使いますか",
+        ],
+        correctAnswer: "このペンを使ってもいいですか",
+        explanation:
+          "使う becomes 使って in the て-form; attach もいいですか to ask for permission.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete the permission pattern: ここで本を読んで___いいですか。(May I read books here?)",
+        correctAnswer: "も",
+        explanation:
+          "The particle も combines with the て-form and いい to ask for permission (〜てもいいですか).",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'May I sit here?'",
+        options: ["座っても", "ここに", "いいですか"],
+        correctAnswer: "ここに座ってもいいですか",
+        explanation:
+          "Location (ここに) + Verb in て-form with particle (座っても) + Inquiry (いいですか).",
+      },
+    ],
+  },
+
+  "te-form-wa-ikemasen-prohibition": {
+    title: "Expressing Prohibition (〜てはいけません)",
+    theoryMarkdown: `### 📘 Expressing Prohibition: 〜てはいけません
+
+To state that an action is strictly prohibited or against the rules (*\"You must not...\"* or *\"Do not...\"*), attach **はいけません** to the **て-form** of the verb.
+
+$$\\text{[Verb in て-form]} + \\mathbf{は (pronounced\\ wa) + いけません}$$
+
+---
+
+#### 1. Core Usage & Context
+
+- The topic particle **は** here is pronounced **wa**.
+- This structure is used by figures of authority (teachers, police, parents), on public warning signs, or when stating clear regulations.
+
+| Verb | Te-form | Prohibition (〜てはいけません) |
+| :--- | :--- | :--- |
+| <ruby>入<rt>はい</rt></ruby>る (to enter) | <ruby>入<rt>はい</rt></ruby>って | <ruby>入<rt>はい</rt></ruby>って**はいけません** (Do not enter) |
+| <ruby>撮<rt>と</rt></ruby>る (to take [photos]) | <ruby>撮<rt>と</rt></ruby>って | <ruby>撮<rt>と</rt></ruby>って**はいけません** (You must not take photos) |
+| <ruby>吸<rt>す</rt></ruby>う (to smoke) | <ruby>吸<rt>す</rt></ruby>って | たばこを<ruby>吸<rt>す</rt></ruby>って**はいけません** (No smoking) |
+
+---
+
+#### 2. Contrast: Permission vs. Prohibition
+
+- **Permission:** <ruby>食<rt>た</rt></ruby>べ**てもいいです**。(You may eat.)
+- **Prohibition:** <ruby>食<rt>た</rt></ruby>べ**てはいけません**。(You must not eat.)`,
+    dialogue: [
+      {
+        speaker: "Ken",
+        jpText: "美術館で写真を撮ってもいいですか。",
+        enText: "May I take photographs in the art museum?",
+      },
+      {
+        speaker: "Staff",
+        jpText: "いいえ、写真を撮ってはいけません。",
+        enText: "No, you must not take photographs.",
+      },
+      {
+        speaker: "Ken",
+        jpText: "そうですか。ここで電話をかけてもいいですか。",
+        enText: "I see. May I make a phone call here?",
+      },
+      {
+        speaker: "Staff",
+        jpText: "すみません、電話も使ってはいけません。外でお願いします。",
+        enText: "Excuse me, but you must not use the phone either. Please do so outside.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "吸う",
+        reading: "すう",
+        enText: "to smoke / inhale",
+      },
+      {
+        jpText: "たばこ",
+        reading: "たばこ",
+        enText: "tobacco / cigarette",
+      },
+      {
+        jpText: "入る",
+        reading: "はいる",
+        enText: "to enter",
+      },
+      {
+        jpText: "美術館",
+        reading: "びじゅつかん",
+        enText: "art museum",
+      },
+      {
+        jpText: "外",
+        reading: "そと",
+        enText: "outside",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt:
+          "Choose the correct phrase to say: 'You must not enter here':",
+        options: [
+          "ここに入ってはいけません",
+          "ここに入ってもいいです",
+          "ここに入りてはいけません",
+          "ここに入らないです",
+        ],
+        correctAnswer: "ここに入ってはいけません",
+        explanation:
+          "入る becomes 入って in the て-form; append はいけません to form a prohibition.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete with the prohibition particle: ここでたばこを吸って___いけません。(You must not smoke here.)",
+        correctAnswer: "は",
+        explanation:
+          "Particle は (pronounced 'wa') links the て-form with いけません.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'You must not take photos.'",
+        options: ["撮ってはいけません", "写真を"],
+        correctAnswer: "写真を撮ってはいけません",
+        explanation:
+          "Direct Object (写真を) + Verb of prohibition (撮ってはいけません).",
+      },
+    ],
+  },
+
+  "te-form-sequence-actions": {
+    title: "Connecting Sequential Actions (〜て、〜て、〜ます)",
+    theoryMarkdown: `### 📘 Connecting Actions in Sequence: 〜て、〜て
+
+When you perform multiple actions in chronological succession, connect the earlier verbs using their **て-form**. Only the final verb receives tense (past, present, or negative).
+
+$$\\text{[Verb 1 て-form]}、\\text{[Verb 2 て-form]}、\\text{[Verb 3 conjugated]}$$
+
+---
+
+#### 1. Daily Routine Examples
+
+- <ruby>朝<rt>あさ</rt></ruby><ruby>七時<rt>しちじ</rt></ruby>に**<ruby>起<rt>お</rt></ruby>きて**、<ruby>朝ご飯<rt>あさごはん</rt></ruby>を**<ruby>食<rt>た</rt></ruby>べて**、<ruby>学校<rt>がっこう</rt></ruby>へ**<ruby>行<rt>い</rt></ruby>きます**。(I wake up at 7:00, eat breakfast, and go to school.)
+- <ruby>夜<rt>よる</rt></ruby>シャワーを**<ruby>浴<rt>あ</rt></ruby>びて**、<ruby>本<rt>ほん</rt></ruby>を**<ruby>読<rt>よ</rt></ruby>んで**、**<ruby>寝<rt>ね</rt></ruby>ます**。(At night, I take a shower, read a book, and go to bed.)
+
+---
+
+#### 2. Sequence in the Past Tense
+
+Notice that the verbs in the middle stay in the **て-form**; only the last verb changes to **〜ました**:
+
+- <ruby>昨日<rt>きのう</rt></ruby>、デパートへ**<ruby>行<rt>い</rt></ruby>って**、<ruby>服<rt>ふく</rt></ruby>を**<ruby>買<rt>か</rt></ruby>って**、<ruby>映画<rt>えいが</rt></ruby>を**<ruby>見<rt>み</rt></ruby>ました**。(Yesterday, I went to the department store, bought clothes, and watched a movie.)`,
+    dialogue: [
+      {
+        speaker: "Aoi",
+        jpText: "ケンさん、昨日は何をしましたか。",
+        enText: "Ken-san, what did you do yesterday?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "図書館へ行って、友達に会って、日本語を勉強しました。",
+        enText: "I went to the library, met a friend, and studied Japanese.",
+      },
+      {
+        speaker: "Aoi",
+        jpText: "そうですか。晩ご飯はどうしましたか。",
+        enText: "I see. What about dinner?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "家に帰って、カレーを作って食べました。",
+        enText: "I returned home, cooked curry, and ate it.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "シャワー",
+        reading: "しゃわー",
+        enText: "shower",
+      },
+      {
+        jpText: "浴びる",
+        reading: "あびる",
+        enText: "to bathe / to take (a shower)",
+      },
+      {
+        jpText: "会う",
+        reading: "あう",
+        enText: "to meet",
+      },
+      {
+        jpText: "作る",
+        reading: "つくる",
+        enText: "to make / cook",
+      },
+      {
+        jpText: "映画",
+        reading: "えいが",
+        enText: "movie / film",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt:
+          "Choose the correctly chained sentence for: 'I wake up, eat, and leave home':",
+        options: [
+          "起きて、食べて、出かけます",
+          "起きます、食べます、出かけます",
+          "起きて、食べて、出かけて",
+          "起きて、食べ、出かけます",
+        ],
+        correctAnswer: "起きて、食べて、出かけます",
+        explanation:
+          "Sequential actions link non-final verbs with the て-form, with the final verb expressing the tense.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Connect 帰る into the sequence: 家に___、晩ご飯を食べました。(I went home and ate dinner.)",
+        correctAnswer: "帰って",
+        explanation:
+          "帰る is a godan verb ending in る; its て-form is 帰って.",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt:
+          "Arrange the words to say: 'I went to Tokyo and met a friend.'",
+        options: ["友達に会いました", "東京へ行って、"],
+        correctAnswer: "東京へ行って、友達に会いました",
+        explanation:
+          "First action with て-form (東京へ行って、) + Final action with past tense (友達に会いました).",
+      },
+    ],
+  },
+
+  "te-form-kara-after-doing": {
+    title: "Sequential Condition 'After Doing' (〜てから)",
+    theoryMarkdown: `### 📘 Specifying Order: 〜てから (After doing...)
+
+Attaching **から** to the **て-form** of a verb emphasizes that the second action takes place **strictly after** the first action has concluded.
+
+$$\\text{[Verb 1 in て-form]} + \\mathbf{から}、\\text{[Verb 2]}$$
+
+---
+
+#### 1. Daily Examples
+
+- <ruby>手<rt>て</rt></ruby>を**<ruby>洗<rt>あら</rt></ruby>ってから**、ご飯を<ruby>食<rt>た</rt></ruby>べます。(After washing my hands, I eat.)
+- <ruby>宿題<rt>しゅくだい</rt></ruby>を**してから**、テレビを<ruby>見<rt>み</rt></ruby>ます。(After doing homework, I will watch TV.)
+- <ruby>国<rt>くに</rt></ruby>へ**<ruby>帰<rt>かえ</rt></ruby>ってから**、<ruby>仕事<rt>しごと</rt></ruby>をします。(After returning to my country, I will work.)
+
+---
+
+#### ⚠️ Important Nuance: 〜てから vs. から (Because)
+
+- **[Sentence] + から:** Expresses reason (*because / since*).
+  - <ruby>時間<rt>じかん</rt></ruby>がありません**から**、<ruby>急<rt>いそ</rt></ruby>ぎます。(Because I have no time, I will hurry.)
+- **[Verb in て-form] + から:** Expresses temporal succession (*after doing*).
+  - ご飯を<ruby>食<rt>た</rt></ruby>べ**てから**、<ruby>散歩<rt>さんぽ</rt></ruby>します。(After eating a meal, I go for a walk.)`,
+    dialogue: [
+      {
+        speaker: "Tanaka",
+        jpText: "ケンさん、今晩一緒に映画を見に行きませんか。",
+        enText: "Ken-san, won't you go watch a movie with me tonight?",
+      },
+      {
+        speaker: "Ken",
+        jpText: "いいですね。でも、宿題をしてから行ってもいいですか。",
+        enText: "Sounds good. But may we go after I finish my homework?",
+      },
+      {
+        speaker: "Tanaka",
+        jpText: "ええ、宿題が終わってから行きましょう。",
+        enText: "Yes, let's go after your homework is finished.",
+      },
+      {
+        speaker: "Ken",
+        jpText: "ありがとうございます。急いで終わらせます。",
+        enText: "Thank you. I will finish it quickly.",
+      },
+    ],
+    vocabulary: [
+      {
+        jpText: "手",
+        reading: "て",
+        enText: "hand",
+      },
+      {
+        jpText: "洗う",
+        reading: "あらう",
+        enText: "to wash",
+      },
+      {
+        jpText: "宿題",
+        reading: "しゅくだい",
+        enText: "homework",
+      },
+      {
+        jpText: "終わる",
+        reading: "おわる",
+        enText: "to end / finish",
+      },
+      {
+        jpText: "散歩する",
+        reading: "さんぽする",
+        enText: "to take a walk",
+      },
+    ],
+    exercises: [
+      {
+        order: 1,
+        type: "multiple_choice",
+        prompt:
+          "Choose the sentence meaning: 'I will watch TV after doing homework':",
+        options: [
+          "宿題をしてからテレビを見ます",
+          "宿題をするからテレビを見ます",
+          "宿題をしたらテレビを見ます",
+          "宿題をしてテレビが見ます",
+        ],
+        correctAnswer: "宿題をしてからテレビを見ます",
+        explanation:
+          "Verb in て-form + から specifies that the second action begins after the first is completed.",
+      },
+      {
+        order: 2,
+        type: "fill_blank",
+        prompt:
+          "Complete with the 'after doing' pattern: 手を洗って___、ご飯を食べます。(After washing hands, I eat.)",
+        correctAnswer: "から",
+        explanation: "〜てから marks sequential succession ('after doing').",
+      },
+      {
+        order: 3,
+        type: "reorder",
+        prompt: "Arrange the words to say: 'After eating, I will study.'",
+        options: ["勉強します", "ご飯を食べてから、"],
+        correctAnswer: "ご飯を食べてから、勉強します",
+        explanation:
+          "Prior condition with てから (ご飯を食べてから、) + Subsequent action (勉強します).",
+      },
+    ],
+  },
 };

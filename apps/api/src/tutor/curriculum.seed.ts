@@ -218,6 +218,48 @@ export const SEED_CURRICULUM_N5: SeedTopic[] = [
     objective:
       "Express persistent conditions, professions, residence, and resulting states using 〜ています with change-of-state verbs.",
   },
+
+  // Unit 6: Permissions, Prohibitions & Sequences
+  {
+    level: "N5",
+    unitIndex: 6,
+    unitTitle: "Permissions, Prohibitions & Sequences",
+    lessonIndex: 21,
+    title: "Asking & Granting Permission (〜てもいいです)",
+    grammarKey: "te-form-mo-ii-desu-permission",
+    objective:
+      "Learn how to ask for and grant permission using the て-form followed by もいいです or もいいですか.",
+  },
+  {
+    level: "N5",
+    unitIndex: 6,
+    unitTitle: "Permissions, Prohibitions & Sequences",
+    lessonIndex: 22,
+    title: "Expressing Prohibition (〜てはいけません)",
+    grammarKey: "te-form-wa-ikemasen-prohibition",
+    objective:
+      "Express strict rules, regulations, and prohibitions using the て-form followed by ははいけません.",
+  },
+  {
+    level: "N5",
+    unitIndex: 6,
+    unitTitle: "Permissions, Prohibitions & Sequences",
+    lessonIndex: 23,
+    title: "Connecting Sequential Actions (〜て、〜て、〜ます)",
+    grammarKey: "te-form-sequence-actions",
+    objective:
+      "Connect multiple verbs in chronological sequence using the て-form to describe a daily routine or series of events.",
+  },
+  {
+    level: "N5",
+    unitIndex: 6,
+    unitTitle: "Permissions, Prohibitions & Sequences",
+    lessonIndex: 24,
+    title: "Sequential Condition 'After Doing' (〜てから)",
+    grammarKey: "te-form-kara-after-doing",
+    objective:
+      "Specify that an event occurs strictly after another action finishes using the construction 〜てから.",
+  },
 ];
 
 export const SEED_CURRICULUM_N4: SeedTopic[] = [];
