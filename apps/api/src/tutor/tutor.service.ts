@@ -144,7 +144,11 @@ export class TutorService implements OnModuleInit {
             .first()
             .catch(() => null);
 
-        if (!existingTopic && ALL_SEED_CURRICULA[level]) {
+        if (
+          !existingTopic &&
+          ALL_SEED_CURRICULA[level] &&
+          ALL_SEED_CURRICULA[level].length > 0
+        ) {
           this.logger.log(`Seeding initial ${level} curriculum topics...`);
           for (const topic of ALL_SEED_CURRICULA[level]) {
             await this.prisma.db.orm.public.CurriculumTopic.create({
@@ -285,7 +289,8 @@ export class TutorService implements OnModuleInit {
       // Auto-seed level if empty and default curriculum is available
       if (
         topics.length === 0 &&
-        ALL_SEED_CURRICULA[level as keyof typeof ALL_SEED_CURRICULA]
+        ALL_SEED_CURRICULA[level as keyof typeof ALL_SEED_CURRICULA] &&
+        ALL_SEED_CURRICULA[level as keyof typeof ALL_SEED_CURRICULA].length > 0
       ) {
         const seedList =
           ALL_SEED_CURRICULA[level as keyof typeof ALL_SEED_CURRICULA];
@@ -366,8 +371,7 @@ export class TutorService implements OnModuleInit {
         `Error querying curriculum for level ${level}, falling back to seed list: ${error instanceof Error ? error.message : String(error)}`,
       );
       const seedList =
-        ALL_SEED_CURRICULA[level as keyof typeof ALL_SEED_CURRICULA] ||
-        ALL_SEED_CURRICULA.N5;
+        ALL_SEED_CURRICULA[level as keyof typeof ALL_SEED_CURRICULA] || [];
       return seedList.map((t) => ({
         id: `seed-${t.level}-${t.unitIndex}-${t.lessonIndex}`,
         level: t.level,
