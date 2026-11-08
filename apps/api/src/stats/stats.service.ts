@@ -9,8 +9,21 @@ export class StatsService implements OnModuleInit {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   async onModuleInit() {
+    await this.ensureTablesExist();
+  }
+
+  async ensureTablesExist(): Promise<void> {
     try {
-      const driver = (this.prisma.db as any).$driver;
+      await this.prisma.connect();
+      const runtime = (this.prisma.db as any).runtime?.() as unknown as {
+        driver?: {
+          execute: (req: {
+            sql: string;
+            params: unknown[];
+          }) => Promise<unknown>;
+        };
+      };
+      const driver = runtime?.driver ?? (this.prisma.db as any).$driver;
       if (!driver?.execute) return;
 
       const statements = [
@@ -24,6 +37,7 @@ export class StatsService implements OnModuleInit {
           PRIMARY KEY ("id")
         )`,
         `CREATE INDEX IF NOT EXISTS "studyLog_userId_reviewedAt_idx" ON "public"."studyLog" ("userId", "reviewedAt")`,
+        `CREATE INDEX IF NOT EXISTS "studyLog_userId_idx" ON "public"."studyLog" ("userId")`,
         `ALTER TABLE "public"."studyLog" DISABLE ROW LEVEL SECURITY`,
       ];
 
@@ -42,14 +56,29 @@ export class StatsService implements OnModuleInit {
 
   async logReview(userId: string, cardId: string, rating: number): Promise<void> {
     try {
-      await this.prisma.db.orm.public.StudyLog.create({
-        userId,
-        cardId,
-        rating,
-        reviewedAt: new Date(),
-      });
+      if (typeof this.prisma?.db?.orm?.public?.StudyLog?.create === "function") {
+        await this.prisma.db.orm.public.StudyLog.create({
+          userId,
+          cardId,
+          rating,
+          reviewedAt: new Date(),
+        });
+      }
     } catch (err) {
       this.logger.warn(`Failed to log card review: ${err}`);
+      try {
+        await this.ensureTablesExist();
+        if (typeof this.prisma?.db?.orm?.public?.StudyLog?.create === "function") {
+          await this.prisma.db.orm.public.StudyLog.create({
+            userId,
+            cardId,
+            rating,
+            reviewedAt: new Date(),
+          });
+        }
+      } catch (retryErr) {
+        this.logger.warn(`Retry logging card review failed: ${retryErr}`);
+      }
     }
   }
 
@@ -57,16 +86,27 @@ export class StatsService implements OnModuleInit {
     const now = new Date();
 
     // 1. Fetch user's cards
-    let cards = await this.prisma.db.orm.public.Card.where({ userId }).all();
+    let cards: any[] = [];
+    try {
+      if (typeof this.prisma?.db?.orm?.public?.Card?.where === "function") {
+        cards = await this.prisma.db.orm.public.Card.where({ userId }).all();
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to fetch cards for stats: ${err}`);
+      cards = [];
+    }
 
     // If user has active decks, restrict memory breakdown to cards assigned to active decks
     try {
-      if (this.prisma?.db?.orm?.public?.Deck && this.prisma?.db?.orm?.public?.DeckCard) {
+      if (
+        typeof this.prisma?.db?.orm?.public?.Deck?.where === "function" &&
+        typeof this.prisma?.db?.orm?.public?.DeckCard?.where === "function"
+      ) {
         const userDecks = await this.prisma.db.orm.public.Deck.where({ userId }).all();
         if (Array.isArray(userDecks) && userDecks.length > 0) {
-          const deckIds = userDecks.map((d) => d.id);
+          const deckIds = userDecks.map((d: any) => d.id);
           const deckCardsLists = await Promise.all(
-            deckIds.map((deckId) =>
+            deckIds.map((deckId: string) =>
               this.prisma.db.orm.public.DeckCard.where({ deckId }).all()
             )
           );
@@ -79,7 +119,7 @@ export class StatsService implements OnModuleInit {
             }
           }
           if (activeCardIdSet.size > 0) {
-            cards = cards.filter((c) => activeCardIdSet.has(c.id));
+            cards = cards.filter((c: any) => activeCardIdSet.has(c.id));
           }
         }
       }
@@ -88,10 +128,27 @@ export class StatsService implements OnModuleInit {
     }
 
     // 2. Fetch user's study logs
-    let logs = await this.prisma.db.orm.public.StudyLog.where({ userId }).all();
+    let logs: any[] = [];
+    try {
+      if (typeof this.prisma?.db?.orm?.public?.StudyLog?.where === "function") {
+        logs = await this.prisma.db.orm.public.StudyLog.where({ userId }).all();
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to fetch study logs for stats: ${err}`);
+      // If table doesn't exist yet, attempt to ensure tables and retry once
+      try {
+        await this.ensureTablesExist();
+        if (typeof this.prisma?.db?.orm?.public?.StudyLog?.where === "function") {
+          logs = await this.prisma.db.orm.public.StudyLog.where({ userId }).all();
+        }
+      } catch (retryErr) {
+        this.logger.warn(`Retry fetching study logs failed, using fallback: ${retryErr}`);
+        logs = [];
+      }
+    }
 
     // Graceful backfill: if no logs exist yet, synthesize logs from cards with lastReviewedAt
-    if (logs.length === 0 && cards.some((c) => c.lastReviewedAt)) {
+    if ((!logs || logs.length === 0) && Array.isArray(cards) && cards.some((c) => c.lastReviewedAt)) {
       logs = cards
         .filter((c) => c.lastReviewedAt)
         .map((c) => ({
