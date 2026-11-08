@@ -36,6 +36,7 @@ import {
   Flame,
   Globe,
   Loader2,
+  RotateCcw,
 } from "lucide-react";
 
 export type { DeckCardFilterMode, DeckWorkspaceProps };
@@ -51,6 +52,7 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
     isCurrentDeckOwner,
     addDeckToMyDecks,
     setSelectedDeckId,
+    refreshAll,
   } = useFlashCards();
 
   const { speak } = useSpeech();
@@ -74,6 +76,17 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
   const [revealedCardIds, setRevealedCardIds] = useState<Set<string>>(
     new Set()
   );
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    if (!refreshAll) return;
+    setIsRefreshing(true);
+    try {
+      await refreshAll();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refreshAll]);
 
   const isAlreadyAdded = useMemo(() => {
     if (isCurrentDeckOwner || !deck) return false;
@@ -177,16 +190,29 @@ export function DeckWorkspace({ deck }: DeckWorkspaceProps) {
 
   return (
     <div className="w-full max-w-5xl flex-1 flex flex-col gap-4 sm:gap-6 justify-start p-3.5 sm:p-6 md:p-8 min-w-0 max-w-full overflow-x-hidden pb-safe">
-      {/* Back to Decks Button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setSelectedDeckId(null)}
-        className="self-start gap-1.5 text-xs text-muted-foreground hover:text-foreground -ml-2 -mb-1 cursor-pointer"
-      >
-        <ArrowLeft size={14} />
-        <span>Back to Decks</span>
-      </Button>
+      {/* Top Navigation Bar: Back to Decks on Left, Refresh on Right */}
+      <div className="flex items-center justify-between w-full min-w-0">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setSelectedDeckId(null)}
+          className="gap-1.5 text-xs text-muted-foreground hover:text-foreground -ml-2 -mb-1 cursor-pointer"
+        >
+          <ArrowLeft size={14} />
+          <span>Back to Decks</span>
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="text-xs gap-1.5 cursor-pointer"
+        >
+          <RotateCcw size={14} className={isRefreshing ? "animate-spin" : ""} />
+          <span>Refresh</span>
+        </Button>
+      </div>
 
       {/* Deck Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">

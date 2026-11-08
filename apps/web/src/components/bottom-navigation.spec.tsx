@@ -204,4 +204,39 @@ describe("BottomNavigation", () => {
     expect(screen.getByText("1")).toBeInTheDocument();
     expect(screen.getByTitle("1 card due for review")).toBeInTheDocument();
   });
+
+  it("does not render due badge when cards are reviewed and not due, even if studyStats is stale", () => {
+    const mockReviewedCard: Card = {
+      id: "card-reviewed-1",
+      jpText: "犬",
+      enText: "Dog",
+      interval: 1,
+      easeFactor: 2.5,
+      repetitions: 1,
+      lapses: 0,
+      nextReviewAt: new Date(Date.now() + 86400000).toISOString(), // Tomorrow (not due)
+      lastReviewedAt: new Date().toISOString(),
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    };
+
+    vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue(
+      createMockFlashcards({
+        cards: [mockReviewedCard],
+        getDueCards: () => [],
+        studyStats: {
+          streak: { current: 1, longest: 1, lastStudiedAt: null, isActiveToday: true },
+          today: { reviewsCount: 1, targetReviews: 20, retentionRate: 100 },
+          cardsBreakdown: { total: 1, dueToday: 1, newCards: 0, learning: 1, mature: 0 }, // Stale server value
+          ratingsDistribution: { again: 0, hard: 0, good: 1, easy: 0, totalReviews: 1 },
+          heatmap: [],
+          forecast: [],
+        },
+      })
+    );
+
+    render(<BottomNavigation />);
+
+    expect(screen.queryByTitle(/due for review/i)).not.toBeInTheDocument();
+  });
 });

@@ -418,4 +418,50 @@ describe("DeckGrid", () => {
 
     expect(screen.getByText("No decks found.")).toBeInTheDocument();
   });
+
+  describe("Refresh Button", () => {
+    it("renders Refresh button in header bar and triggers refreshAll on click", async () => {
+      const mockRefreshAll = vi.fn().mockResolvedValue(undefined);
+      vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue(
+        createMockFlashcards({
+          refreshAll: mockRefreshAll,
+        })
+      );
+
+      render(<DeckGrid onSelectDeck={mockSelectDeck} />);
+
+      const refreshBtn = screen.getByRole("button", { name: /Refresh/i });
+      expect(refreshBtn).toBeInTheDocument();
+
+      fireEvent.click(refreshBtn);
+      expect(mockRefreshAll).toHaveBeenCalledTimes(1);
+    });
+
+    it("disables Refresh button while refreshing", async () => {
+      let resolveRefresh: () => void = () => {};
+      const refreshPromise = new Promise<void>((resolve) => {
+        resolveRefresh = resolve;
+      });
+      const mockRefreshAll = vi.fn().mockReturnValue(refreshPromise);
+
+      vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue(
+        createMockFlashcards({
+          refreshAll: mockRefreshAll,
+        })
+      );
+
+      render(<DeckGrid onSelectDeck={mockSelectDeck} />);
+
+      const refreshBtn = screen.getByRole("button", { name: /Refresh/i });
+      fireEvent.click(refreshBtn);
+
+      expect(refreshBtn).toBeDisabled();
+
+      // Resolve the pending refresh
+      resolveRefresh();
+      await vi.waitFor(() => {
+        expect(refreshBtn).not.toBeDisabled();
+      });
+    });
+  });
 });

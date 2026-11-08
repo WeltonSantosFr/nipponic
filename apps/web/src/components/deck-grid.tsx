@@ -20,6 +20,7 @@ import {
   Trash2,
   Check,
   Sparkles,
+  RotateCcw,
 } from "lucide-react";
 
 const DeleteDeckModal = dynamic(
@@ -43,11 +44,23 @@ export function DeckGrid({ onSelectDeck, onCreateDeck }: DeckGridProps) {
     deleteDeck,
     startPlayingDeck,
     addDeckToMyDecks,
+    refreshAll,
   } = useFlashCards();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [deckToDelete, setDeckToDelete] = useState<Deck | null>(null);
   const [cloningDeckId, setCloningDeckId] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    if (!refreshAll) return;
+    setIsRefreshing(true);
+    try {
+      await refreshAll();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refreshAll]);
 
   const myDeckNormalizedNames = useMemo(
     () => new Set(decks.map((myDeck) => normalizeDeckName(myDeck.name))),
@@ -112,13 +125,26 @@ export function DeckGrid({ onSelectDeck, onCreateDeck }: DeckGridProps) {
           </p>
         </div>
 
-        <Button
-          onClick={handleCreateNew}
-          className="gap-1.5 cursor-pointer w-full sm:w-auto shrink-0 justify-center"
-        >
-          <Plus size={16} />
-          <span>New Deck</span>
-        </Button>
+        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="text-xs gap-1.5 cursor-pointer flex-1 sm:flex-initial justify-center"
+          >
+            <RotateCcw size={14} className={isRefreshing ? "animate-spin" : ""} />
+            <span>Refresh</span>
+          </Button>
+
+          <Button
+            onClick={handleCreateNew}
+            className="gap-1.5 cursor-pointer flex-1 sm:flex-initial shrink-0 justify-center text-xs sm:text-sm"
+          >
+            <Plus size={16} />
+            <span>New Deck</span>
+          </Button>
+        </div>
       </div>
 
       {/* Navigation Tabs & Search Controls */}
