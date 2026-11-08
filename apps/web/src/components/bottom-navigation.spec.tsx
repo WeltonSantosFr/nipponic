@@ -239,4 +239,66 @@ describe("BottomNavigation", () => {
 
     expect(screen.queryByTitle(/due for review/i)).not.toBeInTheDocument();
   });
+
+  it("displays 16 due (not 29) when 1 deck has 16 cards and 13 orphan cards exist", () => {
+    const deckCards = Array.from({ length: 16 }, (_, i) => ({
+      id: `deck-card-${i}`,
+      jpText: `Card ${i}`,
+      enText: `Translation ${i}`,
+      interval: 0,
+      easeFactor: 2.5,
+      repetitions: 0,
+      lapses: 0,
+      nextReviewAt: new Date(Date.now() - 1000).toISOString(),
+      lastReviewedAt: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    }));
+
+    const orphanCards = Array.from({ length: 13 }, (_, i) => ({
+      id: `orphan-card-${i}`,
+      jpText: `Orphan ${i}`,
+      enText: `Orphan Trans ${i}`,
+      interval: 0,
+      easeFactor: 2.5,
+      repetitions: 0,
+      lapses: 0,
+      nextReviewAt: new Date(Date.now() - 1000).toISOString(),
+      lastReviewedAt: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    }));
+
+    const singleDeck = {
+      id: "deck-1",
+      name: "Single Deck",
+      cards: deckCards,
+      isPublic: false,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    };
+
+    vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue(
+      createMockFlashcards({
+        cards: [...deckCards, ...orphanCards], // 29 cards total
+        decks: [singleDeck],
+        getDueCards: () => deckCards, // only 16 deck cards are due
+        studyStats: {
+          streak: { current: 1, longest: 1, lastStudiedAt: null, isActiveToday: true },
+          today: { reviewsCount: 0, targetReviews: 20, retentionRate: 100 },
+          cardsBreakdown: { total: 29, dueToday: 29, newCards: 29, learning: 0, mature: 0 },
+          ratingsDistribution: { again: 0, hard: 0, good: 0, easy: 0, totalReviews: 0 },
+          heatmap: [],
+          forecast: [],
+        },
+      })
+    );
+
+    render(<BottomNavigation />);
+
+    const badge = screen.getByTitle(/16 cards? due for review/i);
+    expect(badge).toBeInTheDocument();
+    expect(badge).toHaveTextContent("16");
+  });
 });
+

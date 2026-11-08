@@ -267,18 +267,21 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
         if (!deck) return [];
         return deck.cards.filter(isCardDue);
       }
-      const uniqueCards = new Map<string, Card>();
-      for (const card of cardsRef.current) {
-        uniqueCards.set(card.id, card);
-      }
-      for (const deck of decksRef.current) {
-        for (const card of deck.cards || []) {
-          if (!uniqueCards.has(card.id)) {
-            uniqueCards.set(card.id, card);
+      const hasDeckCards = decksRef.current.some(
+        (d) => (d.cards || []).length > 0
+      );
+      if (hasDeckCards) {
+        const deckCardsMap = new Map<string, Card>();
+        for (const deck of decksRef.current) {
+          for (const card of deck.cards || []) {
+            if (!deckCardsMap.has(card.id)) {
+              deckCardsMap.set(card.id, card);
+            }
           }
         }
+        return Array.from(deckCardsMap.values()).filter(isCardDue);
       }
-      return Array.from(uniqueCards.values()).filter(isCardDue);
+      return cardsRef.current.filter(isCardDue);
     },
     []
   );
@@ -667,13 +670,17 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
       if (!isAuthenticated || id.startsWith("temp-")) return true;
 
       try {
-        return await deleteDeckAction(id);
+        const success = await deleteDeckAction(id);
+        if (success) {
+          refreshStats().catch(() => {});
+        }
+        return success;
       } catch (err) {
         console.error("Error deleting deck:", err);
         return false;
       }
     },
-    [isAuthenticated, selectedDeckId, playingDeck?.id]
+    [isAuthenticated, selectedDeckId, playingDeck?.id, refreshStats]
   );
 
   const addCardsToDeck = useCallback(

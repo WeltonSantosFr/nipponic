@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
 import type {
   CreateDeckDto,
@@ -9,6 +9,8 @@ import type {
 
 @Injectable()
 export class DecksService {
+  private readonly logger = new Logger(DecksService.name);
+
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   private async populateDeckCards(
@@ -145,7 +147,42 @@ export class DecksService {
       throw new NotFoundException("Deck not found");
     }
 
-    return await this.prisma.db.orm.public.Deck.where({ id, userId }).delete();
+    const cardIdsToDelete: string[] = [];
+    try {
+      if (this.prisma?.db?.orm?.public?.DeckCard) {
+        const deckCards = await this.prisma.db.orm.public.DeckCard.where({
+          deckId: id,
+        }).all();
+        if (Array.isArray(deckCards)) {
+          const cardIds = deckCards.map((dc) => dc.cardId);
+          for (const cardId of cardIds) {
+            const otherDeckCards = await this.prisma.db.orm.public.DeckCard.where({
+              cardId,
+            }).all();
+            if (
+              Array.isArray(otherDeckCards) &&
+              otherDeckCards.every((dc) => dc.deckId === id)
+            ) {
+              cardIdsToDelete.push(cardId);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to inspect orphan cards on deck deletion: ${err}`);
+    }
+
+    const deleted = await this.prisma.db.orm.public.Deck.where({ id, userId }).delete();
+
+    for (const cardId of cardIdsToDelete) {
+      try {
+        await this.prisma.db.orm.public.Card.where({ id: cardId, userId }).delete();
+      } catch {
+        // Ignore card deletion errors if already removed
+      }
+    }
+
+    return deleted;
   }
 
   async addCards(userId: string, deckId: string, dto: AddCardsDto) {

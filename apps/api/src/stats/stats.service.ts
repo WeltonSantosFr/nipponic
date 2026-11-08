@@ -57,7 +57,35 @@ export class StatsService implements OnModuleInit {
     const now = new Date();
 
     // 1. Fetch user's cards
-    const cards = await this.prisma.db.orm.public.Card.where({ userId }).all();
+    let cards = await this.prisma.db.orm.public.Card.where({ userId }).all();
+
+    // If user has active decks, restrict memory breakdown to cards assigned to active decks
+    try {
+      if (this.prisma?.db?.orm?.public?.Deck && this.prisma?.db?.orm?.public?.DeckCard) {
+        const userDecks = await this.prisma.db.orm.public.Deck.where({ userId }).all();
+        if (Array.isArray(userDecks) && userDecks.length > 0) {
+          const deckIds = userDecks.map((d) => d.id);
+          const deckCardsLists = await Promise.all(
+            deckIds.map((deckId) =>
+              this.prisma.db.orm.public.DeckCard.where({ deckId }).all()
+            )
+          );
+          const activeCardIdSet = new Set<string>();
+          for (const list of deckCardsLists) {
+            if (Array.isArray(list)) {
+              for (const dc of list) {
+                activeCardIdSet.add(dc.cardId);
+              }
+            }
+          }
+          if (activeCardIdSet.size > 0) {
+            cards = cards.filter((c) => activeCardIdSet.has(c.id));
+          }
+        }
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to filter active deck cards for stats: ${err}`);
+    }
 
     // 2. Fetch user's study logs
     let logs = await this.prisma.db.orm.public.StudyLog.where({ userId }).all();

@@ -291,6 +291,46 @@ describe('DecksService', () => {
 
       await expect(service.delete('user_1', 'deck_1')).rejects.toThrow(NotFoundException);
     });
+
+    it('should delete cards that only belonged to the deleted deck', async () => {
+      const userId = 'user_1';
+      const id = 'deck_1';
+      const mockDeck = { id, userId, name: 'Deck to Delete' };
+
+      const deckFirstMock = vi.fn().mockResolvedValue(mockDeck);
+      const deckDeleteMock = vi.fn().mockResolvedValue(mockDeck);
+      prismaMock.db.orm.public.Deck.where.mockReturnValue({
+        first: deckFirstMock,
+        delete: deckDeleteMock,
+      });
+
+      const deckCardsMock = vi.fn().mockResolvedValue([
+        { deckId: 'deck_1', cardId: 'card_orphan' },
+      ]);
+      const otherDeckCardsMock = vi.fn().mockResolvedValue([
+        { deckId: 'deck_1', cardId: 'card_orphan' },
+      ]);
+      prismaMock.db.orm.public.DeckCard = {
+        where: vi.fn().mockImplementation(({ deckId, cardId }: any) => {
+          if (deckId) return { all: deckCardsMock };
+          if (cardId) return { all: otherDeckCardsMock };
+          return { all: vi.fn().mockResolvedValue([]) };
+        }),
+      };
+
+      const cardDeleteMock = vi.fn().mockResolvedValue({});
+      prismaMock.db.orm.public.Card = {
+        where: vi.fn().mockReturnValue({
+          delete: cardDeleteMock,
+        }),
+      };
+
+      const result = await service.delete(userId, id);
+
+      expect(result).toEqual(mockDeck);
+      expect(prismaMock.db.orm.public.Card.where).toHaveBeenCalledWith({ id: 'card_orphan', userId });
+      expect(cardDeleteMock).toHaveBeenCalled();
+    });
   });
 
   describe('addCards', () => {

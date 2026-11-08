@@ -446,16 +446,16 @@ describe("FlashCardsContext", () => {
   });
 
   describe("getDueCards", () => {
-    it("returns due cards for all cards or for a specific deck", async () => {
+    it("returns due cards for all cards in active decks or for a specific deck, excluding orphan cards", async () => {
       const pastDate = new Date(Date.now() - 10000).toISOString();
       const futureDate = new Date(Date.now() + 1000000).toISOString();
 
       const dueCard1 = makeMockCard("due-1", { nextReviewAt: pastDate });
       const futureCard = makeMockCard("future-1", { nextReviewAt: futureDate });
-      const dueCard2 = makeMockCard("due-2", { nextReviewAt: pastDate });
+      const orphanDueCard = makeMockCard("orphan-due", { nextReviewAt: pastDate });
 
       const deck = makeMockDeck("deck-due", [dueCard1, futureCard]);
-      vi.mocked(getCardsAction).mockResolvedValue([dueCard1, futureCard, dueCard2]);
+      vi.mocked(getCardsAction).mockResolvedValue([dueCard1, futureCard, orphanDueCard]);
       vi.mocked(getDecksAction).mockResolvedValue([deck]);
 
       const { result } = renderHook(() => useFlashCards(), {
@@ -466,14 +466,57 @@ describe("FlashCardsContext", () => {
         expect(result.current.cards).toHaveLength(3);
       });
 
+      // When decks with cards exist, getDueCards() only includes cards in active decks
       const allDue = result.current.getDueCards();
-      expect(allDue.map((c) => c.id)).toEqual(["due-1", "due-2"]);
+      expect(allDue.map((c) => c.id)).toEqual(["due-1"]);
 
       const deckDue = result.current.getDueCards("deck-due");
       expect(deckDue.map((c) => c.id)).toEqual(["due-1"]);
 
       const emptyDue = result.current.getDueCards("non-existent-deck");
       expect(emptyDue).toEqual([]);
+    });
+
+    it("returns due cards from cardsRef when no decks exist", async () => {
+      const pastDate = new Date(Date.now() - 10000).toISOString();
+      const standaloneDue = makeMockCard("standalone-due", { nextReviewAt: pastDate });
+
+      vi.mocked(getCardsAction).mockResolvedValue([standaloneDue]);
+      vi.mocked(getDecksAction).mockResolvedValue([]);
+
+      const { result } = renderHook(() => useFlashCards(), {
+        wrapper: ({ children }) => <FlashCardsProvider>{children}</FlashCardsProvider>,
+      });
+
+      await waitFor(() => {
+        expect(result.current.cards).toHaveLength(1);
+      });
+
+      const allDue = result.current.getDueCards();
+      expect(allDue.map((c) => c.id)).toEqual(["standalone-due"]);
+    });
+
+    it("returns empty array when all deck cards are reviewed even if orphan cards are due", async () => {
+      const pastDate = new Date(Date.now() - 10000).toISOString();
+      const futureDate = new Date(Date.now() + 1000000).toISOString();
+
+      const reviewedDeckCard = makeMockCard("deck-card-1", { nextReviewAt: futureDate });
+      const orphanDueCard = makeMockCard("orphan-card-1", { nextReviewAt: pastDate });
+
+      const deck = makeMockDeck("deck-reviewed", [reviewedDeckCard]);
+      vi.mocked(getCardsAction).mockResolvedValue([reviewedDeckCard, orphanDueCard]);
+      vi.mocked(getDecksAction).mockResolvedValue([deck]);
+
+      const { result } = renderHook(() => useFlashCards(), {
+        wrapper: ({ children }) => <FlashCardsProvider>{children}</FlashCardsProvider>,
+      });
+
+      await waitFor(() => {
+        expect(result.current.decks).toHaveLength(1);
+      });
+
+      const allDue = result.current.getDueCards();
+      expect(allDue).toEqual([]);
     });
 
     it("returns due cards from decksRef even if not in cardsRef", async () => {

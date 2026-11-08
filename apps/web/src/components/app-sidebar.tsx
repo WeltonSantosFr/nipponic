@@ -402,8 +402,14 @@ export function AppSidebar({
   );
 
   const cardsDueCount = useMemo(() => {
-    const hasLoadedCards =
-      cards.length > 0 || (decks || []).some((d) => (d.cards || []).length > 0);
+    const hasDecksWithCards = (decks || []).some(
+      (d) => (d.cards || []).length > 0
+    );
+    if (hasDecksWithCards) {
+      const list = getDueCards ? getDueCards() : [];
+      return list.length;
+    }
+    const hasLoadedCards = cards.length > 0;
     if (hasLoadedCards) {
       const list = getDueCards ? getDueCards() : cards.filter(isCardDue);
       return list.length;
@@ -411,7 +417,7 @@ export function AppSidebar({
     if (studyStats?.cardsBreakdown?.dueToday !== undefined) {
       return studyStats.cardsBreakdown.dueToday;
     }
-    const list = getDueCards ? getDueCards() : cards.filter(isCardDue);
+    const list = getDueCards ? getDueCards() : [];
     return list.length;
   }, [studyStats, getDueCards, cards, decks]);
 
