@@ -25,6 +25,7 @@ export function StatsWorkspace() {
   const { isAuthenticated } = useAuth();
   const {
     cards,
+    decks,
     studyStats,
     refreshStats,
     startPlayingDeck,
@@ -50,7 +51,18 @@ export function StatsWorkspace() {
     let mature = 0;
     let dueToday = 0;
 
-    for (const card of cards) {
+    const hasDecksWithCards = (decks || []).some(
+      (d) => (d.cards || []).length > 0
+    );
+    const activeCards = hasDecksWithCards
+      ? Array.from(
+          new Map(
+            (decks || []).flatMap((d) => (d.cards || []).map((c) => [c.id, c]))
+          ).values()
+        )
+      : cards;
+
+    for (const card of activeCards) {
       if (isCardDue(card)) dueToday++;
       const reps = card.repetitions ?? 0;
       const interval = card.interval ?? 0;
@@ -64,13 +76,13 @@ export function StatsWorkspace() {
     }
 
     return {
-      total: cards.length,
+      total: activeCards.length,
       newCards,
       learning,
       mature,
       dueToday,
     };
-  }, [cards]);
+  }, [cards, decks]);
 
   const stats: StudyStats = useMemo(() => {
     if (studyStats) return studyStats;

@@ -1121,5 +1121,124 @@ describe("AppSidebar - Views & Full Feature Suite", () => {
       fireEvent.click(myTabBtn);
       expect(mockSetActiveDeckTab).toHaveBeenCalledWith("my");
     });
+
+    it("displays 16 due (not 29) when 1 deck has 16 cards and 13 orphan cards exist", () => {
+      const deckCards = Array.from({ length: 16 }, (_, i) => ({
+        id: `deck-card-${i}`,
+        jpText: `Card ${i}`,
+        enText: `Translation ${i}`,
+        interval: 0,
+        easeFactor: 2.5,
+        repetitions: 0,
+        lapses: 0,
+        nextReviewAt: new Date(Date.now() - 1000).toISOString(),
+        lastReviewedAt: null,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      }));
+
+      const orphanCards = Array.from({ length: 13 }, (_, i) => ({
+        id: `orphan-card-${i}`,
+        jpText: `Orphan ${i}`,
+        enText: `Orphan Trans ${i}`,
+        interval: 0,
+        easeFactor: 2.5,
+        repetitions: 0,
+        lapses: 0,
+        nextReviewAt: new Date(Date.now() - 1000).toISOString(),
+        lastReviewedAt: null,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      }));
+
+      const singleDeck = {
+        id: "deck-1",
+        name: "Single Deck",
+        cards: deckCards,
+        isPublic: false,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      };
+
+      vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue({
+        ...getBaseFlashcards(),
+        activeSidebarView: "stats",
+        cards: [...deckCards, ...orphanCards], // 29 cards total
+        decks: [singleDeck],
+        getDueCards: () => deckCards, // only 16 deck cards are due
+        studyStats: {
+          streak: { current: 1, longest: 1, lastStudiedAt: null, isActiveToday: true },
+          today: { reviewsCount: 0, targetReviews: 20, retentionRate: 100 },
+          cardsBreakdown: { total: 29, dueToday: 29, newCards: 29, learning: 0, mature: 0 },
+          ratingsDistribution: { again: 0, hard: 0, good: 0, easy: 0, totalReviews: 0 },
+          heatmap: [],
+          forecast: [],
+        },
+      } as any);
+
+      render(
+        <SidebarProvider>
+          <AppSidebar selectedNoteId={null} onSelectNote={vi.fn()} />
+        </SidebarProvider>
+      );
+
+      // Verify the Cards badge shows "16 due"
+      expect(screen.getByText("16 due")).toBeInTheDocument();
+      // Verify bottom review button shows "Review 16 Due Cards"
+      expect(screen.getByText("Review 16 Due Cards")).toBeInTheDocument();
+    });
+
+    it("displays 'No cards due right now' when all deck cards are reviewed even if orphan cards exist", () => {
+      const reviewedDeckCards = Array.from({ length: 16 }, (_, i) => ({
+        id: `deck-card-${i}`,
+        jpText: `Card ${i}`,
+        enText: `Translation ${i}`,
+        interval: 1,
+        easeFactor: 2.5,
+        repetitions: 1,
+        lapses: 0,
+        nextReviewAt: new Date(Date.now() + 86400000).toISOString(),
+        lastReviewedAt: new Date().toISOString(),
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      }));
+
+      const singleDeck = {
+        id: "deck-1",
+        name: "Single Deck",
+        cards: reviewedDeckCards,
+        isPublic: false,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      };
+
+      vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue({
+        ...getBaseFlashcards(),
+        activeSidebarView: "stats",
+        cards: reviewedDeckCards,
+        decks: [singleDeck],
+        getDueCards: () => [],
+        studyStats: {
+          streak: { current: 1, longest: 1, lastStudiedAt: null, isActiveToday: true },
+          today: { reviewsCount: 16, targetReviews: 20, retentionRate: 100 },
+          cardsBreakdown: { total: 29, dueToday: 13, newCards: 0, learning: 16, mature: 0 },
+          ratingsDistribution: { again: 0, hard: 0, good: 16, easy: 0, totalReviews: 16 },
+          heatmap: [],
+          forecast: [],
+        },
+      } as any);
+
+      render(
+        <SidebarProvider>
+          <AppSidebar selectedNoteId={null} onSelectNote={vi.fn()} />
+        </SidebarProvider>
+      );
+
+      // Verify the badge is NOT rendered
+      expect(screen.queryByText(/due$/)).not.toBeInTheDocument();
+      // Verify bottom review button shows "No cards due right now"
+      expect(screen.getByText("No cards due right now")).toBeInTheDocument();
+    });
   });
 });
+

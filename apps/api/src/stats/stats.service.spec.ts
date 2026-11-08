@@ -116,6 +116,38 @@ describe("StatsService", () => {
       expect(stats.cardsBreakdown.learning).toBe(1);
       expect(stats.cardsBreakdown.mature).toBe(1);
     });
+
+    it("excludes orphan cards from cardsBreakdown when user decks exist", async () => {
+      const now = new Date();
+      const past = new Date(now.getTime() - 3600000);
+
+      const deckCards = [
+        { id: "c1", repetitions: 0, interval: 0, nextReviewAt: past },
+        { id: "c2", repetitions: 1, interval: 2, nextReviewAt: past },
+      ];
+      const orphanCard = { id: "c3", repetitions: 0, interval: 0, nextReviewAt: past };
+
+      prismaMock.db.orm.public.Card.where().all.mockResolvedValue([...deckCards, orphanCard]);
+      prismaMock.db.orm.public.StudyLog.where().all.mockResolvedValue([]);
+      prismaMock.db.orm.public.Deck = {
+        where: vi.fn().mockReturnValue({
+          all: vi.fn().mockResolvedValue([{ id: "deck_1", userId: "usr_1" }]),
+        }),
+      };
+      prismaMock.db.orm.public.DeckCard = {
+        where: vi.fn().mockReturnValue({
+          all: vi.fn().mockResolvedValue([
+            { deckId: "deck_1", cardId: "c1" },
+            { deckId: "deck_1", cardId: "c2" },
+          ]),
+        }),
+      };
+
+      const stats = await service.getDashboardStats("usr_1");
+
+      expect(stats.cardsBreakdown.total).toBe(2);
+      expect(stats.cardsBreakdown.dueToday).toBe(2);
+    });
   });
 
   describe("logReview", () => {
