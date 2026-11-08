@@ -253,7 +253,12 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
 
   const stopPlayingDeck = useCallback(() => {
     setPlayingDeck(null);
-  }, []);
+    if (isAuthenticated) {
+      refreshStats().catch((err) => {
+        console.error("Error refreshing study stats on stop playing deck:", err);
+      });
+    }
+  }, [isAuthenticated, refreshStats]);
 
   const getDueCards = useCallback(
     (deckId?: string): Card[] => {
@@ -262,7 +267,18 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
         if (!deck) return [];
         return deck.cards.filter(isCardDue);
       }
-      return cardsRef.current.filter(isCardDue);
+      const uniqueCards = new Map<string, Card>();
+      for (const card of cardsRef.current) {
+        uniqueCards.set(card.id, card);
+      }
+      for (const deck of decksRef.current) {
+        for (const card of deck.cards || []) {
+          if (!uniqueCards.has(card.id)) {
+            uniqueCards.set(card.id, card);
+          }
+        }
+      }
+      return Array.from(uniqueCards.values()).filter(isCardDue);
     },
     []
   );
@@ -422,6 +438,25 @@ export function FlashCardsProvider({ children }: { children: ReactNode }) {
         return {
           ...prevPlaying,
           cards: prevPlaying.cards.map((c) => (c.id === cardId ? updatedCard : c)),
+        };
+      });
+
+      // Optimistically update studyStats if present
+      setStudyStats((prevStats) => {
+        if (!prevStats) return prevStats;
+        const wasDue = isCardDue(card);
+        const isStillDue = isCardDue(updatedCard);
+        const dueDelta = wasDue && !isStillDue ? -1 : !wasDue && isStillDue ? 1 : 0;
+        return {
+          ...prevStats,
+          today: {
+            ...prevStats.today,
+            reviewsCount: prevStats.today.reviewsCount + 1,
+          },
+          cardsBreakdown: {
+            ...prevStats.cardsBreakdown,
+            dueToday: Math.max(0, prevStats.cardsBreakdown.dueToday + dueDelta),
+          },
         };
       });
 

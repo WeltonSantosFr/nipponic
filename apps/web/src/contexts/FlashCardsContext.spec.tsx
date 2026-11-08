@@ -424,6 +424,25 @@ describe("FlashCardsContext", () => {
       });
       expect(result.current.playingDeck).toBeNull();
     });
+
+    it("stopPlayingDeck refreshes studyStats when user finishes or cancels deck review", async () => {
+      vi.mocked(getStudyStatsAction).mockClear();
+      const { result } = renderHook(() => useFlashCards(), {
+        wrapper: ({ children }) => <FlashCardsProvider>{children}</FlashCardsProvider>,
+      });
+
+      const deck = makeMockDeck("play-deck-refresh");
+      act(() => {
+        result.current.startPlayingDeck(deck);
+      });
+
+      act(() => {
+        result.current.stopPlayingDeck();
+      });
+
+      expect(result.current.playingDeck).toBeNull();
+      expect(getStudyStatsAction).toHaveBeenCalled();
+    });
   });
 
   describe("getDueCards", () => {
@@ -455,6 +474,26 @@ describe("FlashCardsContext", () => {
 
       const emptyDue = result.current.getDueCards("non-existent-deck");
       expect(emptyDue).toEqual([]);
+    });
+
+    it("returns due cards from decksRef even if not in cardsRef", async () => {
+      const pastDate = new Date(Date.now() - 10000).toISOString();
+      const dueInDeckOnly = makeMockCard("deck-only-due", { nextReviewAt: pastDate });
+      const deck = makeMockDeck("deck-with-due", [dueInDeckOnly]);
+
+      vi.mocked(getCardsAction).mockResolvedValue([]);
+      vi.mocked(getDecksAction).mockResolvedValue([deck]);
+
+      const { result } = renderHook(() => useFlashCards(), {
+        wrapper: ({ children }) => <FlashCardsProvider>{children}</FlashCardsProvider>,
+      });
+
+      await waitFor(() => {
+        expect(result.current.decks).toHaveLength(1);
+      });
+
+      const allDue = result.current.getDueCards();
+      expect(allDue.map((c) => c.id)).toContain("deck-only-due");
     });
   });
 
@@ -900,6 +939,48 @@ describe("FlashCardsContext", () => {
       expect(saveCachedDecks).toHaveBeenCalled();
       expect(result.current.playingDeck?.cards[0]?.interval).toBe(6);
       expect(getStudyStatsAction).toHaveBeenCalled();
+    });
+
+    it("reviewCard optimistically updates studyStats dueToday and reviewsCount", async () => {
+      const pastDate = new Date(Date.now() - 10000).toISOString();
+      const card = makeMockCard("card-opt-due", { nextReviewAt: pastDate });
+      vi.mocked(getCardsAction).mockResolvedValue([card]);
+      const initialStats = {
+        streak: { current: 1, longest: 2, lastStudiedAt: null, isActiveToday: true },
+        today: { reviewsCount: 0, targetReviews: 20, retentionRate: 100 },
+        cardsBreakdown: { total: 1, dueToday: 1, newCards: 0, learning: 1, mature: 0 },
+        ratingsDistribution: { again: 0, hard: 0, good: 0, easy: 0, totalReviews: 0 },
+        heatmap: [],
+        forecast: [],
+      };
+      vi.mocked(getStudyStatsAction)
+        .mockResolvedValueOnce(initialStats)
+        .mockResolvedValue({
+          ...initialStats,
+          today: { ...initialStats.today, reviewsCount: 1 },
+          cardsBreakdown: { ...initialStats.cardsBreakdown, dueToday: 0 },
+        });
+      vi.mocked(reviewCardAction).mockResolvedValue({
+        ...card,
+        interval: 1,
+        repetitions: 1,
+        nextReviewAt: new Date(Date.now() + 86400000).toISOString(),
+      });
+
+      const { result } = renderHook(() => useFlashCards(), {
+        wrapper: ({ children }) => <FlashCardsProvider>{children}</FlashCardsProvider>,
+      });
+
+      await waitFor(() => {
+        expect(result.current.studyStats?.cardsBreakdown.dueToday).toBe(1);
+      });
+
+      await act(async () => {
+        await result.current.reviewCard("card-opt-due", 3 as ReviewRating);
+      });
+
+      expect(result.current.studyStats?.cardsBreakdown.dueToday).toBe(0);
+      expect(result.current.studyStats?.today.reviewsCount).toBe(1);
     });
 
     it("reviewCard handles offline mode by enqueueing review into IndexedDB queue", async () => {

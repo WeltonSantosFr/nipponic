@@ -402,12 +402,18 @@ export function AppSidebar({
   );
 
   const cardsDueCount = useMemo(() => {
+    const hasLoadedCards =
+      cards.length > 0 || (decks || []).some((d) => (d.cards || []).length > 0);
+    if (hasLoadedCards) {
+      const list = getDueCards ? getDueCards() : cards.filter(isCardDue);
+      return list.length;
+    }
     if (studyStats?.cardsBreakdown?.dueToday !== undefined) {
       return studyStats.cardsBreakdown.dueToday;
     }
     const list = getDueCards ? getDueCards() : cards.filter(isCardDue);
     return list.length;
-  }, [studyStats, getDueCards, cards]);
+  }, [studyStats, getDueCards, cards, decks]);
 
   const streakCount = useMemo(() => {
     return studyStats?.streak?.current ?? 0;
@@ -1006,7 +1012,7 @@ export function AppSidebar({
                 </div>
               </div>
 
-              {((studyStats?.cardsBreakdown.dueToday ?? cards.filter(isCardDue).length) > 0) ? (
+              {cardsDueCount > 0 ? (
                 <Button
                   size="sm"
                   onClick={() => {
@@ -1024,7 +1030,7 @@ export function AppSidebar({
                   className="w-full text-xs gap-1.5 cursor-pointer font-semibold shadow-xs"
                 >
                   <Flame size={13} className="fill-current" />
-                  <span>Review {studyStats?.cardsBreakdown.dueToday ?? cards.filter(isCardDue).length} Due Cards</span>
+                  <span>Review {cardsDueCount} Due Cards</span>
                 </Button>
               ) : (
                 <div className="text-center py-2 text-xs text-muted-foreground flex items-center justify-center gap-1.5">
