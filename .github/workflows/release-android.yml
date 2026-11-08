@@ -100,18 +100,18 @@ jobs:
             echo "release_name=${RELEASE_NAME}" >> "$GITHUB_OUTPUT"
 
             BUILD_TIME=$(date -u '+%Y-%m-%d %H:%M UTC')
-            cat << EOF > release_notes.md
-### 🚀 Nipponic Beta (Latest Rolling Release)
-
-This release is automatically compiled and updated on every deploy/push to \`main\`.
-
-- **Commit**: [\`${{ github.sha }}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
-- **Build Date**: ${BUILD_TIME}
-- **Direct Download**: [**nipponic-beta-latest.apk**](https://github.com/${{ github.repository }}/releases/download/beta-latest/nipponic-beta-latest.apk)
-
-> [!NOTE]
-> This is an automated debug build. You may need to allow "Install unknown apps" in your Android settings to install it.
-EOF
+            {
+              echo "### 🚀 Nipponic Beta (Latest Rolling Release)"
+              echo ""
+              echo "This release is automatically compiled and updated on every deploy/push to \`main\`."
+              echo ""
+              echo "- **Commit**: [\`${{ github.sha }}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})"
+              echo "- **Build Date**: ${BUILD_TIME}"
+              echo "- **Direct Download**: [**nipponic-beta-latest.apk**](https://github.com/${{ github.repository }}/releases/download/beta-latest/nipponic-beta-latest.apk)"
+              echo ""
+              echo "> [!NOTE]"
+              echo "> This is an automated debug build. You may need to allow \"Install unknown apps\" in your Android settings to install it."
+            } > release_notes.md
           else
             RELEASE_NAME="Nipponic Beta ${VERSION}"
             APK_NAME="nipponic-${VERSION}.apk"
@@ -123,6 +123,8 @@ EOF
       - name: Update rolling git tag
         if: steps.prepare_release.outputs.is_rolling == 'true'
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -f beta-latest
           git push -f origin beta-latest
 
