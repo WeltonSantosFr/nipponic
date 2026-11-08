@@ -8,7 +8,11 @@ describe("StatsService", () => {
 
   beforeEach(() => {
     prismaMock = {
+      connect: vi.fn().mockResolvedValue(undefined),
       db: {
+        runtime: vi.fn().mockReturnValue({
+          driver: { execute: vi.fn().mockResolvedValue({}) },
+        }),
         $driver: { execute: vi.fn().mockResolvedValue({}) },
         orm: {
           public: {
@@ -150,6 +154,118 @@ describe("StatsService", () => {
     });
   });
 
+  describe("schema initialization (ensureTablesExist)", () => {
+    it("connects and executes table and index creation SQL via runtime driver", async () => {
+      const executeMock = vi.fn().mockResolvedValue({});
+      prismaMock.db.runtime = vi.fn().mockReturnValue({
+        driver: { execute: executeMock },
+      });
+
+      await service.onModuleInit();
+
+      expect(prismaMock.connect).toHaveBeenCalled();
+      expect(executeMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sql: expect.stringContaining(`CREATE TABLE IF NOT EXISTS "public"."studyLog"`),
+        })
+      );
+    });
+
+    it("falls back to $driver if runtime().driver is not available", async () => {
+      const fallbackExecute = vi.fn().mockResolvedValue({});
+      prismaMock.db.runtime = vi.fn().mockReturnValue({});
+      prismaMock.db.$driver = { execute: fallbackExecute };
+
+      await service.ensureTablesExist();
+
+      expect(fallbackExecute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sql: expect.stringContaining(`CREATE TABLE IF NOT EXISTS "public"."studyLog"`),
+        })
+      );
+    });
+
+    it("gracefully catches errors when table verification fails", async () => {
+      prismaMock.db.runtime = vi.fn().mockImplementation(() => {
+        throw new Error("Connection failed");
+      });
+
+      // Should not throw
+      await expect(service.ensureTablesExist()).resolves.toBeUndefined();
+    });
+  });
+
+  describe("bug regression: relation public.studyLog does not exist", () => {
+    it("recovers and synthesizes logs from cards if StudyLog query throws relation error", async () => {
+      const past = new Date("2026-10-30T10:00:00Z");
+      const mockCards = [
+        {
+          id: "card_rev",
+          userId: "usr_1",
+          repetitions: 3,
+          interval: 10,
+          lastReviewedAt: past,
+          nextReviewAt: new Date("2026-11-05T10:00:00Z"),
+        },
+      ];
+
+      prismaMock.db.orm.public.Card.where().all.mockResolvedValue(mockCards);
+
+      // Simulate the exact error: relation "public.studyLog" does not exist
+      prismaMock.db.orm.public.StudyLog.where = vi.fn().mockReturnValue({
+        all: vi.fn().mockRejectedValue(new Error('SqlQueryError: relation "public.studyLog" does not exist')),
+      });
+
+      const stats = await service.getDashboardStats("usr_1");
+
+      expect(stats).toBeDefined();
+      expect(stats.cardsBreakdown.total).toBe(1);
+      // Logs were synthesized from lastReviewedAt
+      expect(stats.today.reviewsCount).toBe(0);
+      expect(stats.streak.longest).toBe(1);
+    });
+
+    it("retries querying StudyLog after calling ensureTablesExist on error", async () => {
+      prismaMock.db.orm.public.Card.where().all.mockResolvedValue([]);
+
+      let attempts = 0;
+      prismaMock.db.orm.public.StudyLog.where = vi.fn().mockReturnValue({
+        all: vi.fn().mockImplementation(() => {
+          attempts++;
+          if (attempts === 1) {
+            return Promise.reject(new Error('SqlQueryError: relation "public.studyLog" does not exist'));
+          }
+          return Promise.resolve([
+            { id: "log_1", rating: 4, reviewedAt: new Date() },
+          ]);
+        }),
+      });
+
+      const ensureSpy = vi.spyOn(service, "ensureTablesExist");
+      const stats = await service.getDashboardStats("usr_1");
+
+      expect(ensureSpy).toHaveBeenCalled();
+      expect(stats.today.reviewsCount).toBe(1);
+      expect(stats.ratingsDistribution.easy).toBe(1);
+    });
+
+    it("survives total database failure when fetching cards and study logs", async () => {
+      prismaMock.db.orm.public.Card.where = vi.fn().mockReturnValue({
+        all: vi.fn().mockRejectedValue(new Error("Connection reset")),
+      });
+      prismaMock.db.orm.public.StudyLog.where = vi.fn().mockReturnValue({
+        all: vi.fn().mockRejectedValue(new Error("Connection reset")),
+      });
+
+      const stats = await service.getDashboardStats("usr_1");
+
+      expect(stats).toBeDefined();
+      expect(stats.cardsBreakdown.total).toBe(0);
+      expect(stats.today.reviewsCount).toBe(0);
+      expect(stats.streak.current).toBe(0);
+    });
+  });
+
   describe("logReview", () => {
     it("persists review event into StudyLog", async () => {
       await service.logReview("usr_1", "card_1", 3);
@@ -161,6 +277,23 @@ describe("StatsService", () => {
           rating: 3,
         })
       );
+    });
+
+    it("attempts ensureTablesExist and retries if StudyLog.create fails initially", async () => {
+      let attempts = 0;
+      prismaMock.db.orm.public.StudyLog.create = vi.fn().mockImplementation(() => {
+        attempts++;
+        if (attempts === 1) {
+          return Promise.reject(new Error('relation "public.studyLog" does not exist'));
+        }
+        return Promise.resolve({ id: "log_retried" });
+      });
+
+      const ensureSpy = vi.spyOn(service, "ensureTablesExist");
+      await service.logReview("usr_1", "card_1", 3);
+
+      expect(ensureSpy).toHaveBeenCalled();
+      expect(attempts).toBe(2);
     });
   });
 });
