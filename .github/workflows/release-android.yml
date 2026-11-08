@@ -1,0 +1,83 @@
+name: Android Beta Release
+
+on:
+  push:
+    tags:
+      - 'v*-beta*'
+      - 'beta-*'
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version tag (e.g. v1.0.0-beta.1)'
+        required: true
+        default: 'v1.0.0-beta.1'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-apk:
+    name: Build & Publish Android Beta APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Sync Capacitor Android
+        run: pnpm --filter web cap:sync
+
+      - name: Build Android Debug APK
+        working-directory: apps/web/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Prepare Release Artifacts
+        id: prepare_release
+        run: |
+          VERSION="${{ github.ref_name }}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          fi
+          echo "tag_name=${VERSION}" >> "$GITHUB_OUTPUT"
+          
+          mkdir -p release-artifacts
+          cp apps/web/android/app/build/outputs/apk/debug/app-debug.apk "release-artifacts/nipponic-${VERSION}.apk"
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.prepare_release.outputs.tag_name }}
+          name: Nipponic Beta ${{ steps.prepare_release.outputs.tag_name }}
+          prerelease: true
+          draft: false
+          files: release-artifacts/*.apk
+          generate_release_notes: true
