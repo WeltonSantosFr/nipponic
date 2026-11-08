@@ -2,6 +2,12 @@ name: Android Beta Release
 
 on:
   push:
+    branches:
+      - main
+    paths:
+      - 'apps/web/**'
+      - 'packages/**'
+      - '.github/workflows/release-android.yml'
     tags:
       - 'v*-beta*'
       - 'beta-*'
@@ -9,9 +15,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version tag (e.g. v1.0.0-beta.1)'
-        required: true
-        default: 'v1.0.0-beta.1'
+        description: 'Release version tag (use "beta-latest" for rolling release)'
+        required: false
+        default: 'beta-latest'
 
 permissions:
   contents: write
@@ -29,6 +35,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -66,21 +74,66 @@ jobs:
         id: prepare_release
         run: |
           VERSION="${{ github.ref_name }}"
+          IS_ROLLING="false"
+
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            VERSION="beta-latest"
+            IS_ROLLING="true"
+          fi
+
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             VERSION="${{ inputs.version }}"
+            if [ "$VERSION" = "beta-latest" ]; then
+              IS_ROLLING="true"
+            fi
           fi
+
           echo "tag_name=${VERSION}" >> "$GITHUB_OUTPUT"
-          
+          echo "is_rolling=${IS_ROLLING}" >> "$GITHUB_OUTPUT"
+
           mkdir -p release-artifacts
-          cp apps/web/android/app/build/outputs/apk/debug/app-debug.apk "release-artifacts/nipponic-${VERSION}.apk"
+
+          if [ "$IS_ROLLING" = "true" ]; then
+            RELEASE_NAME="Nipponic Beta (Latest Build)"
+            APK_NAME="nipponic-beta-latest.apk"
+            cp apps/web/android/app/build/outputs/apk/debug/app-debug.apk "release-artifacts/${APK_NAME}"
+            echo "release_name=${RELEASE_NAME}" >> "$GITHUB_OUTPUT"
+
+            BUILD_TIME=$(date -u '+%Y-%m-%d %H:%M UTC')
+            cat << EOF > release_notes.md
+### 🚀 Nipponic Beta (Latest Rolling Release)
+
+This release is automatically compiled and updated on every deploy/push to \`main\`.
+
+- **Commit**: [\`${{ github.sha }}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+- **Build Date**: ${BUILD_TIME}
+- **Direct Download**: [**nipponic-beta-latest.apk**](https://github.com/${{ github.repository }}/releases/download/beta-latest/nipponic-beta-latest.apk)
+
+> [!NOTE]
+> This is an automated debug build. You may need to allow "Install unknown apps" in your Android settings to install it.
+EOF
+          else
+            RELEASE_NAME="Nipponic Beta ${VERSION}"
+            APK_NAME="nipponic-${VERSION}.apk"
+            cp apps/web/android/app/build/outputs/apk/debug/app-debug.apk "release-artifacts/${APK_NAME}"
+            echo "release_name=${RELEASE_NAME}" >> "$GITHUB_OUTPUT"
+            touch release_notes.md
+          fi
+
+      - name: Update rolling git tag
+        if: steps.prepare_release.outputs.is_rolling == 'true'
+        run: |
+          git tag -f beta-latest
+          git push -f origin beta-latest
 
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.prepare_release.outputs.tag_name }}
           target_commitish: ${{ github.sha }}
-          name: Nipponic Beta ${{ steps.prepare_release.outputs.tag_name }}
+          name: ${{ steps.prepare_release.outputs.release_name }}
+          body_path: ${{ steps.prepare_release.outputs.is_rolling == 'true' && 'release_notes.md' || '' }}
           prerelease: true
           draft: false
           files: release-artifacts/*.apk
-          generate_release_notes: true
+          generate_release_notes: ${{ steps.prepare_release.outputs.is_rolling != 'true' }}
