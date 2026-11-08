@@ -48,8 +48,10 @@ jobs:
           distribution: 'zulu'
           java-version: '21'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Setup Android SDK licenses
+        run: |
+          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
 
       - name: Sync Capacitor Android
         run: pnpm --filter web cap:sync
@@ -58,7 +60,7 @@ jobs:
         working-directory: apps/web/android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --no-daemon
 
       - name: Prepare Release Artifacts
         id: prepare_release
@@ -76,6 +78,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.prepare_release.outputs.tag_name }}
+          target_commitish: ${{ github.sha }}
           name: Nipponic Beta ${{ steps.prepare_release.outputs.tag_name }}
           prerelease: true
           draft: false
