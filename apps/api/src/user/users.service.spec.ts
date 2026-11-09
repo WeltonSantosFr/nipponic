@@ -43,7 +43,7 @@ describe('UsersService', () => {
     const result = await service.findOne('usr_123');
 
     // Assert
-    expect(result).toEqual(mockUser);
+    expect(result).toEqual({ ...mockUser, role: 'USER' });
     expect(prismaMock.db.orm.public.User.first).toHaveBeenCalledWith({ id: 'usr_123' });
   });
 
@@ -59,6 +59,7 @@ describe('UsersService', () => {
       username: 'sakura',
       email: 'sakura@nipponic.com',
       password: 'hashed_plainPassword123',
+      role: 'USER',
     };
     prismaMock.db.orm.public.User.create.mockResolvedValue(createdUser);
 
@@ -66,11 +67,12 @@ describe('UsersService', () => {
     const result = await service.create(createUserDto);
 
     // Assert
-    expect(result).toEqual({ id: createdUser.id, username: createdUser.username, email: createdUser.email });
+    expect(result).toEqual({ id: createdUser.id, username: createdUser.username, email: createdUser.email, role: 'USER' });
     expect(prismaMock.db.orm.public.User.create).toHaveBeenCalledWith({
       username: createUserDto.username,
       email: createUserDto.email,
       password: 'hashed_plainPassword123',
+      role: 'USER',
     });
   });
 

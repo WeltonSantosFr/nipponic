@@ -63,9 +63,39 @@ describe('AuthService', () => {
         sub: mockUser.id,
         username: mockUser.username,
         email: mockUser.email,
+        role: "USER",
       },
       { expiresIn: '24h' },
     );
+  });
+
+  it('login - should assign ADMIN role when email matches ADMIN_EMAILS', async () => {
+    process.env.ADMIN_EMAILS = "admin@example.com, super@example.com";
+    const adminUser = {
+      id: 'admin_1',
+      username: 'admin',
+      email: 'admin@example.com',
+      password: 'hashed_password',
+      role: 'USER',
+    };
+    prismaMock.db.orm.public.User.first.mockResolvedValue(adminUser);
+    const updateMock = vi.fn().mockResolvedValue({ ...adminUser, role: 'ADMIN' });
+    prismaMock.db.orm.public.User.where = vi.fn().mockReturnValue({ update: updateMock });
+    vi.mocked(bcrypt.compareSync).mockReturnValue(true as never);
+    jwtServiceMock.signAsync.mockResolvedValue('admin_token_123');
+
+    const result = await service.login({ email: 'admin@example.com', password: 'password123' });
+    expect(result).toEqual({ access_token: 'admin_token_123' });
+    expect(jwtServiceMock.signAsync).toHaveBeenCalledWith(
+      {
+        sub: adminUser.id,
+        username: adminUser.username,
+        email: adminUser.email,
+        role: "ADMIN",
+      },
+      { expiresIn: '24h' },
+    );
+    delete process.env.ADMIN_EMAILS;
   });
 
   it('login - should throw UnauthorizedException when user does not exist', async () => {

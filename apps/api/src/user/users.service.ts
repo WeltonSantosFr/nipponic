@@ -9,6 +9,7 @@ import {
 import { PrismaService } from "../prisma.service";
 import type { CreateUserDto, UpdateUserDto } from "./users.dto";
 import { compareSync, hashSync } from "bcrypt";
+import { isConfiguredAdminEmail } from "../auth/auth.service";
 
 /**
  * Removes credential material from a user record before it leaves the service layer.
@@ -33,10 +34,12 @@ export class UsersService {
       throw new ConflictException("User with this email already exists");
     }
 
+    const isConfiguredAdmin = isConfiguredAdminEmail(data.email);
     const newUser = await this.prisma.db.orm.public.User.create({
       username: data.username,
       email: data.email,
       password: hashSync(data.password, 10),
+      role: isConfiguredAdmin ? "ADMIN" : "USER",
     });
     return toPublicUser(newUser);
   }
@@ -46,6 +49,9 @@ export class UsersService {
     if (!user) return null;
 
     const publicUser = toPublicUser(user);
+    const userRole = (user as { role?: string }).role;
+    const isConfiguredAdmin = isConfiguredAdminEmail(user.email);
+    const resolvedRole = userRole === "ADMIN" || isConfiguredAdmin ? "ADMIN" : "USER";
 
     if (user.githubUsername) {
       const sponsor = await this.prisma.db.orm.public.Sponsor.first({
@@ -54,6 +60,7 @@ export class UsersService {
       if (sponsor) {
         return {
           ...publicUser,
+          role: resolvedRole,
           isSupporter: true,
           isActiveSupporter: sponsor.isActive,
           tierName: sponsor.tierName,
@@ -61,7 +68,10 @@ export class UsersService {
       }
     }
 
-    return publicUser;
+    return {
+      ...publicUser,
+      role: resolvedRole,
+    };
   }
 
   async update(id: string, body: Partial<UpdateUserDto>) {

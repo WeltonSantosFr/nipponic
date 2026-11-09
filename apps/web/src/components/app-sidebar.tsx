@@ -22,6 +22,10 @@ const SettingsModal = dynamic(
   () => import("@/components/settings-modal").then((mod) => mod.SettingsModal),
   { ssr: false }
 );
+const FeedbackModal = dynamic(
+  () => import("@/components/feedback-modal").then((mod) => mod.FeedbackModal),
+  { ssr: false }
+);
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,10 +62,12 @@ import {
   Heart,
   Layers,
   Loader2,
+  MessageSquarePlus,
   Play,
   Plus,
   Search,
   Settings,
+  ShieldAlert,
   Sparkles,
   Trash2,
   TrendingUp,
@@ -317,6 +323,7 @@ export function AppSidebar({
   const [authModalMode, setAuthModalMode] = useState<AuthMode>("login");
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState<boolean>(false);
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
   const [deckToDelete, setDeckToDelete] = useState<Deck | null>(null);
 
@@ -1114,6 +1121,34 @@ export function AppSidebar({
           <Heart size={16} className="fill-rose-500/20 text-rose-500" />
           <span>Support Nipponic 💖</span>
         </SidebarMenuButton>
+
+        {user?.role === "ADMIN" && (
+          <SidebarMenuButton
+            render={<Link href="/admin" />}
+            className="cursor-pointer text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 hover:bg-amber-500/10 transition-colors"
+          >
+            <ShieldAlert size={16} />
+            <span>Admin Dashboard</span>
+          </SidebarMenuButton>
+        )}
+
+        <SidebarMenuButton
+          onClick={() => setIsFeedbackModalOpen(true)}
+          className="cursor-pointer"
+        >
+          <MessageSquarePlus size={16} />
+          <span>Feedback & Support</span>
+        </SidebarMenuButton>
+        {isFeedbackModalOpen && (
+          <FeedbackModal
+            isOpen={isFeedbackModalOpen}
+            onClose={() => setIsFeedbackModalOpen(false)}
+            onOpenLogin={() => {
+              setAuthModalMode("login");
+              setIsModalOpen(true);
+            }}
+          />
+        )}
 
         <SidebarMenuButton
           onClick={() => setIsSettingsModalOpen(true)}
