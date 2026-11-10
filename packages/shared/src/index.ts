@@ -4,10 +4,14 @@ import { z } from "zod";
 // User & Auth Contracts
 // ==========================================
 
+export const UserRoleSchema = z.enum(["USER", "ADMIN"]);
+export type UserRole = z.infer<typeof UserRoleSchema>;
+
 export const JwtPayloadSchema = z.object({
   sub: z.string(),
   username: z.string(),
   email: z.string(),
+  role: UserRoleSchema.optional(),
 });
 export type JwtPayload = z.infer<typeof JwtPayloadSchema>;
 export type UserPayload = JwtPayload;
@@ -31,6 +35,7 @@ export const UserSchema = z.object({
   id: z.string(),
   username: z.string(),
   email: z.string(),
+  role: UserRoleSchema.default("USER"),
   githubUsername: z.string().nullable().optional(),
   isSupporter: z.boolean().optional(),
   isActiveSupporter: z.boolean().optional(),
@@ -336,7 +341,7 @@ export const DeckCardFilterModeSchema = z.enum(["all", "due"]);
 export type DeckCardFilterMode = z.infer<typeof DeckCardFilterModeSchema>;
 export type CardFilterMode = DeckCardFilterMode;
 
-export const SettingsTabSchema = z.enum(["glossary", "flashcards", "appearance", "notifications"]);
+export const SettingsTabSchema = z.enum(["glossary", "flashcards", "appearance", "notifications", "feedback"]);
 export type SettingsTab = z.infer<typeof SettingsTabSchema>;
 export type SettingsTabMode = SettingsTab;
 
@@ -924,6 +929,68 @@ export const StudyStatsSchema = z.object({
   forecast: z.array(ForecastDaySchema),
 });
 export type StudyStats = z.infer<typeof StudyStatsSchema>;
+
+// ==========================================
+// Feedback & Bug Reports (Tickets)
+// ==========================================
+
+export const FeedbackTypeSchema = z.enum(["BUG", "SUGGESTION", "FEEDBACK"]);
+export type FeedbackType = z.infer<typeof FeedbackTypeSchema>;
+
+export const FeedbackStatusSchema = z.enum(["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"]);
+export type FeedbackStatus = z.infer<typeof FeedbackStatusSchema>;
+
+export const ClientMetadataSchema = z.object({
+  browser: z.string().optional(),
+  os: z.string().optional(),
+  viewport: z.string().optional(),
+  pathname: z.string().optional(),
+  userAgent: z.string().optional(),
+}).passthrough();
+export type ClientMetadata = z.infer<typeof ClientMetadataSchema>;
+
+export const CreateFeedbackTicketSchema = z.object({
+  type: FeedbackTypeSchema,
+  title: z.string().trim().min(3, "Title must be at least 3 characters").max(120, "Title cannot exceed 120 characters"),
+  description: z.string().trim().min(10, "Description must be at least 10 characters").max(3000, "Description cannot exceed 3000 characters"),
+  clientMetadata: ClientMetadataSchema.optional(),
+});
+export type CreateFeedbackTicketDto = z.infer<typeof CreateFeedbackTicketSchema>;
+
+export const UpdateFeedbackTicketSchema = z.object({
+  status: FeedbackStatusSchema.optional(),
+  adminNotes: z.string().max(2000, "Notes cannot exceed 2000 characters").nullable().optional(),
+});
+export type UpdateFeedbackTicketDto = z.infer<typeof UpdateFeedbackTicketSchema>;
+
+export const FeedbackTicketAuthorSchema = z.object({
+  id: z.string(),
+  username: z.string(),
+  email: z.string(),
+});
+export type FeedbackTicketAuthor = z.infer<typeof FeedbackTicketAuthorSchema>;
+
+export const FeedbackTicketSchema = z.object({
+  id: z.string(),
+  type: FeedbackTypeSchema,
+  status: FeedbackStatusSchema,
+  title: z.string(),
+  description: z.string(),
+  clientMetadata: ClientMetadataSchema.nullable().optional(),
+  adminNotes: z.string().nullable().optional(),
+  userId: z.string(),
+  user: FeedbackTicketAuthorSchema.optional(),
+  createdAt: z.string().or(z.date()),
+  updatedAt: z.string().or(z.date()),
+});
+export type FeedbackTicket = z.infer<typeof FeedbackTicketSchema>;
+
+export const FeedbackListQuerySchema = z.object({
+  status: FeedbackStatusSchema.optional(),
+  type: FeedbackTypeSchema.optional(),
+  search: z.string().optional(),
+});
+export type FeedbackListQueryDto = z.infer<typeof FeedbackListQuerySchema>;
 
 export * from "./furigana";
 

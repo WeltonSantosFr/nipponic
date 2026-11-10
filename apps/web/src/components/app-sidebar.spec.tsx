@@ -1239,6 +1239,44 @@ describe("AppSidebar - Views & Full Feature Suite", () => {
       // Verify bottom review button shows "No cards due right now"
       expect(screen.getByText("No cards due right now")).toBeInTheDocument();
     });
+
+    it("renders Feedback & Support button and opens feedback modal", () => {
+      render(
+        <SidebarProvider>
+          <AppSidebar selectedNoteId={null} onSelectNote={vi.fn()} />
+        </SidebarProvider>
+      );
+
+      const feedbackBtn = screen.getByText("Feedback & Support");
+      expect(feedbackBtn).toBeInTheDocument();
+      fireEvent.click(feedbackBtn);
+    });
+
+    it("renders Admin Dashboard link only when user has ADMIN role", () => {
+      vi.spyOn(AuthContextModule, "useAuth").mockReturnValue({
+        user: {
+          sub: "admin-1",
+          email: "admin@example.com",
+          username: "adminUser",
+          role: "ADMIN",
+        },
+        isAuthenticated: true,
+        login: vi.fn(),
+        logout: vi.fn(),
+        isWakingServer: false,
+        hasInitialToken: true,
+        setIsWakingServer: vi.fn(),
+        setUser: vi.fn(),
+      });
+
+      render(
+        <SidebarProvider>
+          <AppSidebar selectedNoteId={null} onSelectNote={vi.fn()} />
+        </SidebarProvider>
+      );
+
+      expect(screen.getByText("Admin Dashboard")).toBeInTheDocument();
+    });
   });
 });
 

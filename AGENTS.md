@@ -87,3 +87,20 @@ These rules are mandatory for all AI agents and developers working on the Nippon
   - Headings, blockquotes, lists, and paragraphs in user-facing content or Markdown renderers must include `break-words min-w-0`.
   - Tables and code blocks must always be enclosed in isolated horizontal scroll containers (`overflow-x-auto rounded-xl border border-border/80 bg-card min-w-0 max-w-full`) so they never force the page to scroll horizontally.
 
+---
+
+## 6. Database Migrations & Schema Synchronization (CRITICAL RULE)
+
+> **MANDATORY**: Whenever changes are made to `contract.prisma` or database models, migrations MUST be planned, committed, and executed against the local database before completing the task.
+
+- **Migration Workflow**:
+  1. Emit contract artifacts: `pnpm --filter api contract:emit`.
+  2. Plan migration from the latest on-disk migration: `pnpm --filter api exec prisma migration plan --from <latest_migration_dir> --name <migration_name>`.
+  3. Execute migration on local database: `pnpm --filter api migrate`.
+  4. Verify alignment: `pnpm --filter api migration:status` (must show `✔ Up to date`).
+- **File Tracking**:
+  - Always track and commit the resulting `apps/api/migrations/app/<timestamp>_<name>/` and snapshot files in `apps/api/migrations/snapshots/`.
+- **Handoff Requirement**:
+  - In task summaries or merge/PR requests, always explicitly state whether migrations were executed locally and specify the command (`pnpm --filter api migrate`) for deployment or staging environments.
+
+

@@ -9,14 +9,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { useGlossaryRules } from "@/services/glossary";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
 import { useSpeech } from "@/hooks/use-speech";
 import { Card, SettingsTab, SettingsModalProps } from "@nipponic/shared";
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
+import { FeedbackModal } from "@/components/feedback-modal";
 import {
   BookMarked,
   Pencil,
@@ -35,6 +39,10 @@ import {
   Clock,
   Sparkles,
   AlertCircle,
+  Bug,
+  Lightbulb,
+  MessageSquarePlus,
+  ShieldAlert,
 } from "lucide-react";
 import {
   getNotificationSettings,
@@ -96,6 +104,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 isActive={activeTab === "notifications"}
                 onClick={() => setActiveTab("notifications")}
               />
+              <FeedbackTabButton
+                isActive={activeTab === "feedback"}
+                onClick={() => setActiveTab("feedback")}
+              />
             </nav>
           </div>
         </div>
@@ -106,6 +118,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           {activeTab === "flashcards" && <FlashCardsSettingsSection />}
           {activeTab === "appearance" && <AppearanceSettingsSection />}
           {activeTab === "notifications" && <NotificationsSettingsSection />}
+          {activeTab === "feedback" && <FeedbackSettingsSection />}
         </main>
       </DialogContent>
     </Dialog>
@@ -1101,4 +1114,119 @@ function NotificationsSettingsSection() {
     </div>
   );
 }
+
+function FeedbackTabButton({
+  isActive,
+  onClick,
+}: {
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      role="tab"
+      aria-selected={isActive}
+      onClick={onClick}
+      className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 ${
+        isActive
+          ? "bg-primary text-primary-foreground shadow-xs"
+          : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      <MessageSquarePlus size={14} />
+      <span>Feedback</span>
+    </button>
+  );
+}
+
+function FeedbackSettingsSection() {
+  const { user } = useAuth();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  return (
+    <div className="space-y-6 max-w-2xl min-w-0">
+      <div>
+        <h2 className="text-sm sm:text-base font-bold text-foreground">
+          Feedback & Support
+        </h2>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Help us improve Nipponic. We review every bug report and feature idea from learners.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
+        <div className="p-4 rounded-xl border bg-card/60 space-y-2 min-w-0">
+          <div className="flex items-center gap-2 text-red-600 dark:text-red-400 font-semibold text-xs sm:text-sm">
+            <Bug size={16} />
+            <span>Report a Problem</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Something not working? Let us know with details and steps so we can resolve it.
+          </p>
+        </div>
+
+        <div className="p-4 rounded-xl border bg-card/60 space-y-2 min-w-0">
+          <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-semibold text-xs sm:text-sm">
+            <Lightbulb size={16} />
+            <span>Suggest a Feature</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Have an idea for lessons, SRS, or cards? We’d love to learn your suggestions.
+          </p>
+        </div>
+      </div>
+
+      <div className="p-4 rounded-xl border bg-muted/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
+        <div className="min-w-0">
+          <h4 className="text-xs sm:text-sm font-semibold text-foreground">
+            Submit a New Ticket
+          </h4>
+          <p className="text-xs text-muted-foreground">
+            Open the ticket creation form with optional device diagnostics.
+          </p>
+        </div>
+
+        <Button
+          onClick={() => setIsModalOpen(true)}
+          className="rounded-xl gap-2 font-medium shrink-0 w-full sm:w-auto"
+        >
+          <MessageSquarePlus size={16} />
+          Send Feedback
+        </Button>
+      </div>
+
+      {user?.role === "ADMIN" && (
+        <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-semibold text-xs sm:text-sm">
+              <ShieldAlert size={16} />
+              <span>Administrator Access</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Review and manage incoming community tickets in the Kanban dashboard.
+            </p>
+          </div>
+
+          <Link
+            href="/admin"
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "rounded-xl border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 shrink-0 w-full sm:w-auto",
+            )}
+          >
+            Open Admin Kanban
+          </Link>
+        </div>
+      )}
+
+      {isModalOpen && (
+        <FeedbackModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
 

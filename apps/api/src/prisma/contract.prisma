@@ -6,6 +6,7 @@ model User {
   email          String   @unique
   password       String
   githubUsername String?  @unique
+  role           String   @default("USER")
   
   notes          Note[]
   cards          Card[]
@@ -13,6 +14,7 @@ model User {
   sponsorships   Sponsor[]
   lessonProgress UserLessonProgress[]
   studyLogs      StudyLog[]
+  feedbackTickets FeedbackTicket[]
   
   createdAt      DateTime @default(now())
   updatedAt      temporal.updatedAt()
@@ -184,4 +186,20 @@ model StudyLog {
   reviewedAt DateTime @default(now())
   
   createdAt  DateTime @default(now())
+}
+
+model FeedbackTicket {
+  id             String   @id @default(uuid())
+  type           String   // BUG, SUGGESTION, FEEDBACK
+  status         String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  title          String
+  description    String
+  clientMetadata Json?
+  adminNotes     String?
+  
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt      DateTime @default(now())
+  updatedAt      temporal.updatedAt()
 }
