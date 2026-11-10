@@ -1,0 +1,284 @@
+[
+  {
+    "id": "table.feedbackTicket",
+    "label": "Create table \"feedbackTicket\"",
+    "summary": "Creates table \"feedbackTicket\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "feedbackTicket"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"feedbackTicket\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"feedbackTicket\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"feedbackTicket\"",
+        "sql": "CREATE TABLE \"public\".\"feedbackTicket\" (\n  \"adminNotes\" text,\n  \"clientMetadata\" json,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"description\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"status\" text DEFAULT 'OPEN' NOT NULL,\n  \"title\" text NOT NULL,\n  \"type\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"feedbackTicket\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"feedbackTicket\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.studyLog",
+    "label": "Create table \"studyLog\"",
+    "summary": "Creates table \"studyLog\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "studyLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"studyLog\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"studyLog\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"studyLog\"",
+        "sql": "CREATE TABLE \"public\".\"studyLog\" (\n  \"cardId\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"rating\" int4 NOT NULL,\n  \"reviewedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"userId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"studyLog\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"studyLog\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.user.role",
+    "label": "Add column \"role\" to \"user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "role",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"role\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "role"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"role\"",
+        "sql": "ALTER TABLE \"public\".\"user\" ADD COLUMN \"role\" text DEFAULT 'USER' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"role\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "role"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.feedbackTicket.feedbackTicket_userId_idx_a489d58a",
+    "label": "Create index \"feedbackTicket_userId_idx_a489d58a\" on \"feedbackTicket\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "feedbackTicket_userId_idx_a489d58a",
+        "table": "feedbackTicket"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"feedbackTicket_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"feedbackTicket_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"feedbackTicket_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"feedbackTicket_userId_idx_a489d58a\" ON \"public\".\"feedbackTicket\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"feedbackTicket_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"feedbackTicket_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.studyLog.studyLog_userId_idx_a489d58a",
+    "label": "Create index \"studyLog_userId_idx_a489d58a\" on \"studyLog\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "studyLog_userId_idx_a489d58a",
+        "table": "studyLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"studyLog_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"studyLog_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"studyLog_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"studyLog_userId_idx_a489d58a\" ON \"public\".\"studyLog\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"studyLog_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"studyLog_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.feedbackTicket.feedbackTicket_userId_fkey",
+    "label": "Add foreign key \"feedbackTicket_userId_fkey\" on \"feedbackTicket\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "feedbackTicket_userId_fkey",
+        "table": "feedbackTicket"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"feedbackTicket_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "feedbackTicket_userId_fkey",
+          "public",
+          "\"public\".\"feedbackTicket\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"feedbackTicket_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"feedbackTicket\"\nADD CONSTRAINT \"feedbackTicket_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"feedbackTicket_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "feedbackTicket_userId_fkey",
+          "public",
+          "\"public\".\"feedbackTicket\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.studyLog.studyLog_userId_fkey",
+    "label": "Add foreign key \"studyLog_userId_fkey\" on \"studyLog\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "studyLog_userId_fkey",
+        "table": "studyLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"studyLog_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "studyLog_userId_fkey",
+          "public",
+          "\"public\".\"studyLog\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"studyLog_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"studyLog\"\nADD CONSTRAINT \"studyLog_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"studyLog_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "studyLog_userId_fkey",
+          "public",
+          "\"public\".\"studyLog\""
+        ]
+      }
+    ]
+  }
+]
