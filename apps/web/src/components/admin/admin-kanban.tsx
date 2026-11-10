@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useMemo } from "react";
+import { useState, useEffect, useTransition, useMemo } from "react";
 import {
   type FeedbackTicket,
   type FeedbackStatus,
@@ -88,6 +88,12 @@ export function AdminKanban({ initialTickets, onRefresh }: AdminKanbanProps) {
   const [typeFilter, setTypeFilter] = useState<FeedbackType | "ALL">("ALL");
   const [activeMobileColumn, setActiveMobileColumn] = useState<FeedbackStatus>("OPEN");
   const [isPending, startTransition] = useTransition();
+
+  // Sync internal state when initialTickets prop updates (e.g. after refresh)
+  useEffect(() => {
+    setTickets(initialTickets);
+  }, [initialTickets]);
+
 
   // Selected ticket for modal detail view
   const [selectedTicket, setSelectedTicket] = useState<FeedbackTicket | null>(null);
@@ -485,7 +491,7 @@ export function AdminKanban({ initialTickets, onRefresh }: AdminKanbanProps) {
                     <strong className="text-foreground">Viewport:</strong> {selectedTicket.clientMetadata?.viewport || "N/A"}
                   </p>
                   <p className="truncate text-muted-foreground">
-                    <strong className="text-foreground">Page:</strong> {selectedTicket.clientMetadata?.pathname || "/"}
+                    <strong className="text-foreground">Page:</strong> {selectedTicket.clientMetadata?.pathname || (selectedTicket.clientMetadata as Record<string, string> | null)?.currentPath || "/"}
                   </p>
                 </div>
               </div>

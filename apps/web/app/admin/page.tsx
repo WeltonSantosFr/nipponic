@@ -19,9 +19,14 @@ import { cn } from "@/lib/utils";
 
 export default function AdminDashboardPage() {
   const { user, isAuthenticated } = useAuth();
+  const [isMounted, setIsMounted] = useState(false);
   const [tickets, setTickets] = useState<FeedbackTicket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const isAdmin = isAuthenticated && user?.role === "ADMIN";
 
@@ -43,12 +48,22 @@ export default function AdminDashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (isAdmin) {
-      loadTickets();
-    } else {
-      setIsLoading(false);
+    if (isMounted) {
+      if (isAdmin) {
+        loadTickets();
+      } else {
+        setIsLoading(false);
+      }
     }
-  }, [isAdmin, loadTickets]);
+  }, [isMounted, isAdmin, loadTickets]);
+
+  if (!isMounted) {
+    return (
+      <main className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-background text-foreground">
+        <Loader2 size={32} className="animate-spin text-primary" />
+      </main>
+    );
+  }
 
   if (!isAuthenticated || !isAdmin) {
     return (
