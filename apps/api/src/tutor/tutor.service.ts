@@ -231,12 +231,15 @@ export class TutorService implements OnModuleInit {
               shouldSyncExercises = Boolean(lessonId);
             } else {
               lessonId = existingLesson.id;
-              const currentExercises =
-                await this.prisma.db.orm.public.LessonExercise.where({
-                  lessonId,
-                })
-                  .all()
-                  .catch(() => []);
+              let currentExercises: Array<{ id: string; order: number }> = [];
+              try {
+                currentExercises =
+                  await this.prisma.db.orm.public.LessonExercise.where({
+                    lessonId,
+                  }).all();
+              } catch {
+                currentExercises = [];
+              }
 
               const hasDuplicateOrders =
                 new Set(currentExercises.map((e) => e.order)).size !==
@@ -485,12 +488,15 @@ export class TutorService implements OnModuleInit {
 
     // Sync prebaked lessons in-place to preserve lesson ID and user progress
     if (isPrebaked && prebaked && lesson) {
-      const currentExercises =
-        await this.prisma.db.orm.public.LessonExercise.where({
-          lessonId: lesson.id,
-        })
-          .all()
-          .catch(() => []);
+      let currentExercises: Array<{ id: string; order: number }> = [];
+      try {
+        currentExercises =
+          await this.prisma.db.orm.public.LessonExercise.where({
+            lessonId: lesson.id,
+          }).all();
+      } catch {
+        currentExercises = [];
+      }
 
       const hasDuplicateOrders =
         new Set(currentExercises.map((e) => e.order)).size !==
