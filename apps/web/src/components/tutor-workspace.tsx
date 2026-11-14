@@ -51,7 +51,7 @@ export function TutorWorkspace() {
   const { speak, stop, isPlaying, isLoading } = useSpeech();
 
   const [activeStep, setActiveStep] = useState<LessonStep>("theory");
-  const [exerciseAnswers, setExerciseAnswers] = useState<Record<number, boolean>>({});
+  const [exerciseAnswers, setExerciseAnswers] = useState<Record<string, boolean>>({});
   const [feedbackSubmitted, setFeedbackSubmitted] = useState<boolean>(false);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState<boolean>(false);
   const [isAddingCards, setIsAddingCards] = useState<boolean>(false);
@@ -120,8 +120,8 @@ export function TutorWorkspace() {
     : 0;
 
   // Handle exercise completion
-  const handleExerciseAnswer = (order: number, isCorrect: boolean) => {
-    const updated = { ...exerciseAnswers, [order]: isCorrect };
+  const handleExerciseAnswer = (exerciseKey: string, isCorrect: boolean) => {
+    const updated = { ...exerciseAnswers, [exerciseKey]: isCorrect };
     setExerciseAnswers(updated);
 
     // Check if all exercises are now answered
@@ -715,19 +715,24 @@ export function TutorWorkspace() {
             </div>
 
             <div className="space-y-3 sm:space-y-4 w-full min-w-0">
-              {currentLesson.exercises.map((exercise) => {
-                const isAnswered = exercise.order in exerciseAnswers;
-                const wasCorrect = exerciseAnswers[exercise.order];
+              {currentLesson.exercises.map((exercise, idx) => {
+                const exerciseKey = exercise.id || `exercise-${idx}`;
+                const isAnswered = exerciseKey in exerciseAnswers;
+                const wasCorrect = exerciseAnswers[exerciseKey];
+                const normalizedExercise = {
+                  ...exercise,
+                  order: idx + 1,
+                };
 
                 return (
                   <InteractiveExercise
-                    key={`${currentLesson.id}-exercise-${exercise.order}`}
-                    exercise={exercise}
+                    key={`${currentLesson.id}-exercise-${exerciseKey}`}
+                    exercise={normalizedExercise}
                     isAnswered={isAnswered}
                     wasCorrect={wasCorrect}
                     showFurigana={showFurigana}
                     onAnswer={(isCorrect) =>
-                      handleExerciseAnswer(exercise.order, isCorrect)
+                      handleExerciseAnswer(exerciseKey, isCorrect)
                     }
                   />
                 );

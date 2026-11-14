@@ -910,5 +910,82 @@ describe("TutorService", () => {
       await expect(service.ensureTablesExist()).resolves.toBeUndefined();
       expect(executeMock).toHaveBeenCalled();
     });
+
+    it("REGRESSION: should detect duplicate exercise orders, delete old exercises by primary key id, and re-sync prebaked exercises cleanly", async () => {
+      const mockTopic = {
+        id: "top_wa_desu_dup",
+        level: "N5",
+        title: "Identity & The Copula (〜は〜です)",
+        grammarKey: "particle-wa-desu",
+        objective: "Learn identity",
+      };
+
+      const mockExistingLesson = {
+        id: "les_existing_dup",
+        topicId: "top_wa_desu_dup",
+        title: "Identity & The Copula (〜は〜です)",
+        level: "N5",
+        theoryMarkdown: "### 📘 Stating Identity: A は B です",
+        dialogueJson: [],
+        vocabularyJson: [],
+        createdAt: new Date(),
+      };
+
+      const staleExercisesWithDuplicates = [
+        { id: "ex_mc_1", order: 1, type: "multiple_choice", prompt: "Q1", optionsJson: ["A"], correctAnswer: "A", explanation: "" },
+        { id: "ex_fb_dup1", order: 2, type: "fill_blank", prompt: "Q2", optionsJson: null, correctAnswer: "B", explanation: "" },
+        { id: "ex_fb_dup2", order: 2, type: "fill_blank", prompt: "Q3", optionsJson: null, correctAnswer: "C", explanation: "" },
+        { id: "ex_ro_dup1", order: 3, type: "reorder", prompt: "Q4", optionsJson: ["D"], correctAnswer: "D", explanation: "" },
+        { id: "ex_ro_dup2", order: 3, type: "reorder", prompt: "Q5", optionsJson: ["E"], correctAnswer: "E", explanation: "" },
+      ];
+
+      const deleteExerciseByIdMock = vi.fn().mockResolvedValue({});
+      const createExerciseMock = vi.fn().mockResolvedValue({});
+
+      prismaMock.db.orm.public.CurriculumTopic.where.mockReturnValue({
+        first: vi.fn().mockResolvedValue(mockTopic),
+      });
+
+      prismaMock.db.orm.public.Lesson.where.mockReturnValue({
+        first: vi.fn().mockResolvedValue(mockExistingLesson),
+        update: vi.fn().mockResolvedValue({}),
+      });
+
+      let allCallCount = 0;
+      prismaMock.db.orm.public.LessonExercise.where.mockImplementation((filter: any) => {
+        if (filter?.id) {
+          return {
+            delete: deleteExerciseByIdMock,
+          };
+        }
+        return {
+          all: vi.fn().mockImplementation(async () => {
+            allCallCount++;
+            if (allCallCount === 1) {
+              return staleExercisesWithDuplicates;
+            }
+            return [
+              { id: "ex_clean_1", order: 1, type: "multiple_choice", prompt: "Q1", optionsJson: ["は"], correctAnswer: "は", explanation: "" },
+              { id: "ex_clean_2", order: 2, type: "fill_blank", prompt: "Q2", optionsJson: null, correctAnswer: "です", explanation: "" },
+              { id: "ex_clean_3", order: 3, type: "reorder", prompt: "Q3", optionsJson: ["私"], correctAnswer: "私", explanation: "" },
+            ];
+          }),
+        };
+      });
+
+      prismaMock.db.orm.public.LessonExercise.create = createExerciseMock;
+
+      const result = await service.getLessonByTopicId("top_wa_desu_dup");
+
+      // Verify that all 5 stale exercises were individually deleted by primary key id
+      expect(deleteExerciseByIdMock).toHaveBeenCalledTimes(5);
+
+      // Verify 3 clean prebaked exercises were created
+      expect(createExerciseMock).toHaveBeenCalledTimes(3);
+
+      // Verify returned exercises are normalized with sequential orders 1, 2, 3
+      expect(result.exercises).toHaveLength(3);
+      expect(result.exercises.map(e => e.order)).toEqual([1, 2, 3]);
+    });
   });
 });

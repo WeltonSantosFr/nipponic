@@ -215,6 +215,8 @@ export class TutorService implements OnModuleInit {
               .catch(() => null);
 
             let lessonId: string;
+            let shouldSyncExercises = false;
+
             if (!existingLesson) {
               const createdLesson =
                 await this.prisma.db.orm.public.Lesson.create({
@@ -226,31 +228,54 @@ export class TutorService implements OnModuleInit {
                   vocabularyJson: prebaked.vocabulary,
                 }).catch(() => null);
               lessonId = createdLesson ? createdLesson.id : "";
-            } else if (existingLesson.title !== prebaked.title) {
-              lessonId = existingLesson.id;
-              await this.prisma.db.orm.public.Lesson.where({
-                id: existingLesson.id,
-              })
-                .update({
-                  title: prebaked.title,
-                  level: topic.level,
-                  theoryMarkdown: prebaked.theoryMarkdown,
-                  dialogueJson: prebaked.dialogue,
-                  vocabularyJson: prebaked.vocabulary,
-                })
-                .catch(() => {});
-
-              await this.prisma.db.orm.public.LessonExercise.where({ lessonId })
-                .delete()
-                .catch(() => {});
+              shouldSyncExercises = Boolean(lessonId);
             } else {
               lessonId = existingLesson.id;
+              let currentExercises: Array<{ id: string; order: number }> = [];
+              try {
+                currentExercises =
+                  await this.prisma.db.orm.public.LessonExercise.where({
+                    lessonId,
+                  }).all();
+              } catch {
+                currentExercises = [];
+              }
+
+              const hasDuplicateOrders =
+                new Set(currentExercises.map((e) => e.order)).size !==
+                currentExercises.length;
+
+              const needsContentSync =
+                existingLesson.title !== prebaked.title ||
+                existingLesson.theoryMarkdown !== prebaked.theoryMarkdown ||
+                currentExercises.length !== prebaked.exercises.length ||
+                hasDuplicateOrders;
+
+              if (needsContentSync) {
+                await this.prisma.db.orm.public.Lesson.where({
+                  id: existingLesson.id,
+                })
+                  .update({
+                    title: prebaked.title,
+                    level: topic.level,
+                    theoryMarkdown: prebaked.theoryMarkdown,
+                    dialogueJson: prebaked.dialogue,
+                    vocabularyJson: prebaked.vocabulary,
+                  })
+                  .catch(() => {});
+
+                for (const ex of currentExercises) {
+                  await this.prisma.db.orm.public.LessonExercise.where({
+                    id: ex.id,
+                  })
+                    .delete()
+                    .catch(() => {});
+                }
+                shouldSyncExercises = true;
+              }
             }
 
-            if (
-              lessonId &&
-              (!existingLesson || existingLesson.title !== prebaked.title)
-            ) {
+            if (lessonId && shouldSyncExercises) {
               for (const ex of prebaked.exercises) {
                 await this.prisma.db.orm.public.LessonExercise.create({
                   lessonId,
@@ -463,9 +488,25 @@ export class TutorService implements OnModuleInit {
 
     // Sync prebaked lessons in-place to preserve lesson ID and user progress
     if (isPrebaked && prebaked && lesson) {
+      let currentExercises: Array<{ id: string; order: number }> = [];
+      try {
+        currentExercises =
+          await this.prisma.db.orm.public.LessonExercise.where({
+            lessonId: lesson.id,
+          }).all();
+      } catch {
+        currentExercises = [];
+      }
+
+      const hasDuplicateOrders =
+        new Set(currentExercises.map((e) => e.order)).size !==
+        currentExercises.length;
+
       const needsSync =
         lesson.title !== prebaked.title ||
-        lesson.theoryMarkdown !== prebaked.theoryMarkdown;
+        lesson.theoryMarkdown !== prebaked.theoryMarkdown ||
+        currentExercises.length !== prebaked.exercises.length ||
+        hasDuplicateOrders;
 
       if (needsSync) {
         this.logger.log(
@@ -486,11 +527,13 @@ export class TutorService implements OnModuleInit {
         lesson.dialogueJson = prebaked.dialogue;
         lesson.vocabularyJson = prebaked.vocabulary;
 
-        try {
-          await this.prisma.db.orm.public.LessonExercise.where({
-            lessonId: lesson.id,
-          }).delete();
-        } catch {}
+        for (const ex of currentExercises) {
+          try {
+            await this.prisma.db.orm.public.LessonExercise.where({
+              id: ex.id,
+            }).delete();
+          } catch {}
+        }
 
         for (const ex of prebaked.exercises) {
           try {
@@ -650,7 +693,7 @@ export class TutorService implements OnModuleInit {
           : []
     ) as VocabularyItem[];
 
-    const exercises: LessonExercise[] = dbExercises.map((e) => {
+    const exercises: LessonExercise[] = dbExercises.map((e, idx) => {
       let options: string[] | undefined;
       if (e.optionsJson) {
         options = Array.isArray(e.optionsJson)
@@ -662,7 +705,7 @@ export class TutorService implements OnModuleInit {
 
       return {
         id: e.id,
-        order: e.order,
+        order: idx + 1,
         type: e.type as "multiple_choice" | "fill_blank" | "reorder",
         prompt: e.prompt,
         options,
