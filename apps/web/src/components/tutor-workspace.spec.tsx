@@ -1331,6 +1331,147 @@ describe("TutorWorkspace", () => {
       expect(screen.getByText("Continue to Dialogue")).toBeDefined();
       expect(screen.queryByText("How was this lesson explanation?")).toBeNull();
     });
+    it("isolates exercise answer state when a lesson contains multiple exercises of the same type or shared orders", async () => {
+      const mockMultiExerciseLesson = {
+        id: "les_multi_exercise",
+        topicId: "top_multi_exercise",
+        title: "Multi Exercise Isolation Test",
+        level: "N5",
+        theoryMarkdown: "# Theory",
+        dialogue: [],
+        vocabulary: [],
+        exercises: [
+          {
+            id: "ex_fb_1",
+            order: 2,
+            type: "fill_blank" as const,
+            prompt: "Fill blank 1: 私は田中___。",
+            correctAnswer: "です",
+            explanation: "Desu is the copula",
+          },
+          {
+            id: "ex_fb_2",
+            order: 2,
+            type: "fill_blank" as const,
+            prompt: "Fill blank 2: 私は学生___。",
+            correctAnswer: "ではありません",
+            explanation: "Negative copula",
+          },
+          {
+            id: "ex_reorder_1",
+            order: 3,
+            type: "reorder" as const,
+            prompt: "Reorder 1: Arrange sentence A",
+            options: ["私", "は", "学生です"],
+            correctAnswer: "私は学生です",
+            explanation: "Sentence A order",
+          },
+          {
+            id: "ex_reorder_2",
+            order: 3,
+            type: "reorder" as const,
+            prompt: "Reorder 2: Arrange sentence B",
+            options: ["田中さん", "は", "先生です"],
+            correctAnswer: "田中さんは先生です",
+            explanation: "Sentence B order",
+          },
+        ],
+      };
+
+      vi.mocked(TutorContextModule.useTutor).mockReturnValue({
+        curriculum: [],
+        selectedLevel: "N5",
+        currentLesson: mockMultiExerciseLesson,
+        isLoadingLesson: false,
+        loadLesson: mockLoadLesson,
+        closeLesson: mockCloseLesson,
+        submitProgress: mockSubmitProgress,
+        submitFeedback: mockSubmitFeedback,
+        addVocabularyToDeck: mockAddVocabularyToDeck,
+        setSelectedTopicId: mockSetSelectedTopicId,
+        error: null,
+        clearError: vi.fn(),
+      } as any);
+
+      render(<TutorWorkspace />);
+
+      // Navigate to Practice tab
+      fireEvent.click(screen.getByRole("button", { name: "3. Practice" }));
+      expect(screen.getByText("Interactive Exercises")).toBeInTheDocument();
+      expect(screen.getByText("Answered: 0 / 4")).toBeInTheDocument();
+
+      // Verify that exercises are displayed with sequential order headers
+      expect(screen.getByText(/Exercise 1 • Fill in the Blank/i)).toBeInTheDocument();
+      expect(screen.getByText(/Exercise 2 • Fill in the Blank/i)).toBeInTheDocument();
+      expect(screen.getByText(/Exercise 3 • Sentence Order/i)).toBeInTheDocument();
+      expect(screen.getByText(/Exercise 4 • Sentence Order/i)).toBeInTheDocument();
+
+      // Find all text inputs for fill_blank
+      const inputs = screen.getAllByPlaceholderText("Type your answer here...");
+      expect(inputs.length).toBe(2);
+
+      const checkButtons = screen.getAllByRole("button", { name: /Check Answer/i });
+      expect(checkButtons.length).toBe(2);
+
+      // 1. Answer the first fill_blank correctly
+      fireEvent.change(inputs[0]!, { target: { value: "です" } });
+      fireEvent.click(checkButtons[0]!);
+
+      // Check results: only the first fill_blank should be answered and correct
+      expect(screen.getByText("Desu is the copula")).toBeInTheDocument();
+      expect(screen.getByText("Answered: 1 / 4")).toBeInTheDocument();
+
+      // The second fill_blank must NOT be answered or marked correct!
+      expect(screen.queryByText("Negative copula")).toBeNull();
+      expect(inputs[1]).not.toBeDisabled();
+      expect(checkButtons[1]).toBeDisabled(); // disabled because empty inputAnswer
+
+      // 2. Answer the second fill_blank incorrectly
+      fireEvent.change(inputs[1]!, { target: { value: "wrong" } });
+      expect(checkButtons[1]).not.toBeDisabled();
+      fireEvent.click(checkButtons[1]!);
+
+      // Now second fill_blank is marked incorrect with explanation
+      expect(screen.getByText("Negative copula")).toBeInTheDocument();
+      expect(screen.getByText("Answered: 2 / 4")).toBeInTheDocument();
+
+      // Neither reorder exercise should be answered
+      expect(screen.queryByText("Sentence A order")).toBeNull();
+      expect(screen.queryByText("Sentence B order")).toBeNull();
+
+      // 3. Complete the first reorder exercise
+      const chipWatashi = screen.getByRole("button", { name: /^私$/ });
+      fireEvent.click(chipWatashi);
+      const chipWa = screen.getAllByRole("button", { name: /^は$/ })[0]!;
+      fireEvent.click(chipWa);
+      const chipGakusei = screen.getByRole("button", { name: /^学生です$/ });
+      fireEvent.click(chipGakusei);
+
+      const checkOrderButtons = screen.getAllByRole("button", { name: /Check Order/i });
+      fireEvent.click(checkOrderButtons[0]!);
+
+      expect(screen.getByText("Sentence A order")).toBeInTheDocument();
+      expect(screen.getByText("Answered: 3 / 4")).toBeInTheDocument();
+      // Reorder 2 is still NOT answered!
+      expect(screen.queryByText("Sentence B order")).toBeNull();
+
+      // 4. Complete the second reorder exercise
+      const chipTanaka = screen.getByRole("button", { name: /^田中さん$/ });
+      fireEvent.click(chipTanaka);
+      const chipWa2 = screen.getAllByRole("button", { name: /^は$/ })[1]!;
+      fireEvent.click(chipWa2);
+      const chipSensei = screen.getByRole("button", { name: /^先生です$/ });
+      fireEvent.click(chipSensei);
+
+      const checkOrderButton2 = screen.getByRole("button", { name: /Check Order/i });
+      fireEvent.click(checkOrderButton2);
+
+      // Now all 4 are answered!
+      expect(screen.getByText("Sentence B order")).toBeInTheDocument();
+      expect(screen.getByText("Answered: 4 / 4")).toBeInTheDocument();
+      expect(screen.getByText("Practice Completed!")).toBeInTheDocument();
+      expect(mockSubmitProgress).toHaveBeenCalledWith(75); // 3 out of 4 correct = 75%
+    });
   });
 });
 

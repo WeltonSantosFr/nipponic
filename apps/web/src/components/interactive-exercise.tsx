@@ -44,7 +44,7 @@ export const InteractiveExercise = memo(function InteractiveExercise({
     setAvailableChips(
       exercise.type === "reorder" && exercise.options ? [...exercise.options] : []
     );
-  }, [exercise.prompt, exercise.order, exercise.type]);
+  }, [exercise.id, exercise.prompt, exercise.order, exercise.type]);
 
   const handleSelectOption = (option: string) => {
     if (isAnswered) return;
