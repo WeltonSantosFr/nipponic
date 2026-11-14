@@ -15,6 +15,8 @@ model User {
   lessonProgress UserLessonProgress[]
   studyLogs      StudyLog[]
   feedbackTickets FeedbackTicket[]
+  translationProgress UserTranslationProgress?
+  translationAttempts TranslationAttempt[]
   
   createdAt      DateTime @default(now())
   updatedAt      temporal.updatedAt()
@@ -202,4 +204,50 @@ model FeedbackTicket {
   
   createdAt      DateTime @default(now())
   updatedAt      temporal.updatedAt()
+}
+
+model UserTranslationProgress {
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentDifficulty  Int      @default(1)
+  completedPromptIds Json
+  lastCompletedDate  String?
+  totalCompleted     Int      @default(0)
+
+  createdAt          DateTime @default(now())
+  updatedAt          temporal.updatedAt()
+}
+
+model TranslationAttempt {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promptId   String
+  userAnswer String
+  isCorrect  Boolean
+  localDate  String
+
+  createdAt  DateTime @default(now())
+}
+
+model TranslationPrompt {
+  id              String   @id
+  order           Int      @unique
+  day             Int      @unique
+  difficulty      Int
+  difficultyLabel String
+  jlptLevel       String
+  direction       String
+  sourceText      String
+  sourceReading   String?
+  canonicalAnswer String
+  answerReading   String?
+  acceptedAnswers Json
+  hint            String
+  explanation     String
+  grammarPoint    String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       temporal.updatedAt()
 }

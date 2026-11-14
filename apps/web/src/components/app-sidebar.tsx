@@ -60,6 +60,7 @@ import {
   Globe,
   GraduationCap,
   Heart,
+  Languages,
   Layers,
   Loader2,
   MessageSquarePlus,
@@ -610,6 +611,30 @@ export function AppSidebar({
 
           <button
             type="button"
+            onClick={() => setActiveSidebarView("practice")}
+            className={`w-full min-w-0 flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all cursor-pointer ${
+              activeSidebarView === "practice"
+                ? "bg-primary/10 text-primary font-bold shadow-xs border border-primary/20"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50 font-medium"
+            }`}
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Languages
+                size={16}
+                className={activeSidebarView === "practice" ? "text-primary shrink-0" : "text-muted-foreground shrink-0"}
+              />
+              <span className="truncate">Practice</span>
+            </div>
+            <Badge
+              variant="outline"
+              className="text-[10px] font-bold px-1.5 py-0 h-4 shrink-0"
+            >
+              Daily
+            </Badge>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveSidebarView("stats")}
             className={`w-full min-w-0 flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all cursor-pointer ${
               activeSidebarView === "stats"
@@ -785,6 +810,15 @@ export function AppSidebar({
                 {lvl}
               </button>
             ))}
+          </div>
+        ) : activeSidebarView === "practice" ? (
+          /* Practice Quick Status */
+          <div className="px-2.5 py-1.5 text-xs text-muted-foreground flex items-center justify-between border border-border/60 rounded-lg bg-muted/40 min-w-0">
+            <span className="flex items-center gap-1.5 font-medium truncate">
+              <Languages size={14} className="text-primary shrink-0" />
+              <span className="truncate">Daily Translation</span>
+            </span>
+            <span className="font-semibold text-foreground shrink-0">JP ↔ EN</span>
           </div>
         ) : (
           /* Stats Quick Status */
@@ -995,6 +1029,21 @@ export function AppSidebar({
                 })}
               </SidebarMenu>
             )}
+          </SidebarGroup>
+        ) : activeSidebarView === "practice" ? (
+          /* Practice Sidebar View */
+          <SidebarGroup>
+            <div className="flex items-center justify-between px-2 py-1">
+              <SidebarGroupLabel className="p-0">Translation Practice</SidebarGroupLabel>
+            </div>
+            <div className="px-2 py-2 space-y-3">
+              <div className="p-3 rounded-lg border border-border/70 bg-card space-y-2 text-xs text-muted-foreground">
+                <p className="font-semibold text-foreground">Daily Progressive MVP</p>
+                <p>
+                  Complete one sentence translation per day to unlock the next difficulty level.
+                </p>
+              </div>
+            </div>
           </SidebarGroup>
         ) : (
           /* Stats Sidebar View */

@@ -3,7 +3,7 @@
 import { useMemo, useCallback } from "react";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
 import { SidebarViewMode } from "@nipponic/shared";
-import { BookOpen, Layers, GraduationCap, TrendingUp, Flame } from "lucide-react";
+import { BookOpen, Layers, GraduationCap, Languages, TrendingUp, Flame } from "lucide-react";
 import { isCardDue } from "@/lib/srs";
 
 interface NavItem {
@@ -74,6 +74,11 @@ export function BottomNavigation() {
         id: "tutor",
         label: "Tutor",
         icon: GraduationCap,
+      },
+      {
+        id: "practice",
+        label: "Practice",
+        icon: Languages,
       },
       {
         id: "stats",

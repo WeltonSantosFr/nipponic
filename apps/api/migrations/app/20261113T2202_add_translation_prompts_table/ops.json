@@ -1,0 +1,125 @@
+[
+  {
+    "id": "table.translationPrompt",
+    "label": "Create table \"translationPrompt\"",
+    "summary": "Creates table \"translationPrompt\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "translationPrompt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"translationPrompt\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"translationPrompt\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"translationPrompt\"",
+        "sql": "CREATE TABLE \"public\".\"translationPrompt\" (\n  \"acceptedAnswers\" json NOT NULL,\n  \"answerReading\" text,\n  \"canonicalAnswer\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"day\" int4 NOT NULL,\n  \"difficulty\" int4 NOT NULL,\n  \"difficultyLabel\" text NOT NULL,\n  \"direction\" text NOT NULL,\n  \"explanation\" text NOT NULL,\n  \"grammarPoint\" text,\n  \"hint\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"jlptLevel\" text NOT NULL,\n  \"order\" int4 NOT NULL,\n  \"sourceReading\" text,\n  \"sourceText\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"translationPrompt\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"translationPrompt\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.translationPrompt.translationPrompt_order_key",
+    "label": "Add unique constraint on \"translationPrompt\" (order)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "translationPrompt_order_key",
+        "table": "translationPrompt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"translationPrompt_order_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "translationPrompt_order_key",
+          "public",
+          "\"public\".\"translationPrompt\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"translationPrompt_order_key\"",
+        "sql": "ALTER TABLE \"public\".\"translationPrompt\" ADD CONSTRAINT \"translationPrompt_order_key\" UNIQUE (\"order\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"translationPrompt_order_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "translationPrompt_order_key",
+          "public",
+          "\"public\".\"translationPrompt\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.translationPrompt.translationPrompt_day_key",
+    "label": "Add unique constraint on \"translationPrompt\" (day)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "translationPrompt_day_key",
+        "table": "translationPrompt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"translationPrompt_day_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "translationPrompt_day_key",
+          "public",
+          "\"public\".\"translationPrompt\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"translationPrompt_day_key\"",
+        "sql": "ALTER TABLE \"public\".\"translationPrompt\" ADD CONSTRAINT \"translationPrompt_day_key\" UNIQUE (\"day\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"translationPrompt_day_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "translationPrompt_day_key",
+          "public",
+          "\"public\".\"translationPrompt\""
+        ]
+      }
+    ]
+  }
+]

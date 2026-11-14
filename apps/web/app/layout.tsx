@@ -10,6 +10,7 @@ import { AuthProvider, UserPayload } from "@/contexts/AuthContext";
 import { NotesProvider } from "@/contexts/NotesContext";
 import { FlashCardsProvider } from "@/contexts/FlashCardsContext";
 import { TutorProvider } from "@/contexts/TutorContext";
+import { PracticeProvider } from "@/contexts/PracticeContext";
 import dynamic from "next/dynamic";
 import { CapacitorProvider } from "@/components/capacitor-provider";
 
@@ -78,7 +79,8 @@ export default async function RootLayout({
           <NotesProvider>
             <FlashCardsProvider>
               <TutorProvider>
-                <ThemeProvider
+                <PracticeProvider>
+                  <ThemeProvider
                   attribute="class"
                   defaultTheme="dark"
                   enableSystem={false}
@@ -87,7 +89,8 @@ export default async function RootLayout({
                     {children}
                     <ServerWakeupOverlay />
                   </CapacitorProvider>
-                </ThemeProvider>
+                  </ThemeProvider>
+                </PracticeProvider>
               </TutorProvider>
             </FlashCardsProvider>
           </NotesProvider>

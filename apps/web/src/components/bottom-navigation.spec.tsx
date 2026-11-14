@@ -47,7 +47,7 @@ describe("BottomNavigation", () => {
     vi.clearAllMocks();
   });
 
-  it("renders all 4 navigation tabs properly", () => {
+  it("renders all 5 navigation tabs properly", () => {
     vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue(
       createMockFlashcards({ activeSidebarView: "notes" })
     );
@@ -57,6 +57,7 @@ describe("BottomNavigation", () => {
     expect(screen.getByRole("tab", { name: /notes section/i })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /cards section/i })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /tutor section/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /practice section/i })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /stats section/i })).toBeInTheDocument();
 
     // Check active state
@@ -79,6 +80,9 @@ describe("BottomNavigation", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: /cards section/i }));
     expect(mockSetActiveSidebarView).toHaveBeenCalledWith("flashcards");
+
+    fireEvent.click(screen.getByRole("tab", { name: /practice section/i }));
+    expect(mockSetActiveSidebarView).toHaveBeenCalledWith("practice");
 
     fireEvent.click(screen.getByRole("tab", { name: /stats section/i }));
     expect(mockSetActiveSidebarView).toHaveBeenCalledWith("stats");

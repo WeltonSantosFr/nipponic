@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useCallback } from "react";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
+import { useOptionalPractice } from "@/contexts/PracticeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import {
   Award,
   ArrowRight,
   ShieldAlert,
+  Languages,
 } from "lucide-react";
 import { Deck, StudyStats } from "@nipponic/shared";
 import { isCardDue } from "@/lib/srs";
@@ -30,7 +32,10 @@ export function StatsWorkspace() {
     refreshStats,
     startPlayingDeck,
     getDueCards,
+    setActiveSidebarView,
   } = useFlashCards();
+  const practice = useOptionalPractice();
+  const dailyState = practice?.dailyState;
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -160,6 +165,24 @@ export function StatsWorkspace() {
     100,
     Math.round((stats.today.reviewsCount / stats.today.targetReviews) * 100)
   );
+
+  const translationMetrics = useMemo(() => {
+    const totalPrompts = stats.translation?.totalPrompts ?? dailyState?.totalPrompts ?? 366;
+    const totalCompleted = stats.translation?.totalCompleted ?? dailyState?.progress.totalCompleted ?? 0;
+    const isCompletedToday = stats.translation?.isCompletedToday ?? dailyState?.isLockedToday ?? false;
+    const currentJlptLevel = stats.translation?.currentJlptLevel ?? dailyState?.prompt?.jlptLevel ?? "N5";
+    const accuracyRate = stats.translation?.accuracyRate ?? 100;
+    const percent = totalPrompts > 0 ? Math.min(100, Math.round((totalCompleted / totalPrompts) * 100)) : 0;
+
+    return {
+      totalPrompts,
+      totalCompleted,
+      isCompletedToday,
+      currentJlptLevel,
+      accuracyRate,
+      percent,
+    };
+  }, [stats.translation, dailyState]);
 
   return (
     <div className="w-full min-w-0 max-w-full overflow-x-hidden p-3 sm:p-6 md:p-8 flex flex-col gap-5 sm:gap-6 pb-safe">
@@ -329,6 +352,127 @@ export function StatsWorkspace() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Daily Translation Practice */}
+      <Card data-testid="stats-translation-card" className="shadow-xs border-border/80">
+        <CardHeader className="p-4 sm:p-6 pb-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap min-w-0">
+            <div className="space-y-0.5 min-w-0">
+              <CardTitle className="text-base sm:text-lg font-bold flex items-center gap-2 min-w-0">
+                <Languages size={18} className="text-primary shrink-0" />
+                <span className="truncate">Daily Translation Practice</span>
+              </CardTitle>
+              <CardDescription className="text-xs sm:text-sm break-words">
+                Master 366 daily sentence translations across JLPT N5 to N1.
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Badge variant="outline" className="text-xs font-semibold">
+                JLPT {translationMetrics.currentJlptLevel}
+              </Badge>
+              {translationMetrics.isCompletedToday ? (
+                <Badge
+                  variant="default"
+                  className="text-xs font-semibold gap-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  <CheckCircle2 size={12} className="shrink-0" />
+                  <span>Completed Today</span>
+                </Badge>
+              ) : (
+                <Badge
+                  variant="secondary"
+                  className="text-xs font-semibold gap-1 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                >
+                  <Clock size={12} className="shrink-0" />
+                  <span>Pending Today</span>
+                </Badge>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-4 sm:p-6 pt-0 space-y-4 min-w-0">
+          {/* Progress bar */}
+          <div className="space-y-1.5 min-w-0">
+            <div className="flex items-center justify-between text-xs min-w-0">
+              <span className="font-medium text-muted-foreground truncate">Curriculum Mastery</span>
+              <span className="font-bold text-foreground shrink-0">
+                {translationMetrics.totalCompleted} / {translationMetrics.totalPrompts} ({translationMetrics.percent}%)
+              </span>
+            </div>
+            <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
+              <div
+                className="bg-primary h-2.5 rounded-full transition-all duration-300"
+                style={{ width: `${translationMetrics.percent}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Metrics grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full min-w-0">
+            {/* Metric 1: Total Completed */}
+            <div className="p-3.5 rounded-lg border border-border/70 bg-muted/30 flex flex-col gap-1 min-w-0">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate">
+                Completed
+              </span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-bold text-foreground">{translationMetrics.totalCompleted}</span>
+                <span className="text-xs text-muted-foreground">/ {translationMetrics.totalPrompts}</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground break-words">
+                {dailyState?.allCompleted
+                  ? "All 366 challenges completed!"
+                  : `${translationMetrics.totalPrompts - translationMetrics.totalCompleted} challenges remaining`}
+              </p>
+            </div>
+
+            {/* Metric 2: Accuracy Rate */}
+            <div className="p-3.5 rounded-lg border border-border/70 bg-muted/30 flex flex-col gap-1 min-w-0">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate">
+                Accuracy Rate
+              </span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-bold text-foreground">{translationMetrics.accuracyRate}%</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground break-words">
+                {stats.translation?.totalAttempts
+                  ? `Across ${stats.translation.totalAttempts} translation attempts`
+                  : "First-attempt translation precision"}
+              </p>
+            </div>
+
+            {/* Metric 3: Today's Status & Quick Action */}
+            <div className="p-3.5 rounded-lg border border-border/70 bg-muted/30 flex flex-col justify-between gap-2 min-w-0">
+              <div className="flex flex-col gap-1 min-w-0">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate">
+                  Today&apos;s Status
+                </span>
+                <span className="text-sm font-semibold text-foreground truncate">
+                  {translationMetrics.isCompletedToday
+                    ? "Challenge Completed 🎉"
+                    : "Ready for Practice"}
+                </span>
+              </div>
+              <div>
+                {translationMetrics.isCompletedToday ? (
+                  <p className="text-[11px] text-muted-foreground break-words">
+                    Great job! Tomorrow&apos;s challenge unlocks at midnight.
+                  </p>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={() => setActiveSidebarView?.("practice")}
+                    className="w-full text-xs font-semibold gap-1.5 cursor-pointer justify-center"
+                  >
+                    <Languages size={14} className="shrink-0" />
+                    <span>Practice Today&apos;s Challenge</span>
+                    <ArrowRight size={14} className="shrink-0" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* SRS Memory Stage Breakdown */}
       <Card className="shadow-xs border-border/80">
