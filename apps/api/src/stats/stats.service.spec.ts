@@ -27,6 +27,14 @@ describe("StatsService", () => {
                 all: vi.fn(),
               }),
             },
+            UserTranslationProgress: {
+              first: vi.fn().mockResolvedValue(null),
+            },
+            TranslationAttempt: {
+              where: vi.fn().mockReturnValue({
+                all: vi.fn().mockResolvedValue([]),
+              }),
+            },
           },
         },
       },
@@ -294,6 +302,57 @@ describe("StatsService", () => {
 
       expect(ensureSpy).toHaveBeenCalled();
       expect(attempts).toBe(2);
+    });
+  });
+
+  describe("translation practice stats", () => {
+    it("returns default translation metrics when user has no translation history", async () => {
+      prismaMock.db.orm.public.Card.where().all.mockResolvedValue([]);
+      prismaMock.db.orm.public.StudyLog.where().all.mockResolvedValue([]);
+      prismaMock.db.orm.public.UserTranslationProgress.first.mockResolvedValue(null);
+      prismaMock.db.orm.public.TranslationAttempt.where().all.mockResolvedValue([]);
+
+      const stats = await service.getDashboardStats("usr_1");
+
+      expect(stats.translation).toBeDefined();
+      expect(stats.translation?.totalCompleted).toBe(0);
+      expect(stats.translation?.totalPrompts).toBe(366);
+      expect(stats.translation?.currentDifficulty).toBe(1);
+      expect(stats.translation?.currentJlptLevel).toBe("N5");
+      expect(stats.translation?.isCompletedToday).toBe(false);
+      expect(stats.translation?.totalAttempts).toBe(0);
+      expect(stats.translation?.accuracyRate).toBe(100);
+    });
+
+    it("aggregates completed prompts, accuracy rate, and today completion status", async () => {
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+      prismaMock.db.orm.public.Card.where().all.mockResolvedValue([]);
+      prismaMock.db.orm.public.StudyLog.where().all.mockResolvedValue([]);
+      prismaMock.db.orm.public.UserTranslationProgress.first.mockResolvedValue({
+        userId: "usr_1",
+        currentDifficulty: 3,
+        totalCompleted: 150,
+        lastCompletedDate: todayStr,
+      });
+      prismaMock.db.orm.public.TranslationAttempt.where().all.mockResolvedValue([
+        { id: "a1", isCorrect: true },
+        { id: "a2", isCorrect: true },
+        { id: "a3", isCorrect: false },
+        { id: "a4", isCorrect: true },
+      ]);
+
+      const stats = await service.getDashboardStats("usr_1");
+
+      expect(stats.translation).toBeDefined();
+      expect(stats.translation?.totalCompleted).toBe(150);
+      expect(stats.translation?.totalPrompts).toBe(366);
+      expect(stats.translation?.currentDifficulty).toBe(3);
+      expect(stats.translation?.currentJlptLevel).toBe("N3");
+      expect(stats.translation?.isCompletedToday).toBe(true);
+      expect(stats.translation?.totalAttempts).toBe(4);
+      expect(stats.translation?.accuracyRate).toBe(75); // 3 of 4 = 75%
     });
   });
 });

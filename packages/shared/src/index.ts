@@ -334,7 +334,7 @@ export type AddCardsDto = AddCardsToDeckInput;
 export type AddCardsToDeckDto = AddCardsToDeckInput;
 
 export type DeckTabMode = "my" | "app" | "public";
-export const SidebarViewModeSchema = z.enum(["notes", "flashcards", "tutor", "stats"]);
+export const SidebarViewModeSchema = z.enum(["notes", "flashcards", "tutor", "practice", "stats"]);
 export type SidebarViewMode = z.infer<typeof SidebarViewModeSchema>;
 
 export const DeckCardFilterModeSchema = z.enum(["all", "due"]);
@@ -920,6 +920,17 @@ export const ForecastDaySchema = z.object({
 });
 export type ForecastDay = z.infer<typeof ForecastDaySchema>;
 
+export const TranslationStatsSchema = z.object({
+  totalCompleted: z.number().int().min(0),
+  totalPrompts: z.number().int().min(1),
+  currentDifficulty: z.number().int().min(1),
+  currentJlptLevel: z.enum(["N5", "N4", "N3", "N2", "N1"]),
+  isCompletedToday: z.boolean(),
+  totalAttempts: z.number().int().min(0),
+  accuracyRate: z.number().min(0).max(100),
+});
+export type TranslationStats = z.infer<typeof TranslationStatsSchema>;
+
 export const StudyStatsSchema = z.object({
   streak: StreakStatsSchema,
   today: TodayStatsSchema,
@@ -927,6 +938,7 @@ export const StudyStatsSchema = z.object({
   ratingsDistribution: RatingsDistributionSchema,
   heatmap: z.array(HeatmapDaySchema),
   forecast: z.array(ForecastDaySchema),
+  translation: TranslationStatsSchema.optional(),
 });
 export type StudyStats = z.infer<typeof StudyStatsSchema>;
 
@@ -993,4 +1005,6 @@ export const FeedbackListQuerySchema = z.object({
 export type FeedbackListQueryDto = z.infer<typeof FeedbackListQuerySchema>;
 
 export * from "./furigana";
+export * from "./translation";
+export * from "./data/daily-prompts";
 

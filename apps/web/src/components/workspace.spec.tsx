@@ -64,6 +64,10 @@ vi.mock("@/components/tutor-workspace", () => ({
   TutorWorkspace: () => <div data-testid="mock-tutor-workspace">Tutor Workspace</div>,
 }));
 
+vi.mock("@/components/practice-workspace", () => ({
+  PracticeWorkspace: () => <div data-testid="mock-practice-workspace">Practice Workspace</div>,
+}));
+
 vi.mock("@/components/stats-workspace", () => ({
   StatsWorkspace: () => <div data-testid="mock-stats-workspace">Stats Workspace</div>,
 }));
@@ -507,6 +511,23 @@ describe("Workspace Component", () => {
       render(<Workspace />);
       fireEvent.click(screen.getByRole("button", { name: "Select n99" }));
       expect(mockSetSelectedNoteId).toHaveBeenCalledWith("n99");
+    });
+
+    it("renders practice workspace and header when activeSidebarView is practice", async () => {
+      vi.spyOn(flashcardsContextModule, "useFlashCards").mockReturnValue({
+        activeSidebarView: "practice",
+        selectedDeck: null,
+        setSelectedDeckId: mockSetSelectedDeckId,
+        playingDeck: null,
+        stopPlayingDeck: mockStopPlayingDeck,
+      } as any);
+
+      render(<Workspace />);
+
+      expect(screen.getByText("Daily Practice")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByTestId("mock-practice-workspace")).toBeInTheDocument();
+      });
     });
   });
 });

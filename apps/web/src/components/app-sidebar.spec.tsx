@@ -723,6 +723,27 @@ describe("AppSidebar - Views & Full Feature Suite", () => {
       expect(mockSetActiveSidebarView).toHaveBeenCalledWith("tutor");
     });
 
+    it("switches to practice view when clicking Practice switcher button and renders practice sidebar", () => {
+      const mockSetActiveSidebarView = vi.fn();
+      vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue({
+        ...getBaseFlashcards(),
+        activeSidebarView: "practice",
+        setActiveSidebarView: mockSetActiveSidebarView,
+      } as any);
+
+      render(
+        <SidebarProvider>
+          <AppSidebar selectedNoteId={null} onSelectNote={vi.fn()} />
+        </SidebarProvider>
+      );
+
+      const practiceBtn = screen.getByRole("button", { name: /Practice/i });
+      fireEvent.click(practiceBtn);
+      expect(mockSetActiveSidebarView).toHaveBeenCalledWith("practice");
+      expect(screen.getByText("Translation Practice")).toBeInTheDocument();
+      expect(screen.getByText("Daily Progressive MVP")).toBeInTheDocument();
+    });
+
     it("renders curriculum topics and loads lesson on click, closing mobile sidebar", () => {
       vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue({
         ...getBaseFlashcards(),

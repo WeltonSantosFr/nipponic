@@ -16,12 +16,13 @@ import { SponsorsModule } from "./sponsors/sponsors.module";
 import { TutorModule } from "./tutor/tutor.module";
 import { StatsModule } from "./stats/stats.module";
 import { FeedbackModule } from "./feedback/feedback.module";
+import { TranslationModule } from "./translation/translation.module";
 
 @Module({
   imports: [
     // Global baseline: 100 requests/minute per client IP. Sensitive routes override it with @Throttle.
     ThrottlerModule.forRoot([{ name: "default", ttl: 60_000, limit: 100 }]),
-    AuthModule, NotesModule, CardsModule, DecksModule, SponsorsModule, TutorModule, StatsModule, FeedbackModule],
+    AuthModule, NotesModule, CardsModule, DecksModule, SponsorsModule, TutorModule, StatsModule, FeedbackModule, TranslationModule],
   controllers: [AppController, UsersController],
   providers: [PrismaService, UsersService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

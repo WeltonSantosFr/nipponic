@@ -102,5 +102,28 @@ These rules are mandatory for all AI agents and developers working on the Nippon
   - Always track and commit the resulting `apps/api/migrations/app/<timestamp>_<name>/` and snapshot files in `apps/api/migrations/snapshots/`.
 - **Handoff Requirement**:
   - In task summaries or merge/PR requests, always explicitly state whether migrations were executed locally and specify the command (`pnpm --filter api migrate`) for deployment or staging environments.
+- **Production Supabase Migration & Seeder Workflow (MANDATORY AUTOMATION)**:
+  - **Context**: The production API is hosted on Render (Free Tier) and the production database is on Supabase (Free Tier). Render does NOT run migrations on startup (decoupled to prevent timeouts and crash loops).
+  - **Supabase Connection**: Stored securely in gitignored `apps/api/.env.production.local` (`SUPABASE_DATABASE_URL`) or system environment `$SUPABASE_DATABASE_URL`.
+  - **Automated Workflow**: Whenever a task introduces database migrations, schema alterations, or seeders, the agent MUST automatically apply them directly to the Supabase database:
+    1. Apply DDL / migrations:
+       ```bash
+       DATABASE_URL="$SUPABASE_DATABASE_URL" pnpm --filter api run migrate
+       ```
+    2. Ensure table RLS matches contract expectations (disable RLS if no public policies are configured):
+       ```bash
+       docker exec -i supabase_db_nipponic psql "$SUPABASE_DATABASE_URL" -c "ALTER TABLE \"public\".\"<table>\" DISABLE ROW LEVEL SECURITY;"
+       ```
+    3. Sign database contract marker if needed:
+       ```bash
+       DATABASE_URL="$SUPABASE_DATABASE_URL" pnpm --filter api exec prisma db sign
+       ```
+    4. Run any required production seeders (e.g. `pnpm --filter api seed:translation all`).
+    5. Verify status:
+       ```bash
+       DATABASE_URL="$SUPABASE_DATABASE_URL" pnpm --filter api run migration:status
+       ```
+       (Must show `✔ Up to date`).
+
 
 

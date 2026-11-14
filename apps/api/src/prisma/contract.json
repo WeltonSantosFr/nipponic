@@ -48,12 +48,24 @@
       "model": "StudyLog",
       "namespace": "public"
     },
+    "translationAttempt": {
+      "model": "TranslationAttempt",
+      "namespace": "public"
+    },
+    "translationPrompt": {
+      "model": "TranslationPrompt",
+      "namespace": "public"
+    },
     "user": {
       "model": "User",
       "namespace": "public"
     },
     "userLessonProgress": {
       "model": "UserLessonProgress",
+      "namespace": "public"
+    },
+    "userTranslationProgress": {
+      "model": "UserTranslationProgress",
       "namespace": "public"
     }
   },
@@ -1378,6 +1390,284 @@
               "table": "studyLog"
             }
           },
+          "TranslationAttempt": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "isCorrect": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "localDate": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "promptId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "userAnswer": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "user": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "isCorrect": {
+                  "column": "isCorrect"
+                },
+                "localDate": {
+                  "column": "localDate"
+                },
+                "promptId": {
+                  "column": "promptId"
+                },
+                "userAnswer": {
+                  "column": "userAnswer"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "translationAttempt"
+            }
+          },
+          "TranslationPrompt": {
+            "fields": {
+              "acceptedAnswers": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/json@1",
+                  "kind": "scalar"
+                }
+              },
+              "answerReading": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "canonicalAnswer": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "day": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "difficulty": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "difficultyLabel": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "direction": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "explanation": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "grammarPoint": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "hint": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "jlptLevel": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "order": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "sourceReading": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sourceText": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {},
+            "storage": {
+              "fields": {
+                "acceptedAnswers": {
+                  "column": "acceptedAnswers"
+                },
+                "answerReading": {
+                  "column": "answerReading"
+                },
+                "canonicalAnswer": {
+                  "column": "canonicalAnswer"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "day": {
+                  "column": "day"
+                },
+                "difficulty": {
+                  "column": "difficulty"
+                },
+                "difficultyLabel": {
+                  "column": "difficultyLabel"
+                },
+                "direction": {
+                  "column": "direction"
+                },
+                "explanation": {
+                  "column": "explanation"
+                },
+                "grammarPoint": {
+                  "column": "grammarPoint"
+                },
+                "hint": {
+                  "column": "hint"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "jlptLevel": {
+                  "column": "jlptLevel"
+                },
+                "order": {
+                  "column": "order"
+                },
+                "sourceReading": {
+                  "column": "sourceReading"
+                },
+                "sourceText": {
+                  "column": "sourceText"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "translationPrompt"
+            }
+          },
           "User": {
             "fields": {
               "createdAt": {
@@ -1542,6 +1832,36 @@
                   "model": "StudyLog",
                   "namespace": "public"
                 }
+              },
+              "translationAttempts": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "TranslationAttempt",
+                  "namespace": "public"
+                }
+              },
+              "translationProgress": {
+                "cardinality": "1:1",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "UserTranslationProgress",
+                  "namespace": "public"
+                }
               }
             },
             "storage": {
@@ -1685,6 +2005,113 @@
               },
               "namespaceId": "public",
               "table": "userLessonProgress"
+            }
+          },
+          "UserTranslationProgress": {
+            "fields": {
+              "completedPromptIds": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/json@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "currentDifficulty": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "lastCompletedDate": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "totalCompleted": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "user": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "completedPromptIds": {
+                  "column": "completedPromptIds"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "currentDifficulty": {
+                  "column": "currentDifficulty"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "lastCompletedDate": {
+                  "column": "lastCompletedDate"
+                },
+                "totalCompleted": {
+                  "column": "totalCompleted"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "userTranslationProgress"
             }
           }
         }
@@ -2695,6 +3122,196 @@
               },
               "uniques": []
             },
+            "translationAttempt": {
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "isCorrect": {
+                  "codecId": "pg/bool@1",
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "localDate": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "promptId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "userAnswer": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "translationAttempt"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "user"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "translationAttempt_userId_idx_a489d58a",
+                  "prefix": "translationAttempt_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "translationPrompt": {
+              "columns": {
+                "acceptedAnswers": {
+                  "codecId": "pg/json@1",
+                  "nativeType": "json",
+                  "nullable": false
+                },
+                "answerReading": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "canonicalAnswer": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "day": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "difficulty": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "difficultyLabel": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "direction": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "explanation": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "grammarPoint": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "hint": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "jlptLevel": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "order": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "sourceReading": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "sourceText": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "order"
+                  ]
+                },
+                {
+                  "columns": [
+                    "day"
+                  ]
+                }
+              ]
+            },
             "user": {
               "columns": {
                 "createdAt": {
@@ -2884,6 +3501,94 @@
                   ]
                 }
               ]
+            },
+            "userTranslationProgress": {
+              "columns": {
+                "completedPromptIds": {
+                  "codecId": "pg/json@1",
+                  "nativeType": "json",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "currentDifficulty": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 1
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "lastCompletedDate": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "totalCompleted": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "userTranslationProgress"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "user"
+                  }
+                }
+              ],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "userId"
+                  ]
+                }
+              ]
             }
           }
         },
@@ -2891,10 +3596,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "685423cfaf8a8020212c48e5ed84e9025b5c7576ee823182d5003f9da6e233b3"
+    "storageHash": "1b8f2ca2e118e9e0796dc634988a15c3e064c1a4cc1229aec396663e0c9eb7aa"
   },
   "execution": {
-    "executionHash": "1d4c690c6e8199d3f64a3fc7dca2882eb18ccdddada1d4de869db9d212d1ce63",
+    "executionHash": "b523654024bef0958d7ffbed080f1ba43283e3062374f75b48b2b9fb8a33035c",
     "mutations": {
       "defaults": [
         {
@@ -3131,6 +3836,32 @@
           "ref": {
             "column": "id",
             "namespace": "public",
+            "table": "translationAttempt"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "translationPrompt"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
             "table": "user"
           }
         },
@@ -3173,6 +3904,32 @@
             "column": "updatedAt",
             "namespace": "public",
             "table": "userLessonProgress"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "userTranslationProgress"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "userTranslationProgress"
           }
         }
       ]

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { StatsWorkspace } from "./stats-workspace";
 import * as FlashCardsContextModule from "@/contexts/FlashCardsContext";
+import * as PracticeContextModule from "@/contexts/PracticeContext";
 import * as AuthContextModule from "@/contexts/AuthContext";
 import type { StudyStats, Card, AuthContextData } from "@nipponic/shared";
 
@@ -534,5 +535,225 @@ describe("StatsWorkspace", () => {
     rerender(<StatsWorkspace />);
     expect(screen.getByText("All caught up! No reviews due right now.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Review Due Cards Now/i })).not.toBeInTheDocument();
+  });
+
+  describe("Daily Translation Practice Stats", () => {
+    it("renders Daily Translation Practice card with server translation metrics", () => {
+      vi.spyOn(AuthContextModule, "useAuth").mockReturnValue(
+        createMockAuth({
+          user: { sub: "user-1", username: "welton", email: "welton@example.com" },
+          isAuthenticated: true,
+        })
+      );
+
+      const statsWithTranslation: StudyStats = {
+        ...mockStudyStats,
+        translation: {
+          totalCompleted: 80,
+          totalPrompts: 366,
+          currentDifficulty: 2,
+          currentJlptLevel: "N4",
+          isCompletedToday: false,
+          totalAttempts: 95,
+          accuracyRate: 84,
+        },
+      };
+
+      const mockSetActiveSidebarView = vi.fn();
+      vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue({
+        cards: [],
+        decks: [],
+        appDecks: [],
+        publicDecks: [],
+        activeDeckTab: "my",
+        setActiveDeckTab: vi.fn(),
+        selectedDeckId: null,
+        selectedDeck: undefined,
+        isCurrentDeckOwner: false,
+        setSelectedDeckId: vi.fn(),
+        activeSidebarView: "stats",
+        setActiveSidebarView: mockSetActiveSidebarView,
+        playingDeck: null,
+        startPlayingDeck: vi.fn(),
+        stopPlayingDeck: vi.fn(),
+        createCard: vi.fn(),
+        updateCard: vi.fn(),
+        deleteCard: vi.fn(),
+        reviewCard: vi.fn(),
+        getDueCards: () => [],
+        createDeck: vi.fn(),
+        updateDeck: vi.fn(),
+        deleteDeck: vi.fn(),
+        addCardsToDeck: vi.fn(),
+        removeCardFromDeck: vi.fn(),
+        reorderDeckCards: vi.fn(),
+        addDeckToMyDecks: vi.fn(),
+        refreshAll: vi.fn(),
+        studyStats: statsWithTranslation,
+        refreshStats: mockRefreshStats,
+      });
+
+      render(<StatsWorkspace />);
+
+      expect(screen.getByTestId("stats-translation-card")).toBeInTheDocument();
+      expect(screen.getByText("Daily Translation Practice")).toBeInTheDocument();
+      expect(screen.getByText("JLPT N4")).toBeInTheDocument();
+      expect(screen.getByText("80 / 366 (22%)")).toBeInTheDocument();
+      expect(screen.getByText("84%")).toBeInTheDocument();
+      expect(screen.getByText("Pending Today")).toBeInTheDocument();
+
+      const practiceBtn = screen.getByRole("button", { name: /Practice Today's Challenge/i });
+      fireEvent.click(practiceBtn);
+      expect(mockSetActiveSidebarView).toHaveBeenCalledWith("practice");
+    });
+
+    it("displays Completed Today badge and message when challenge has been completed today", () => {
+      vi.spyOn(AuthContextModule, "useAuth").mockReturnValue(
+        createMockAuth({
+          user: { sub: "user-1", username: "welton", email: "welton@example.com" },
+          isAuthenticated: true,
+        })
+      );
+
+      const statsCompletedToday: StudyStats = {
+        ...mockStudyStats,
+        translation: {
+          totalCompleted: 148,
+          totalPrompts: 366,
+          currentDifficulty: 3,
+          currentJlptLevel: "N3",
+          isCompletedToday: true,
+          totalAttempts: 160,
+          accuracyRate: 92,
+        },
+      };
+
+      vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue({
+        cards: [],
+        decks: [],
+        appDecks: [],
+        publicDecks: [],
+        activeDeckTab: "my",
+        setActiveDeckTab: vi.fn(),
+        selectedDeckId: null,
+        selectedDeck: undefined,
+        isCurrentDeckOwner: false,
+        setSelectedDeckId: vi.fn(),
+        activeSidebarView: "stats",
+        setActiveSidebarView: vi.fn(),
+        playingDeck: null,
+        startPlayingDeck: vi.fn(),
+        stopPlayingDeck: vi.fn(),
+        createCard: vi.fn(),
+        updateCard: vi.fn(),
+        deleteCard: vi.fn(),
+        reviewCard: vi.fn(),
+        getDueCards: () => [],
+        createDeck: vi.fn(),
+        updateDeck: vi.fn(),
+        deleteDeck: vi.fn(),
+        addCardsToDeck: vi.fn(),
+        removeCardFromDeck: vi.fn(),
+        reorderDeckCards: vi.fn(),
+        addDeckToMyDecks: vi.fn(),
+        refreshAll: vi.fn(),
+        studyStats: statsCompletedToday,
+        refreshStats: mockRefreshStats,
+      });
+
+      render(<StatsWorkspace />);
+
+      expect(screen.getByText("Completed Today")).toBeInTheDocument();
+      expect(screen.getByText("Challenge Completed 🎉")).toBeInTheDocument();
+      expect(
+        screen.getByText("Great job! Tomorrow's challenge unlocks at midnight.")
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /Practice Today's Challenge/i })
+      ).not.toBeInTheDocument();
+    });
+
+    it("falls back to useOptionalPractice when server translation stats are undefined", () => {
+      vi.spyOn(AuthContextModule, "useAuth").mockReturnValue(createMockAuth());
+
+      vi.spyOn(FlashCardsContextModule, "useFlashCards").mockReturnValue({
+        cards: [],
+        decks: [],
+        appDecks: [],
+        publicDecks: [],
+        activeDeckTab: "my",
+        setActiveDeckTab: vi.fn(),
+        selectedDeckId: null,
+        selectedDeck: undefined,
+        isCurrentDeckOwner: false,
+        setSelectedDeckId: vi.fn(),
+        activeSidebarView: "stats",
+        setActiveSidebarView: vi.fn(),
+        playingDeck: null,
+        startPlayingDeck: vi.fn(),
+        stopPlayingDeck: vi.fn(),
+        createCard: vi.fn(),
+        updateCard: vi.fn(),
+        deleteCard: vi.fn(),
+        reviewCard: vi.fn(),
+        getDueCards: () => [],
+        createDeck: vi.fn(),
+        updateDeck: vi.fn(),
+        deleteDeck: vi.fn(),
+        addCardsToDeck: vi.fn(),
+        removeCardFromDeck: vi.fn(),
+        reorderDeckCards: vi.fn(),
+        addDeckToMyDecks: vi.fn(),
+        refreshAll: vi.fn(),
+        studyStats: null,
+        refreshStats: mockRefreshStats,
+      });
+
+      vi.spyOn(PracticeContextModule, "useOptionalPractice").mockReturnValue({
+        dailyState: {
+          prompt: {
+            id: "prompt-001-n5",
+            order: 1,
+            day: 1,
+            difficulty: 1,
+            difficultyLabel: "Level 1 · Beginner (N5)",
+            jlptLevel: "N5",
+            direction: "JP_TO_EN",
+            sourceText: "お水をください。",
+            canonicalAnswer: "Please give me some water.",
+            acceptedAnswers: ["Please give me some water"],
+            hint: "water",
+            explanation: "polite request",
+          },
+          progress: {
+            currentDifficulty: 1,
+            completedPromptIds: [],
+            lastCompletedDate: null,
+            totalCompleted: 0,
+          },
+          isLockedToday: false,
+          allCompleted: false,
+          totalPrompts: 366,
+          nextDifficultyLabel: "Level 2 · Elementary (N5)",
+        },
+        isLoading: false,
+        isSubmitting: false,
+        lastAttemptResult: null,
+        error: null,
+        clearError: vi.fn(),
+        clearLastResult: vi.fn(),
+        refreshState: vi.fn(),
+        submitTranslation: vi.fn(),
+        devUnlockNext: vi.fn(),
+      });
+
+      render(<StatsWorkspace />);
+
+      expect(screen.getByTestId("stats-translation-card")).toBeInTheDocument();
+      expect(screen.getByText("0 / 366 (0%)")).toBeInTheDocument();
+      expect(screen.getByText("366 challenges remaining")).toBeInTheDocument();
+      expect(screen.getByText("JLPT N5")).toBeInTheDocument();
+      expect(screen.getByText("Pending Today")).toBeInTheDocument();
+    });
   });
 });

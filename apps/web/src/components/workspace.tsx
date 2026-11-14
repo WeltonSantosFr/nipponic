@@ -21,7 +21,7 @@ import {
 import dynamic from "next/dynamic";
 import { AppSidebar } from "@/components/app-sidebar";
 import { BottomNavigation } from "@/components/bottom-navigation";
-import { BookOpen, GraduationCap, Layers, Loader2, TrendingUp } from "lucide-react";
+import { BookOpen, GraduationCap, Languages, Layers, Loader2, TrendingUp } from "lucide-react";
 import { useNotes } from "@/contexts/NotesContext";
 import { useFlashCards } from "@/contexts/FlashCardsContext";
 import { useTutor } from "@/contexts/TutorContext";
@@ -48,6 +48,17 @@ const DeckWorkspace = dynamic(
       </div>
     ),
     ssr: false,
+  }
+);
+
+const PracticeWorkspace = dynamic(
+  () => import("@/components/practice-workspace").then((mod) => mod.PracticeWorkspace),
+  {
+    loading: () => (
+      <div className="flex-1 flex items-center justify-center p-8 text-muted-foreground">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    ),
   }
 );
 
@@ -248,6 +259,11 @@ export function Workspace(props: WorkspaceProps = {}) {
                   <span>Cards</span>
                 </span>
               )
+            ) : activeSidebarView === "practice" ? (
+              <span className="text-sm font-medium text-muted-foreground truncate max-w-[140px] xs:max-w-[180px] sm:max-w-sm flex items-center gap-1.5 min-w-0">
+                <Languages size={15} className="text-primary shrink-0" />
+                <span>Daily Practice</span>
+              </span>
             ) : activeSidebarView === "stats" ? (
               <span className="text-sm font-medium text-muted-foreground truncate max-w-[140px] xs:max-w-[180px] sm:max-w-sm flex items-center gap-1.5 min-w-0">
                 <TrendingUp size={15} className="text-primary shrink-0" />
@@ -311,6 +327,10 @@ export function Workspace(props: WorkspaceProps = {}) {
         ) : activeSidebarView === "flashcards" ? (
           <div className="flex-1 flex flex-col items-center justify-start w-full min-w-0 max-w-full pb-20 sm:pb-safe">
             <DeckWorkspace deck={selectedDeck} />
+          </div>
+        ) : activeSidebarView === "practice" ? (
+          <div className="flex-1 flex flex-col items-stretch justify-start w-full min-w-0 max-w-full overflow-x-hidden pb-20 sm:pb-safe">
+            <PracticeWorkspace />
           </div>
         ) : activeSidebarView === "stats" ? (
           <div className="flex-1 flex flex-col items-stretch justify-start w-full min-w-0 max-w-full overflow-x-hidden pb-20 sm:pb-safe">

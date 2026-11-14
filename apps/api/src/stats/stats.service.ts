@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger, type OnModuleInit } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
-import type { StudyStats, HeatmapDay, ForecastDay } from "@nipponic/shared";
+import type { StudyStats, HeatmapDay, ForecastDay, TranslationStats } from "@nipponic/shared";
+import { getTodayLocalDate } from "@nipponic/shared";
 
 @Injectable()
 export class StatsService implements OnModuleInit {
@@ -333,6 +334,50 @@ export class StatsService implements OnModuleInit {
       });
     }
 
+    // 6. Translation Practice Stats
+    let translation: TranslationStats | undefined = undefined;
+    try {
+      const publicOrm = this.prisma?.db?.orm?.public as any;
+      if (typeof publicOrm?.UserTranslationProgress?.first === "function") {
+        const transProgress = await publicOrm.UserTranslationProgress.first({ userId });
+        const attempts: any[] = typeof publicOrm?.TranslationAttempt?.where === "function"
+          ? await publicOrm.TranslationAttempt.where({ userId }).all()
+          : [];
+
+        const totalCompleted = transProgress?.totalCompleted ?? 0;
+        const currentDifficulty = transProgress?.currentDifficulty ?? 1;
+        const todayStr = getTodayLocalDate(now);
+        const isCompletedToday = transProgress?.lastCompletedDate === todayStr;
+
+        const totalAttempts = attempts.length;
+        const correctAttempts = attempts.filter((a: any) => a.isCorrect).length;
+        const accuracyRate = totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 100;
+
+        const difficultyToJlpt: Record<number, "N5" | "N4" | "N3" | "N2" | "N1"> = {
+          1: "N5",
+          2: "N4",
+          3: "N3",
+          4: "N2",
+          5: "N1",
+        };
+        const currentJlptLevel = difficultyToJlpt[currentDifficulty] ?? "N5";
+
+        translation = {
+          totalCompleted,
+          totalPrompts: 366,
+          currentDifficulty,
+          currentJlptLevel,
+          isCompletedToday,
+          totalAttempts,
+          accuracyRate,
+        };
+      }
+    } catch (err) {
+      this.logger.debug(
+        `Could not compute translation stats: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+
     return {
       streak: {
         current: currentStreak,
@@ -361,6 +406,7 @@ export class StatsService implements OnModuleInit {
       },
       heatmap,
       forecast,
+      translation,
     };
   }
 }

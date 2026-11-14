@@ -70,6 +70,12 @@ vi.mock("@/contexts/TutorContext", () => ({
   ),
 }));
 
+vi.mock("@/contexts/PracticeContext", () => ({
+  PracticeProvider: ({ children }: any) => (
+    <div data-testid="practice-provider">{children}</div>
+  ),
+}));
+
 vi.mock("@/components/theme-provider", () => ({
   ThemeProvider: ({ children, attribute, defaultTheme }: any) => (
     <div
@@ -128,6 +134,7 @@ describe("RootLayout (app/layout.tsx)", () => {
     expect(screen.getByTestId("notes-provider")).toBeInTheDocument();
     expect(screen.getByTestId("flashcards-provider")).toBeInTheDocument();
     expect(screen.getByTestId("tutor-provider")).toBeInTheDocument();
+    expect(screen.getByTestId("practice-provider")).toBeInTheDocument();
     expect(screen.getByTestId("theme-provider")).toBeInTheDocument();
     expect(screen.getByTestId("capacitor-provider")).toBeInTheDocument();
     expect(screen.getByTestId("server-wakeup-overlay")).toBeInTheDocument();

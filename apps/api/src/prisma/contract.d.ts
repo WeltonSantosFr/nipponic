@@ -30,9 +30,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'685423cfaf8a8020212c48e5ed84e9025b5c7576ee823182d5003f9da6e233b3'>;
+  StorageHashBase<'1b8f2ca2e118e9e0796dc634988a15c3e064c1a4cc1229aec396663e0c9eb7aa'>;
 export type ExecutionHash =
-  ExecutionHashBase<'1d4c690c6e8199d3f64a3fc7dca2882eb18ccdddada1d4de869db9d212d1ce63'>;
+  ExecutionHashBase<'b523654024bef0958d7ffbed080f1ba43283e3062374f75b48b2b9fb8a33035c'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -309,6 +309,34 @@ export type FieldOutputTypes = {
       readonly reviewedAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
     };
+    readonly TranslationAttempt: {
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly userId: CodecTypes['pg/text@1']['output'];
+      readonly promptId: CodecTypes['pg/text@1']['output'];
+      readonly userAnswer: CodecTypes['pg/text@1']['output'];
+      readonly isCorrect: CodecTypes['pg/bool@1']['output'];
+      readonly localDate: CodecTypes['pg/text@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+    };
+    readonly TranslationPrompt: {
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly order: CodecTypes['pg/int4@1']['output'];
+      readonly day: CodecTypes['pg/int4@1']['output'];
+      readonly difficulty: CodecTypes['pg/int4@1']['output'];
+      readonly difficultyLabel: CodecTypes['pg/text@1']['output'];
+      readonly jlptLevel: CodecTypes['pg/text@1']['output'];
+      readonly direction: CodecTypes['pg/text@1']['output'];
+      readonly sourceText: CodecTypes['pg/text@1']['output'];
+      readonly sourceReading: CodecTypes['pg/text@1']['output'] | null;
+      readonly canonicalAnswer: CodecTypes['pg/text@1']['output'];
+      readonly answerReading: CodecTypes['pg/text@1']['output'] | null;
+      readonly acceptedAnswers: CodecTypes['pg/json@1']['output'];
+      readonly hint: CodecTypes['pg/text@1']['output'];
+      readonly explanation: CodecTypes['pg/text@1']['output'];
+      readonly grammarPoint: CodecTypes['pg/text@1']['output'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+    };
     readonly User: {
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly username: CodecTypes['pg/text@1']['output'];
@@ -325,6 +353,16 @@ export type FieldOutputTypes = {
       readonly lessonId: CodecTypes['pg/text@1']['output'];
       readonly completedAt: CodecTypes['pg/timestamptz@1']['output'] | null;
       readonly score: CodecTypes['pg/int4@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+    };
+    readonly UserTranslationProgress: {
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly userId: CodecTypes['pg/text@1']['output'];
+      readonly currentDifficulty: CodecTypes['pg/int4@1']['output'];
+      readonly completedPromptIds: CodecTypes['pg/json@1']['output'];
+      readonly lastCompletedDate: CodecTypes['pg/text@1']['output'] | null;
+      readonly totalCompleted: CodecTypes['pg/int4@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
     };
@@ -447,6 +485,34 @@ export type FieldInputTypes = {
       readonly reviewedAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
     };
+    readonly TranslationAttempt: {
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly userId: CodecTypes['pg/text@1']['input'];
+      readonly promptId: CodecTypes['pg/text@1']['input'];
+      readonly userAnswer: CodecTypes['pg/text@1']['input'];
+      readonly isCorrect: CodecTypes['pg/bool@1']['input'];
+      readonly localDate: CodecTypes['pg/text@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+    };
+    readonly TranslationPrompt: {
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly order: CodecTypes['pg/int4@1']['input'];
+      readonly day: CodecTypes['pg/int4@1']['input'];
+      readonly difficulty: CodecTypes['pg/int4@1']['input'];
+      readonly difficultyLabel: CodecTypes['pg/text@1']['input'];
+      readonly jlptLevel: CodecTypes['pg/text@1']['input'];
+      readonly direction: CodecTypes['pg/text@1']['input'];
+      readonly sourceText: CodecTypes['pg/text@1']['input'];
+      readonly sourceReading: CodecTypes['pg/text@1']['input'] | null;
+      readonly canonicalAnswer: CodecTypes['pg/text@1']['input'];
+      readonly answerReading: CodecTypes['pg/text@1']['input'] | null;
+      readonly acceptedAnswers: CodecTypes['pg/json@1']['input'];
+      readonly hint: CodecTypes['pg/text@1']['input'];
+      readonly explanation: CodecTypes['pg/text@1']['input'];
+      readonly grammarPoint: CodecTypes['pg/text@1']['input'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+    };
     readonly User: {
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly username: CodecTypes['pg/text@1']['input'];
@@ -463,6 +529,16 @@ export type FieldInputTypes = {
       readonly lessonId: CodecTypes['pg/text@1']['input'];
       readonly completedAt: CodecTypes['pg/timestamptz@1']['input'] | null;
       readonly score: CodecTypes['pg/int4@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+    };
+    readonly UserTranslationProgress: {
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly userId: CodecTypes['pg/text@1']['input'];
+      readonly currentDifficulty: CodecTypes['pg/int4@1']['input'];
+      readonly completedPromptIds: CodecTypes['pg/json@1']['input'];
+      readonly lastCompletedDate: CodecTypes['pg/text@1']['input'] | null;
+      readonly totalCompleted: CodecTypes['pg/int4@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
     };
@@ -585,6 +661,34 @@ export type StorageColumnTypes = {
       readonly reviewedAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly userId: CodecTypes['pg/text@1']['output'];
     };
+    readonly translationAttempt: {
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly isCorrect: CodecTypes['pg/bool@1']['output'];
+      readonly localDate: CodecTypes['pg/text@1']['output'];
+      readonly promptId: CodecTypes['pg/text@1']['output'];
+      readonly userAnswer: CodecTypes['pg/text@1']['output'];
+      readonly userId: CodecTypes['pg/text@1']['output'];
+    };
+    readonly translationPrompt: {
+      readonly acceptedAnswers: CodecTypes['pg/json@1']['output'];
+      readonly answerReading: CodecTypes['pg/text@1']['output'] | null;
+      readonly canonicalAnswer: CodecTypes['pg/text@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly day: CodecTypes['pg/int4@1']['output'];
+      readonly difficulty: CodecTypes['pg/int4@1']['output'];
+      readonly difficultyLabel: CodecTypes['pg/text@1']['output'];
+      readonly direction: CodecTypes['pg/text@1']['output'];
+      readonly explanation: CodecTypes['pg/text@1']['output'];
+      readonly grammarPoint: CodecTypes['pg/text@1']['output'] | null;
+      readonly hint: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly jlptLevel: CodecTypes['pg/text@1']['output'];
+      readonly order: CodecTypes['pg/int4@1']['output'];
+      readonly sourceReading: CodecTypes['pg/text@1']['output'] | null;
+      readonly sourceText: CodecTypes['pg/text@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+    };
     readonly user: {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly email: CodecTypes['pg/text@1']['output'];
@@ -601,6 +705,16 @@ export type StorageColumnTypes = {
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly lessonId: CodecTypes['pg/text@1']['output'];
       readonly score: CodecTypes['pg/int4@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly userId: CodecTypes['pg/text@1']['output'];
+    };
+    readonly userTranslationProgress: {
+      readonly completedPromptIds: CodecTypes['pg/json@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly currentDifficulty: CodecTypes['pg/int4@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly lastCompletedDate: CodecTypes['pg/text@1']['output'] | null;
+      readonly totalCompleted: CodecTypes['pg/int4@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly userId: CodecTypes['pg/text@1']['output'];
     };
@@ -723,6 +837,34 @@ export type StorageColumnInputTypes = {
       readonly reviewedAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly userId: CodecTypes['pg/text@1']['input'];
     };
+    readonly translationAttempt: {
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly isCorrect: CodecTypes['pg/bool@1']['input'];
+      readonly localDate: CodecTypes['pg/text@1']['input'];
+      readonly promptId: CodecTypes['pg/text@1']['input'];
+      readonly userAnswer: CodecTypes['pg/text@1']['input'];
+      readonly userId: CodecTypes['pg/text@1']['input'];
+    };
+    readonly translationPrompt: {
+      readonly acceptedAnswers: CodecTypes['pg/json@1']['input'];
+      readonly answerReading: CodecTypes['pg/text@1']['input'] | null;
+      readonly canonicalAnswer: CodecTypes['pg/text@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly day: CodecTypes['pg/int4@1']['input'];
+      readonly difficulty: CodecTypes['pg/int4@1']['input'];
+      readonly difficultyLabel: CodecTypes['pg/text@1']['input'];
+      readonly direction: CodecTypes['pg/text@1']['input'];
+      readonly explanation: CodecTypes['pg/text@1']['input'];
+      readonly grammarPoint: CodecTypes['pg/text@1']['input'] | null;
+      readonly hint: CodecTypes['pg/text@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly jlptLevel: CodecTypes['pg/text@1']['input'];
+      readonly order: CodecTypes['pg/int4@1']['input'];
+      readonly sourceReading: CodecTypes['pg/text@1']['input'] | null;
+      readonly sourceText: CodecTypes['pg/text@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+    };
     readonly user: {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly email: CodecTypes['pg/text@1']['input'];
@@ -739,6 +881,16 @@ export type StorageColumnInputTypes = {
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly lessonId: CodecTypes['pg/text@1']['input'];
       readonly score: CodecTypes['pg/int4@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly userId: CodecTypes['pg/text@1']['input'];
+    };
+    readonly userTranslationProgress: {
+      readonly completedPromptIds: CodecTypes['pg/json@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly currentDifficulty: CodecTypes['pg/int4@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly lastCompletedDate: CodecTypes['pg/text@1']['input'] | null;
+      readonly totalCompleted: CodecTypes['pg/int4@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly userId: CodecTypes['pg/text@1']['input'];
     };
@@ -1588,6 +1740,167 @@ type ContractBase = Omit<
                 },
               ];
             };
+            readonly translationAttempt: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly userId: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly promptId: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly userAnswer: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly isCorrect: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                };
+                readonly localDate: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'translationAttempt_userId_idx_a489d58a';
+                  readonly prefix: 'translationAttempt_userId_idx';
+                  readonly columns: readonly ['userId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'translationAttempt';
+                    readonly columns: readonly ['userId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'user';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly translationPrompt: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly order: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly day: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly difficulty: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly difficultyLabel: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly jlptLevel: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly direction: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly sourceText: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly sourceReading: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly canonicalAnswer: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly answerReading: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly acceptedAnswers: {
+                  readonly nativeType: 'json';
+                  readonly codecId: 'pg/json@1';
+                  readonly nullable: false;
+                };
+                readonly hint: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly explanation: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly grammarPoint: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly updatedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [
+                { readonly columns: readonly ['order'] },
+                { readonly columns: readonly ['day'] },
+              ];
+              indexes: readonly [];
+              foreignKeys: readonly [];
+            };
             readonly user: {
               columns: {
                 readonly id: {
@@ -1731,6 +2044,76 @@ type ContractBase = Omit<
                 },
               ];
             };
+            readonly userTranslationProgress: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly userId: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly currentDifficulty: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 1>;
+                  };
+                };
+                readonly completedPromptIds: {
+                  readonly nativeType: 'json';
+                  readonly codecId: 'pg/json@1';
+                  readonly nullable: false;
+                };
+                readonly lastCompletedDate: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly totalCompleted: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 0>;
+                  };
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly updatedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['userId'] }];
+              indexes: readonly [];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'userTranslationProgress';
+                    readonly columns: readonly ['userId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'user';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
           };
         };
       };
@@ -1769,6 +2152,18 @@ type ContractBase = Omit<
     readonly feedbackTicket: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'FeedbackTicket';
+    };
+    readonly userTranslationProgress: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'UserTranslationProgress';
+    };
+    readonly translationAttempt: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'TranslationAttempt';
+    };
+    readonly translationPrompt: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'TranslationPrompt';
     };
   };
   readonly domain: {
@@ -2535,6 +2930,157 @@ type ContractBase = Omit<
               };
             };
           };
+          readonly TranslationAttempt: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly userId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly promptId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly userAnswer: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly isCorrect: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly localDate: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+            };
+            readonly relations: {
+              readonly user: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['userId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'translationAttempt';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly userId: { readonly column: 'userId' };
+                readonly promptId: { readonly column: 'promptId' };
+                readonly userAnswer: { readonly column: 'userAnswer' };
+                readonly isCorrect: { readonly column: 'isCorrect' };
+                readonly localDate: { readonly column: 'localDate' };
+                readonly createdAt: { readonly column: 'createdAt' };
+              };
+            };
+          };
+          readonly TranslationPrompt: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly order: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly day: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly difficulty: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly difficultyLabel: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly jlptLevel: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly direction: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly sourceText: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly sourceReading: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly canonicalAnswer: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly answerReading: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly acceptedAnswers: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/json@1' };
+              };
+              readonly hint: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly explanation: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly grammarPoint: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+            };
+            readonly relations: Record<string, never>;
+            readonly storage: {
+              readonly table: 'translationPrompt';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly order: { readonly column: 'order' };
+                readonly day: { readonly column: 'day' };
+                readonly difficulty: { readonly column: 'difficulty' };
+                readonly difficultyLabel: { readonly column: 'difficultyLabel' };
+                readonly jlptLevel: { readonly column: 'jlptLevel' };
+                readonly direction: { readonly column: 'direction' };
+                readonly sourceText: { readonly column: 'sourceText' };
+                readonly sourceReading: { readonly column: 'sourceReading' };
+                readonly canonicalAnswer: { readonly column: 'canonicalAnswer' };
+                readonly answerReading: { readonly column: 'answerReading' };
+                readonly acceptedAnswers: { readonly column: 'acceptedAnswers' };
+                readonly hint: { readonly column: 'hint' };
+                readonly explanation: { readonly column: 'explanation' };
+                readonly grammarPoint: { readonly column: 'grammarPoint' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+              };
+            };
+          };
           readonly User: {
             readonly fields: {
               readonly id: {
@@ -2639,6 +3185,28 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['userId'];
                 };
               };
+              readonly translationAttempts: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'TranslationAttempt';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['userId'];
+                };
+              };
+              readonly translationProgress: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'UserTranslationProgress';
+                };
+                readonly cardinality: '1:1';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['userId'];
+                };
+              };
             };
             readonly storage: {
               readonly table: 'user';
@@ -2716,6 +3284,66 @@ type ContractBase = Omit<
                 readonly lessonId: { readonly column: 'lessonId' };
                 readonly completedAt: { readonly column: 'completedAt' };
                 readonly score: { readonly column: 'score' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+              };
+            };
+          };
+          readonly UserTranslationProgress: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly userId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly currentDifficulty: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly completedPromptIds: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/json@1' };
+              };
+              readonly lastCompletedDate: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly totalCompleted: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+            };
+            readonly relations: {
+              readonly user: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['userId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'userTranslationProgress';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly userId: { readonly column: 'userId' };
+                readonly currentDifficulty: { readonly column: 'currentDifficulty' };
+                readonly completedPromptIds: { readonly column: 'completedPromptIds' };
+                readonly lastCompletedDate: { readonly column: 'lastCompletedDate' };
+                readonly totalCompleted: { readonly column: 'totalCompleted' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
               };
@@ -2902,6 +3530,23 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'public';
+            readonly table: 'translationAttempt';
+            readonly column: 'id';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv4' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'public';
+            readonly table: 'translationPrompt';
+            readonly column: 'updatedAt';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'public';
             readonly table: 'user';
             readonly column: 'id';
           };
@@ -2928,6 +3573,23 @@ type ContractBase = Omit<
           readonly ref: {
             readonly namespace: 'public';
             readonly table: 'userLessonProgress';
+            readonly column: 'updatedAt';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'public';
+            readonly table: 'userTranslationProgress';
+            readonly column: 'id';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv4' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'public';
+            readonly table: 'userTranslationProgress';
             readonly column: 'updatedAt';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
