@@ -34,6 +34,10 @@ These rules are mandatory for all AI agents and developers working on the Nippon
 - Commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/):
   - `fix(notifications): translate notification channel and alerts to English`
   - `feat(mobile): add offline study sessions`
+- **Pull Request CI Verification & Self-Healing (MANDATORY AUTOMATION)**:
+  - Whenever opening a Pull Request (PR), the agent MUST monitor GitHub Actions CI check runs using GitHub MCP tools (`pull_request_read` with `method: "get_check_runs"`).
+  - The agent MUST wait for all checks to complete.
+  - If any check fails (e.g., `check-types`, tests, lint, build), the agent MUST automatically diagnose the failure, apply the fix, commit, push to the PR branch, and re-verify until all checks pass (`conclusion: success`) before completing the task.
 
 ---
 
