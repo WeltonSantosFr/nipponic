@@ -12,6 +12,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
+    "test:regression": "vitest run -t \"regression\"",
+    "test:visual": "playwright test --config=playwright.config.ts",
+    "test:visual:update": "playwright test --config=playwright.config.ts --update-snapshots",
     "cap:sync": "cap sync android",
     "cap:sync:dev": "CAPACITOR_SERVER_URL=http://10.0.2.2:3000 cap sync android",
     "cap:open": "cap open android",
@@ -45,6 +48,7 @@
   "devDependencies": {
     "@capacitor/android": "^8.5.2",
     "@capacitor/cli": "^8.5.2",
+    "@playwright/test": "^1.65.1",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "^4.3.3",

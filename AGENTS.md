@@ -47,7 +47,9 @@ These rules are mandatory for all AI agents and developers working on the Nippon
 
 ---
 
-## 4. Code Quality & Testing
+## 4. Code Quality & Testing (CRITICAL RULE)
+
+> **MANDATORY**: All code modifications must pass through multiple validation layers (unit, integration, bug regression, and visual regression) before creating a Pull Request. Full testing guidelines are documented in [docs/TESTING.md](file:///home/weltonsf/Projetos/nipponic/docs/TESTING.md).
 
 - **Strict Typing**: Maintain strict TypeScript adherence without bypassing types with `any`.
 - **Automated Verification**:
@@ -55,8 +57,22 @@ These rules are mandatory for all AI agents and developers working on the Nippon
   - Ensure existing tests pass and add unit tests for new services, utilities, or behavioral logic.
   - Check for type errors and build status when applicable.
 - **Mandatory Bug Regression Testing**:
-  - For every bug fix, always create dedicated automated regression tests that specifically replicate and validate the failing scenario before marking the task complete.
-  - Ensure tests cover edge cases (e.g., offline mode, page reload/refresh, unauthenticated state, debounce/flush lifecycles).
+  - **Zero-Unverified-Fix Policy**: For every bug fix, always create dedicated automated regression tests that specifically replicate and validate the failing scenario before marking the task complete. The test must fail before the fix and pass after.
+  - **Standardized Naming & Structure**:
+    - Use inline `describe('regression [BUG-<id>]: <summary>', ...)` blocks in local unit test suites for single-module bugs.
+    - Use dedicated `*.regression.spec.ts(x)` files in `src/__tests__/regressions/` for complex, lifecycle, offline, or cross-module bugs.
+  - **Edge Cases**: Must cover offline mode, page reload/refresh (`F5`), unauthenticated state, debounce/flush lifecycles, and rapid concurrent actions.
+  - **Execution**: Run bug regression tests via `pnpm test:regression`.
+- **Mandatory Visual Regression Testing**:
+  - All UI changes, layout refactors, and new screens must have Playwright visual regression coverage in `apps/web/e2e/visual/*.visual.spec.ts`.
+  - Must assert zero horizontal overflow (`scrollWidth <= clientWidth`) and compare screenshots across **320px** (mobile baseline) and **1280px** (desktop).
+  - Run visual tests locally via `pnpm test:visual` (or `pnpm test:visual:update` for approved baseline updates).
+- **Mandatory Pre-PR Gate (`pnpm verify:pr`)**:
+  - Before creating any Pull Request, developers and AI agents MUST execute:
+    ```bash
+    pnpm verify:pr
+    ```
+    This verifies type checks, linting, unit/integration tests, bug regressions, and visual regressions in a single command. If any check fails, it must be resolved locally before opening the PR.
 
 ---
 
