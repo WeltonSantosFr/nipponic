@@ -25,7 +25,8 @@
     "check-types": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:cov": "vitest run --coverage"
+    "test:cov": "vitest run --coverage",
+    "test:regression": "vitest run -t \"regression\""
   },
   "dependencies": {
     "@nestjs/common": "^11.1.17",

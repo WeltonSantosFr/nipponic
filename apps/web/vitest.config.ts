@@ -12,8 +12,9 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: ['node_modules', '.next', '**/*.d.ts'],
+      exclude: ['node_modules', '.next', '**/*.d.ts', 'e2e/**'],
     },
+    exclude: ['**/node_modules/**', '**/dist/**', '**/.next/**', 'e2e/**'],
   },
   resolve: {
     alias: {

@@ -24,6 +24,10 @@
       "dependsOn": ["^check-types"]
     },
     "test": {},
+    "test:regression": {},
+    "test:visual": {
+      "cache": false
+    },
     "test:cov": {
       "outputs": ["coverage/**"]
     },
